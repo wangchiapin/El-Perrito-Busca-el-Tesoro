@@ -3,6 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>El Perrito Busca el Tesoro</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-M9GNL79T0G"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-M9GNL79T0G');
+</script>
 <style>
   :root{
     --cream:#F3E9D8;
@@ -544,6 +553,7 @@ function startGame(){
   snapshotInstruction();
   showCurrentInstruction();
   draw();
+  trackEvent('game_start', { level: state.difficulty });
 }
 
 function snapshotInstruction(){
@@ -622,7 +632,11 @@ function checkGoal(){
       return true;
     }
     return false;
-  }
+    const timeSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+    trackEvent('level_complete', { 
+    time_spent: timeSeconds, 
+    error_count: state.errorCount });
+    }
 
   if(state.dogRow===state.treasureRow && state.dogCol===state.treasureCol){
     state.treasureFound = true;
@@ -648,6 +662,7 @@ function checkGoal(){
     return true;
   }
   return false;
+  trackEvent('stage_transition', { from: 'key', to: 'treasure' });
 }
 
 function handleWrongKey(){
@@ -663,6 +678,7 @@ function handleWrongKey(){
     document.getElementById('errorMsg').textContent='';
     reannounceAfterError();
   }, 900);
+  trackEvent('error_made', { stage: state.stage });
 }
 
 function advanceInstruction(){
@@ -968,7 +984,13 @@ function drawDog(cx,cy,facing){
   }
   ctx.restore();
 }
-
+  
+function trackEvent(name, params = {}) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', name, params);
+  }
+}
+  
 function syncBoardHeight(){
   const panel = document.getElementById('panel');
   const boardWrap = document.getElementById('boardWrap');
