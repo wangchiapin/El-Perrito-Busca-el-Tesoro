@@ -40,12 +40,12 @@
     padding-bottom:8px;
   }
   h1{
-    font-size:18px;
+    font-size:20px;
     color:var(--brick);
-    letter-spacing:0px;
+    letter-spacing:1px;
     margin:0 0 12px 0;
-    border-left:3px solid var(--gold);
-    padding-left:5px;
+    border-left:6px solid var(--gold);
+    padding-left:10px;
   }
   #boardWrap{
     background:#fff;
@@ -191,8 +191,8 @@
   }
   #dpad{
     display:grid;
-    grid-template-columns:60px 60px 60px;
-    grid-template-rows:60px 60px 60px;
+    grid-template-columns:56px 56px 56px;
+    grid-template-rows:56px 56px 56px;
     gap:4px;
     justify-content:center;
     margin-top:14px;
@@ -200,8 +200,8 @@
   }
   #dpad button{
     margin:0;
-    width:60px;
-    height:60px;
+    width:56px;
+    height:56px;
     font-size:22px;
     display:flex;
     align-items:center;
@@ -440,15 +440,17 @@
     background:#fff;
   }
   .lbRow{
-    display:grid;
-    grid-template-columns:34px 1fr 64px;
-    align-items:center;
-    gap:8px;
     padding:8px 12px;
     border-bottom:1px solid #eee0c4;
-    font-size:14px;
   }
   .lbRow:last-child{ border-bottom:none; }
+  .lbRowTop{
+    display:grid;
+    grid-template-columns:28px 1fr 56px;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+  }
   .lbRank{ font-weight:bold; color:var(--brick); text-align:center; }
   .lbName{
     overflow:hidden;
@@ -457,6 +459,15 @@
     color:var(--ink);
   }
   .lbScore{ font-weight:bold; color:var(--brick); text-align:right; }
+  .lbRowMeta{
+    margin-top:3px;
+    padding-left:36px;
+    font-size:11px;
+    color:#8a8072;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
   .lbRowMe{ background:rgba(201,162,75,.22); }
   #lbStatus{
     font-size:13px;
@@ -478,8 +489,8 @@
     <h1>🐾 El Perrito Busca el Tesoro</h1>
     <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
     <p id="namePrompt">¿Cómo te llamas, explorador/a?</p>
-     <!--<p id="namePromptSimp">你叫什麼名字呢？</p> -->
-    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="off">
+    <p id="namePromptSimp">你叫什麼名字呢？</p>
+    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre / 輸入你的名字" autocomplete="off">
     <div id="nameGateError"></div>
     <button id="nameGateBtn">¡Vamos a buscar el tesoro! 🐾</button>
     <div id="nameGateFooter">El perrito te espera con la llave y el tesoro 🔑💰</div>
@@ -1415,13 +1426,12 @@ function computeScore(){
 // TODO：請把下面 firebaseConfig 換成你自己 Firebase 專案的設定（可以沿用其他遊戲已在用的專案）。
 // 在還沒填入正確設定之前，排行榜會顯示「尚未設定」，不會影響遊戲本身其他功能。
 const firebaseConfig = {
-  apiKey: "AIzaSyAa58xLAL4dLphvdPEvWYAUfHrjM1kcnoo",
-  authDomain: "perrito-busca-el-tesoro.firebaseapp.com",
-  projectId: "perrito-busca-el-tesoro",
-  storageBucket: "perrito-busca-el-tesoro.firebasestorage.app",
-  messagingSenderId: "352935350375",
-  appId: "1:352935350375:web:c50678d1e8bce967ae44c2",
-  measurementId: "G-Z13037TCSW"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const LEVEL_LABELS = { level1:'NIVEL 1', level2:'NIVEL 2', level3:'NIVEL 3', level4:'NIVEL 4' };
@@ -1504,12 +1514,37 @@ function renderLeaderboard(list, level){
   listEl.innerHTML = list.map((row, i) => {
     const isMe = state.lastScoreDocId && row.id === state.lastScoreDocId && level === state.lastPlayedLevel;
     const rankLabel = medals[i] || String(i + 1);
+    const timeStr = formatMMSS(row.timeSeconds || 0);
+    const errStr = (row.errorCount != null) ? row.errorCount : 0;
+    const stepsStr = (row.totalPresses != null) ? row.totalPresses : '—';
+    const accStr = (row.accuracy != null) ? row.accuracy + '%' : '—';
+    const dateStr = formatDate(row.createdAt);
+    const meta = `⏱ ${timeStr} · ❌ ${errStr} · 👣 ${stepsStr} · 🎯 ${accStr}` + (dateStr ? ` · 📅 ${dateStr}` : '');
     return `<div class="lbRow${isMe ? ' lbRowMe' : ''}">`
+      + `<div class="lbRowTop">`
       + `<span class="lbRank">${rankLabel}</span>`
       + `<span class="lbName">${escapeHtml(row.name || '???')}</span>`
       + `<span class="lbScore">${row.score}</span>`
+      + `</div>`
+      + `<div class="lbRowMeta">${meta}</div>`
       + `</div>`;
   }).join('');
+}
+
+function formatMMSS(sec){
+  sec = Math.max(0, Math.floor(sec || 0));
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function formatDate(ts){
+  if(!ts) return '';
+  try{
+    const d = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
+    if(isNaN(d.getTime())) return '';
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }catch(e){ return ''; }
 }
 
 function closeLeaderboard(){
