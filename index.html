@@ -993,26 +993,34 @@ function trackEvent(name, params = {}) {
   }
 }
   
-function syncBoardHeight(){
+// 棋盤尺寸只依「視窗大小」計算，完全不受右側資訊欄（結果／錯誤訊息等）高度變化影響，
+// 這樣不管右側欄位內容如何增減，左側棋盤與整體版面都不會跟著跳動或放大。
+function computeBoardSize(){
   const panel = document.getElementById('panel');
-  const boardWrap = document.getElementById('boardWrap');
-  const panelHeight = Math.round(panel.getBoundingClientRect().height);
-  if(panelHeight < 100) return;
-  boardWrap.style.height = panelHeight + 'px';
-  boardWrap.style.width = panelHeight + 'px';
-  const wrapPadding = 10;
-  const innerSize = Math.max(200, boardWrap.clientHeight - wrapPadding*2);
-  canvas.width = innerSize;
-  canvas.height = innerSize;
-  CELL = innerSize / GRID;
+  const gameArea = document.getElementById('gameArea');
+  const gap = 20;          // #gameArea 的 gap
+  const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
+  const panelWidth = (panel && panel.getBoundingClientRect().width) || 300;
+  const areaTop = gameArea ? gameArea.getBoundingClientRect().top : 20;
+
+  const availableWidth = window.innerWidth - panelWidth - gap - 40 - wrapChrome;
+  const availableHeight = window.innerHeight - areaTop - 20 - wrapChrome;
+
+  let size = Math.min(availableWidth, availableHeight);
+  size = Math.max(240, Math.min(size, 640));
+  return Math.floor(size);
+}
+
+function syncBoardHeight(){
+  const size = computeBoardSize();
+  canvas.width = size;
+  canvas.height = size;
+  CELL = size / GRID;
   draw();
 }
 
 window.addEventListener('resize', syncBoardHeight);
 window.addEventListener('load', syncBoardHeight);
-if(window.ResizeObserver){
-  new ResizeObserver(syncBoardHeight).observe(document.getElementById('panel'));
-}
 
 draw();
 syncBoardHeight();
