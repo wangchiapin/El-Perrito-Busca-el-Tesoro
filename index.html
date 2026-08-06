@@ -1409,8 +1409,8 @@ trackEvent = function(name, params = {}){
 
 // ---------- 分數計算 ----------
 // 設計理念：地圖（障礙物、路徑長度）每局隨機，單比「總時間」對玩家不公平，
-// 所以分數以「正確率」為主分，「每步平均反應時間」只作小幅加減分，
-// 避免玩家用亂按方向鍵的方式衝快，違背練習聽力／方向指令的初衷。
+// 所以分數以「正確率」為主分，「每步平均反應時間」只作小幅加減分
+// 避免玩家用亂按方向鍵的方式衝快，違背練習聽力／方向指令的初衷
 function computeScore(){
   const sec = Math.max(0, Math.floor((Date.now() - state.startTime) / 1000));
   const totalPresses = state.totalPresses || 0;
