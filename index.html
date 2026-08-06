@@ -219,9 +219,156 @@
   #dpadCenter{grid-column:2;grid-row:2;}
   #dpadRight{grid-column:3;grid-row:2;}
   #dpadDown{grid-column:2;grid-row:3;}
+
+  /* ---------- 玩家姓名輸入頁（進場畫面） ---------- */
+  body.gate-open{ overflow:hidden; }
+  body.gate-open #gameArea{ display:none; }
+
+  #nameGate{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(201,162,75,.18), transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(155,59,46,.22), transparent 50%),
+      var(--ink);
+  }
+  #nameCard{
+    position:relative;
+    width:100%;
+    max-width:380px;
+    background:var(--paper);
+    border:3px solid var(--brick);
+    border-radius:14px;
+    padding:28px 26px 24px;
+    text-align:center;
+    box-shadow:0 14px 34px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+  #nameCard::before{
+    content:"";
+    position:absolute;
+    inset:8px;
+    border:1px solid var(--gold);
+    border-radius:8px;
+    pointer-events:none;
+  }
+  #nameSeal{
+    position:absolute;
+    top:-18px;
+    right:-18px;
+    width:64px;
+    height:64px;
+    border-radius:50%;
+    background:var(--brick);
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:26px;
+    font-weight:bold;
+    box-shadow:0 4px 10px rgba(0,0,0,.3);
+    transform:rotate(12deg);
+    border:2px solid var(--gold);
+  }
+  #nameGateIcons{
+    font-size:30px;
+    letter-spacing:10px;
+    margin:4px 0 10px;
+  }
+  #nameCard h1{
+    font-size:19px;
+    margin:0 0 4px;
+    border-left:none;
+    padding-left:0;
+    letter-spacing:.5px;
+  }
+  #nameCard .seal{
+    margin:8px 0 16px;
+  }
+  #namePrompt{
+    font-size:15px;
+    font-weight:bold;
+    color:var(--ink);
+    margin:0 0 4px;
+  }
+  #namePromptSimp{
+    font-size:13px;
+    color:var(--brick);
+    opacity:.85;
+    margin:0 0 14px;
+  }
+  #playerNameInput{
+    width:100%;
+    padding:12px 14px;
+    font-size:16px;
+    border:2px solid var(--gold);
+    border-radius:8px;
+    background:#fff;
+    color:var(--ink);
+    text-align:center;
+    outline:none;
+  }
+  #playerNameInput:focus{
+    border-color:var(--brick);
+    box-shadow:0 0 0 3px rgba(155,59,46,.15);
+  }
+  #nameGateError{
+    color:#c0392b;
+    font-weight:bold;
+    font-size:13px;
+    min-height:18px;
+    margin-top:6px;
+  }
+  #nameGateBtn{
+    margin-top:14px;
+  }
+  #nameGateFooter{
+    margin-top:14px;
+    font-size:12px;
+    color:#7a7268;
+  }
+  #playerGreeting{
+    font-size:13px;
+    font-weight:bold;
+    color:var(--brick);
+    text-align:center;
+    margin:12px 0 4px;
+    min-height:16px;
+  }
+  #playerGreeting:empty{
+    margin:0;
+    min-height:0;
+  }
+  #playerGreeting span{
+    display:inline-block;
+    background:#fff;
+    border:1px solid var(--gold);
+    border-radius:20px;
+    padding:4px 14px;
+  }
 </style>
 </head>
-<body>
+<body class="gate-open">
+
+<div id="nameGate">
+  <div id="nameCard">
+    <div id="nameSeal">寶</div>
+    <div id="nameGateIcons">🐶 🪨 🔑 💰</div>
+    <h1>🐾 El Perrito Busca el Tesoro</h1>
+    <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
+    <p id="namePrompt">¿Cómo te llamas, explorador/a?</p>
+    <p id="namePromptSimp">你叫什麼名字呢？</p>
+    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre / 輸入你的名字" autocomplete="off">
+    <div id="nameGateError"></div>
+    <button id="nameGateBtn">¡Vamos a buscar el tesoro! 🐾</button>
+    <div id="nameGateFooter">El perrito te espera con la llave y el tesoro 🔑💰</div>
+  </div>
+</div>
 
 <div id="gameArea">
   <div id="boardWrap">
@@ -231,6 +378,7 @@
   <div id="panel">
     <h1>🐾 El Perrito Busca el Tesoro</h1>
     <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
+    <div id="playerGreeting"></div>
 
     <div id="statRow">
       <div>Tiempo<span id="timerDisp">00:00</span></div>
@@ -1024,6 +1172,62 @@ window.addEventListener('load', syncBoardHeight);
 
 draw();
 syncBoardHeight();
+
+// ---------- 玩家姓名輸入頁 ----------
+const NAME_STORAGE_KEY = 'perritoTesoroPlayerName';
+state.playerName = '';
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function setGreeting(name){
+  const g = document.getElementById('playerGreeting');
+  g.innerHTML = name ? `<span>¡Hola, ${escapeHtml(name)}! 🐾</span>` : '';
+}
+
+function openGame(name){
+  state.playerName = name;
+  try{ localStorage.setItem(NAME_STORAGE_KEY, name); }catch(e){}
+  setGreeting(name);
+  document.body.classList.remove('gate-open');
+  document.getElementById('nameGate').style.display = 'none';
+  syncBoardHeight();
+  trackEvent('player_named', { has_name: true });
+  const input = document.getElementById('playerNameInput');
+  if(input) input.blur();
+}
+
+function submitPlayerName(){
+  const input = document.getElementById('playerNameInput');
+  const errEl = document.getElementById('nameGateError');
+  const name = (input.value || '').trim();
+  if(!name){
+    errEl.textContent = 'Escribe tu nombre para continuar / 請輸入名字';
+    input.focus();
+    return;
+  }
+  errEl.textContent = '';
+  openGame(name.slice(0, 20));
+}
+
+(function initNameGate(){
+  const input = document.getElementById('playerNameInput');
+  let saved = '';
+  try{ saved = localStorage.getItem(NAME_STORAGE_KEY) || ''; }catch(e){}
+  if(saved) input.value = saved;
+  document.getElementById('nameGateBtn').addEventListener('click', submitPlayerName);
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); submitPlayerName(); }
+  });
+  setTimeout(()=> input.focus(), 50);
+})();
+
+// 讓所有 GA4 事件都自動帶上玩家名稱，方便之後在 Analytics 依名字分析（不含個資風險，僅暱稱）
+const _trackEvent = trackEvent;
+trackEvent = function(name, params = {}){
+  _trackEvent(name, Object.assign({}, params, state.playerName ? { player_name: state.playerName } : {}));
+};
 </script>
 </body>
 </html>
