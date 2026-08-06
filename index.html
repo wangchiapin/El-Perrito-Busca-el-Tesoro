@@ -351,6 +351,122 @@
     border-radius:20px;
     padding:4px 14px;
   }
+
+  /* ---------- 分數列 / 排行榜按鈕 / 練習提示 ---------- */
+  #scoreLine{
+    font-size:14px;
+    font-weight:bold;
+    color:var(--brick);
+    background:#fff;
+    border:1px dashed var(--gold);
+    border-radius:6px;
+    padding:8px;
+    margin-top:8px;
+  }
+  #viewLeaderboardBtn{
+    background:var(--gold);
+    color:var(--ink);
+  }
+  #practiceHint{
+    font-size:12px;
+    color:#7a7268;
+    font-style:italic;
+    margin-top:8px;
+  }
+
+  /* ---------- 排行榜彈窗 ---------- */
+  #leaderboardModal{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(201,162,75,.18), transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(155,59,46,.22), transparent 50%),
+      var(--ink);
+  }
+  #leaderboardCard{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    max-height:86vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--paper);
+    border:3px solid var(--brick);
+    border-radius:14px;
+    padding:26px 22px 22px;
+    text-align:center;
+    box-shadow:0 14px 34px rgba(0,0,0,.45);
+  }
+  #leaderboardCloseBtn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:30px;
+    height:30px;
+    padding:0;
+    margin:0;
+    border-radius:50%;
+    background:var(--brick);
+    color:var(--cream);
+    font-size:14px;
+    line-height:1;
+  }
+  #lbSeal{
+    font-size:32px;
+    margin-bottom:2px;
+  }
+  #leaderboardCard h2{
+    color:var(--brick);
+    font-size:19px;
+    margin:0 0 2px;
+  }
+  #lbSubtitle{
+    font-size:13px;
+    color:var(--brick);
+    opacity:.8;
+    font-weight:bold;
+    margin-bottom:14px;
+  }
+  #lbList{
+    overflow-y:auto;
+    text-align:left;
+    border:1px solid var(--gold);
+    border-radius:8px;
+    background:#fff;
+  }
+  .lbRow{
+    display:grid;
+    grid-template-columns:34px 1fr 64px;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-bottom:1px solid #eee0c4;
+    font-size:14px;
+  }
+  .lbRow:last-child{ border-bottom:none; }
+  .lbRank{ font-weight:bold; color:var(--brick); text-align:center; }
+  .lbName{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--ink);
+  }
+  .lbScore{ font-weight:bold; color:var(--brick); text-align:right; }
+  .lbRowMe{ background:rgba(201,162,75,.22); }
+  #lbStatus{
+    font-size:13px;
+    color:#7a7268;
+    padding:10px 4px 2px;
+    min-height:18px;
+  }
+  #lbBackBtn{
+    margin-top:14px;
+  }
 </style>
 </head>
 <body class="gate-open">
@@ -367,6 +483,18 @@
     <div id="nameGateError"></div>
     <button id="nameGateBtn">¡Vamos a buscar el tesoro! 🐾</button>
     <div id="nameGateFooter">El perrito te espera con la llave y el tesoro 🔑💰</div>
+  </div>
+</div>
+
+<div id="leaderboardModal">
+  <div id="leaderboardCard">
+    <button id="leaderboardCloseBtn" aria-label="Cerrar">✕</button>
+    <div id="lbSeal">🏆</div>
+    <h2 id="lbTitle">Clasificación</h2>
+    <div id="lbSubtitle"></div>
+    <div id="lbList"></div>
+    <div id="lbStatus"></div>
+    <button id="lbBackBtn">Volver al juego</button>
   </div>
 </div>
 
@@ -403,6 +531,9 @@
       <h2></h2>
       <p>Tiempo empleado: <b id="finalTime"></b></p>
       <p>Número de errores: <b id="finalError"></b></p>
+      <div id="scoreLine"></div>
+      <button id="viewLeaderboardBtn" style="display:none;">🏆 Ver clasificación</button>
+      <div id="practiceHint" style="display:none;">¡Bien hecho! 🐾 Prueba el NIVEL 2 o superior para entrar en la clasificación.</div>
     </div>
 
     <button id="startBtn">Comenzar juego</button>
@@ -417,6 +548,10 @@
     </div>
   </div>
 </div>
+
+<!-- Firebase（排行榜用）：請於下方 script 中的 firebaseConfig 填入你的 Firebase 專案設定 -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
 const GRID = 20;
@@ -461,8 +596,9 @@ let state = {
   instructions: [], chunkStarts:new Set(), chunkLabels:new Map(),
   curIndex:0, stepsDone:0,
   snapshot:null,
-  errorCount:0, startTime:0, timerId:null,
-  playing:false
+  errorCount:0, totalPresses:0, startTime:0, timerId:null,
+  playing:false,
+  lastScoreDocId:null, lastPlayedLevel:null
 };
 
 function sameCell(a,b){ return a.row===b.row && a.col===b.col; }
@@ -685,6 +821,7 @@ function startGame(){
   state.stage = settings.requiresKey ? 'key' : 'treasure';
   state.obstacles = plan.obstacles;
   state.errorCount = 0;
+  state.totalPresses = 0;
   state.curIndex = 0;
   state.stepsDone = 0;
   setInstructions(plan.firstInstructions);
@@ -692,6 +829,9 @@ function startGame(){
 
   document.getElementById('difficultySelect').disabled = true;
   document.getElementById('resultBox').style.display='none';
+  document.getElementById('scoreLine').textContent = '';
+  document.getElementById('viewLeaderboardBtn').style.display = 'none';
+  document.getElementById('practiceHint').style.display = 'none';
   document.getElementById('errorMsg').textContent='';
   document.getElementById('errorDisp').textContent='0';
   state.startTime = Date.now();
@@ -779,28 +919,47 @@ function checkGoal(){
       snapshotInstruction();
       updateStageLabel();
       setTimeout(showCurrentInstruction, 1300);
+      trackEvent('stage_transition', { level: state.difficulty, from: 'key', to: 'treasure' });
       return true;
     }
     return false;
-    const timeSeconds = Math.floor((Date.now() - state.startTime) / 1000);
-    trackEvent('level_complete', { 
-    time_spent: timeSeconds, 
-    error_count: state.errorCount });
-    }
+  }
 
   if(state.dogRow===state.treasureRow && state.dogCol===state.treasureCol){
     state.treasureFound = true;
     state.playing = false;
     clearInterval(state.timerId);
     document.getElementById('difficultySelect').disabled = false;
-    const sec = Math.floor((Date.now()-state.startTime)/1000);
-    const m = String(Math.floor(sec/60)).padStart(2,'0');
-    const s = String(sec%60).padStart(2,'0');
+
+    const result = computeScore();
+    const m = String(Math.floor(result.sec/60)).padStart(2,'0');
+    const s = String(result.sec%60).padStart(2,'0');
     document.getElementById('finalTime').textContent = `${m}:${s}`;
     document.getElementById('finalError').textContent = state.errorCount;
+
     const h2 = document.querySelector('#resultBox h2');
     h2.innerHTML = `🎉 ${TREASURE_FOUND_PAIR.trad} <span class="zh-simp">${TREASURE_FOUND_PAIR.simp}</span>`;
     document.getElementById('resultBox').style.display='block';
+
+    const scoreLine = document.getElementById('scoreLine');
+    scoreLine.textContent = `Puntuación: ${result.score}  ·  Precisión ${Math.round(result.accuracy*100)}%  ·  Ritmo ${result.avgTimePerStep.toFixed(1)}s/paso`;
+
+    const viewBtn = document.getElementById('viewLeaderboardBtn');
+    const hint = document.getElementById('practiceHint');
+    if(state.difficulty === 'level1'){
+      viewBtn.style.display = 'none';
+      hint.style.display = 'block';
+    } else {
+      hint.style.display = 'none';
+      viewBtn.style.display = 'block';
+      viewBtn.onclick = () => openLeaderboard(state.difficulty);
+      state.lastScoreDocId = null;
+      state.lastPlayedLevel = state.difficulty;
+      saveScoreToLeaderboard(state.difficulty, result).then(id=>{
+        state.lastScoreDocId = id;
+      });
+    }
+
     const box = document.getElementById('instructionBox');
     if(!state.textHidden){
       renderPair(box, TREASURE_FOUND_PAIR);
@@ -809,10 +968,16 @@ function checkGoal(){
     }
     speak('恭喜，' + TREASURE_FOUND_PAIR.trad);
     draw();
+    trackEvent('level_complete', {
+      level: state.difficulty,
+      score: result.score,
+      accuracy: Math.round(result.accuracy*100),
+      time_spent: result.sec,
+      error_count: result.errors
+    });
     return true;
   }
   return false;
-  trackEvent('stage_transition', { from: 'key', to: 'treasure' });
 }
 
 function handleWrongKey(){
@@ -897,6 +1062,7 @@ function pressDirection(dir){
     if(dir === ins.dir){
       playBeep(0);
       state.facing = dir;
+      state.totalPresses = (state.totalPresses||0) + 1;
       draw();
       advanceInstruction();
     } else {
@@ -910,6 +1076,7 @@ function pressDirection(dir){
       state.dogRow += d.dr;
       state.dogCol += d.dc;
       state.stepsDone++;
+      state.totalPresses = (state.totalPresses||0) + 1;
       draw();
       if(checkGoal()) return;
       if(state.stepsDone >= ins.steps){
@@ -1228,6 +1395,129 @@ const _trackEvent = trackEvent;
 trackEvent = function(name, params = {}){
   _trackEvent(name, Object.assign({}, params, state.playerName ? { player_name: state.playerName } : {}));
 };
+
+// ---------- 分數計算 ----------
+// 設計理念：地圖（障礙物、路徑長度）每局隨機，單比「總時間」對玩家不公平，
+// 所以分數以「正確率」為主分，「每步平均反應時間」只作小幅加減分，
+// 避免玩家用亂按方向鍵的方式衝快，違背練習聽力／方向指令的初衷。
+function computeScore(){
+  const sec = Math.max(0, Math.floor((Date.now() - state.startTime) / 1000));
+  const totalPresses = state.totalPresses || 0;
+  const errors = state.errorCount || 0;
+  const accuracy = totalPresses > 0 ? totalPresses / (totalPresses + errors) : 0;
+  const avgTimePerStep = totalPresses > 0 ? sec / totalPresses : sec;
+  let score = Math.round(accuracy * 1000 - avgTimePerStep * 50);
+  if(score < 0) score = 0;
+  return { sec, totalPresses, errors, accuracy, avgTimePerStep, score };
+}
+
+// ---------- 排行榜（Firebase Firestore） ----------
+// TODO：請把下面 firebaseConfig 換成你自己 Firebase 專案的設定（可以沿用其他遊戲已在用的專案）。
+// 在還沒填入正確設定之前，排行榜會顯示「尚未設定」，不會影響遊戲本身其他功能。
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const LEVEL_LABELS = { level1:'NIVEL 1', level2:'NIVEL 2', level3:'NIVEL 3', level4:'NIVEL 4' };
+
+let db = null;
+let firebaseReady = false;
+try{
+  if(typeof firebase !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY'){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+  }
+}catch(e){ console.error('Firebase 初始化失敗', e); }
+
+function leaderboardCollectionName(level){
+  return 'perritoTesoro_leaderboard_' + level;
+}
+
+async function saveScoreToLeaderboard(level, result){
+  if(!firebaseReady || level === 'level1') return null;
+  try{
+    const ref = await db.collection(leaderboardCollectionName(level)).add({
+      name: state.playerName || '???',
+      score: result.score,
+      accuracy: Math.round(result.accuracy * 100),
+      avgTimePerStep: Math.round(result.avgTimePerStep * 100) / 100,
+      timeSeconds: result.sec,
+      errorCount: result.errors,
+      totalPresses: result.totalPresses,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return ref.id;
+  }catch(e){
+    console.error('saveScoreToLeaderboard 失敗', e);
+    return null;
+  }
+}
+
+async function fetchLeaderboard(level){
+  if(!firebaseReady) return [];
+  try{
+    const snap = await db.collection(leaderboardCollectionName(level))
+      .orderBy('score', 'desc')
+      .limit(20)
+      .get();
+    return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
+  }catch(e){
+    console.error('fetchLeaderboard 失敗', e);
+    return [];
+  }
+}
+
+function openLeaderboard(level){
+  const modal = document.getElementById('leaderboardModal');
+  const listEl = document.getElementById('lbList');
+  const statusEl = document.getElementById('lbStatus');
+  document.getElementById('lbSubtitle').textContent = LEVEL_LABELS[level] || level;
+  listEl.innerHTML = '';
+  statusEl.textContent = 'Cargando...';
+  modal.style.display = 'flex';
+  trackEvent('leaderboard_view', { level });
+
+  if(!firebaseReady){
+    statusEl.textContent = 'La clasificación aún no está disponible / 排行榜尚未設定';
+    return;
+  }
+  fetchLeaderboard(level).then(list => renderLeaderboard(list, level));
+}
+
+function renderLeaderboard(list, level){
+  const listEl = document.getElementById('lbList');
+  const statusEl = document.getElementById('lbStatus');
+  if(!list.length){
+    statusEl.textContent = 'Todavía no hay puntuaciones. ¡Sé el primero/a! 🐾';
+    listEl.innerHTML = '';
+    return;
+  }
+  statusEl.textContent = '';
+  const medals = ['🥇','🥈','🥉'];
+  listEl.innerHTML = list.map((row, i) => {
+    const isMe = state.lastScoreDocId && row.id === state.lastScoreDocId && level === state.lastPlayedLevel;
+    const rankLabel = medals[i] || String(i + 1);
+    return `<div class="lbRow${isMe ? ' lbRowMe' : ''}">`
+      + `<span class="lbRank">${rankLabel}</span>`
+      + `<span class="lbName">${escapeHtml(row.name || '???')}</span>`
+      + `<span class="lbScore">${row.score}</span>`
+      + `</div>`;
+  }).join('');
+}
+
+function closeLeaderboard(){
+  document.getElementById('leaderboardModal').style.display = 'none';
+}
+
+document.getElementById('leaderboardCloseBtn').addEventListener('click', closeLeaderboard);
+document.getElementById('lbBackBtn').addEventListener('click', closeLeaderboard);
+
 </script>
 </body>
 </html>
