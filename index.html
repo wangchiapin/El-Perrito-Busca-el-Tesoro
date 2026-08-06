@@ -1441,7 +1441,7 @@ const LEVEL_LABELS = { level1:'NIVEL 1', level2:'NIVEL 2', level3:'NIVEL 3', lev
 let db = null;
 let firebaseReady = false;
 try{
-  if(typeof firebase !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'AIzaSyAa58xLAL4dLphvdPEvWYAUfHrjM1kcnoo'){
+  if(typeof firebase !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     firebaseReady = true;
