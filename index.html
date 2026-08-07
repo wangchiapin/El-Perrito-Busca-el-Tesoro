@@ -442,78 +442,78 @@
   #leaderboardCard{
     position:relative;
     width:100%;
-    max-width:420px;
-    max-height:86vh;
+    max-width:560px;        /* 原本 420px，卡片整體加寬 */
+    max-height:90vh;        /* 原本 86vh，多留一點高度 */
     display:flex;
     flex-direction:column;
     background:var(--paper);
     border:3px solid var(--brick);
-    border-radius:14px;
-    padding:26px 22px 22px;
+    border-radius:16px;
+    padding:34px 30px 28px; /* 原本 26px 22px 22px，內距加大 */
     text-align:center;
     box-shadow:0 14px 34px rgba(0,0,0,.45);
   }
   #leaderboardCloseBtn{
     position:absolute;
-    top:10px;
-    right:10px;
-    width:30px;
-    height:30px;
+    top:12px;
+    right:12px;
+    width:36px;             /* 原本 30px */
+    height:36px;
     padding:0;
     margin:0;
     border-radius:50%;
     background:var(--brick);
     color:var(--cream);
-    font-size:14px;
+    font-size:16px;         /* 原本 14px */
     line-height:1;
   }
   #lbSeal{
-    font-size:32px;
-    margin-bottom:2px;
+    font-size:44px;         /* 原本 32px */
+    margin-bottom:4px;
   }
   #leaderboardCard h2{
     color:var(--brick);
-    font-size:19px;
-    margin:0 0 2px;
+    font-size:26px;         /* 原本 19px */
+    margin:0 0 4px;
   }
   #lbSubtitle{
-    font-size:13px;
+    font-size:16px;         /* 原本 13px */
     color:var(--brick);
     opacity:.8;
     font-weight:bold;
-    margin-bottom:14px;
+    margin-bottom:18px;
   }
   #lbList{
     overflow-y:auto;
     text-align:left;
     border:1px solid var(--gold);
-    border-radius:8px;
+    border-radius:10px;
     background:#fff;
   }
   .lbRow{
-    padding:8px 12px;
+    padding:12px 16px;      /* 原本 8px 12px，每列更高、更好點 */
     border-bottom:1px solid #eee0c4;
   }
   .lbRow:last-child{ border-bottom:none; }
   .lbRowTop{
     display:grid;
-    grid-template-columns:28px 1fr 56px;
+    grid-template-columns:36px 1fr 72px; /* 原本 28px 1fr 56px */
     align-items:center;
-    gap:8px;
-    font-size:14px;
+    gap:10px;
+    font-size:18px;         /* 原本 14px */
   }
-  .lbRank{ font-weight:bold; color:var(--brick); text-align:center; }
+  .lbRank{ font-weight:bold; color:var(--brick); text-align:center; font-size:20px; }
   .lbName{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
     color:var(--ink);
   }
-  .lbScore{ font-weight:bold; color:var(--brick); text-align:right; }
+  .lbScore{ font-weight:bold; color:var(--brick); text-align:right; font-size:19px; }
   .lbRowMeta{
-    margin-top:3px;
-    padding-left:36px;
-    font-size:11px;
+    margin-top:5px;
+    padding-left:46px;      /* 對齊名字欄位，原本 36px */
+    font-size:13px;         /* 原本 11px */
     color:#8a8072;
     white-space:nowrap;
     overflow:hidden;
@@ -521,13 +521,15 @@
   }
   .lbRowMe{ background:rgba(201,162,75,.22); }
   #lbStatus{
-    font-size:13px;
+    font-size:15px;         /* 原本 13px */
     color:#7a7268;
-    padding:10px 4px 2px;
-    min-height:18px;
+    padding:14px 4px 4px;
+    min-height:20px;
   }
   #lbBackBtn{
-    margin-top:14px;
+    margin-top:18px;
+    font-size:16px;
+    padding:12px 20px;      /* 按鈕也稍微放大 */
   }
 </style>
 </head>
