@@ -123,24 +123,26 @@
     font-weight:bold;
     color:var(--brick);
   }
-  #difficultyRow{
+  #currentLevelBadge{
     margin-bottom:10px;
-  }
-  #difficultyRow label{
-    display:block;
-    font-size:13px;
-    color:var(--brick);
-    font-weight:bold;
-    margin-bottom:4px;
-  }
-  #difficultySelect{
-    width:100%;
-    padding:8px;
+    background:#fff;
     border:1px solid var(--gold);
     border-radius:6px;
-    background:#fff;
-    color:var(--ink);
+    padding:8px 10px;
     font-size:13px;
+    text-align:center;
+  }
+  #currentLevelBadge b{
+    color:var(--brick);
+    display:block;
+    font-size:14px;
+    margin-bottom:2px;
+  }
+  #currentLevelBadge a{
+    color:var(--brick);
+    font-size:12px;
+    text-decoration:underline;
+    cursor:pointer;
   }
   #stageLabel{
     text-align:center;
@@ -327,6 +329,55 @@
   #nameGateBtn{
     margin-top:14px;
   }
+  #gateDifficultyRow{
+    margin:16px 0 4px;
+    text-align:left;
+  }
+  #gateDifficultyLabel{
+    font-size:13px;
+    font-weight:bold;
+    color:var(--brick);
+    margin:0 0 8px;
+    text-align:center;
+  }
+  #gateDifficultyButtons{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .gateDiffBtn{
+    width:100%;
+    margin:0;
+    padding:8px 12px;
+    background:#fff;
+    color:var(--ink);
+    border:2px solid var(--gold);
+    border-radius:8px;
+    text-align:left;
+    cursor:pointer;
+    font-family:inherit;
+    letter-spacing:normal;
+  }
+  .gateDiffBtn .diffName{
+    display:block;
+    font-weight:bold;
+    color:var(--brick);
+    font-size:14px;
+  }
+  .gateDiffBtn .diffDesc{
+    display:block;
+    font-size:11px;
+    color:#7a7268;
+    font-weight:normal;
+    margin-top:2px;
+  }
+  .gateDiffBtn.selected{
+    background:var(--brick);
+    border-color:var(--brick);
+  }
+  .gateDiffBtn.selected .diffName{ color:var(--cream); }
+  .gateDiffBtn.selected .diffDesc{ color:var(--cream); opacity:.9; }
+  .gateDiffBtn:hover{ opacity:.9; }
   #nameGateFooter{
     margin-top:14px;
     font-size:12px;
@@ -492,6 +543,29 @@
     <p id="namePromptSimp">你叫什麼名字呢？</p>
     <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre / 輸入你的名字" autocomplete="off">
     <div id="nameGateError"></div>
+
+    <div id="gateDifficultyRow">
+      <p id="gateDifficultyLabel">Elige un nivel de dificultad / 選擇難度</p>
+      <div id="gateDifficultyButtons">
+        <button type="button" class="gateDiffBtn selected" data-level="level1">
+          <span class="diffName">NIVEL 1</span>
+          <span class="diffDesc">7–15 obstáculos</span>
+        </button>
+        <button type="button" class="gateDiffBtn" data-level="level2">
+          <span class="diffName">NIVEL 2</span>
+          <span class="diffDesc">15–25 obstáculos, busca la llave primero</span>
+        </button>
+        <button type="button" class="gateDiffBtn" data-level="level3">
+          <span class="diffName">NIVEL 3</span>
+          <span class="diffDesc">20–30 obstáculos, llave primero, solo voz</span>
+        </button>
+        <button type="button" class="gateDiffBtn" data-level="level4">
+          <span class="diffName">NIVEL 4</span>
+          <span class="diffDesc">20–30 obstáculos, llave primero, solo voz, instrucciones combinadas</span>
+        </button>
+      </div>
+    </div>
+
     <button id="nameGateBtn">¡Vamos a buscar el tesoro! 🐾</button>
     <div id="nameGateFooter">El perrito te espera con la llave y el tesoro 🔑💰</div>
   </div>
@@ -524,14 +598,9 @@
       <div>Errores<span id="errorDisp">0</span></div>
     </div>
 
-    <div id="difficultyRow">
-      <label for="difficultySelect">Nivel de dificultad</label>
-      <select id="difficultySelect">
-        <option value="level1">NIVEL 1 (7–15 obstáculos)</option>
-        <option value="level2">NIVEL 2 (15–25 obstáculos, busca la llave primero)</option>
-        <option value="level3">NIVEL 3 (20–30 obstáculos, llave primero, solo voz)</option>
-        <option value="level4">NIVEL 4 (20–30 obstáculos, llave primero, solo voz, instrucciones combinadas)</option>
-      </select>
+    <div id="currentLevelBadge">
+      <b id="currentLevelName">NIVEL 1</b>
+      <a id="changeLevelLink">🔁 Cambiar nivel</a>
     </div>
 
     <div id="stageLabel"></div>
@@ -801,7 +870,7 @@ function updateStageLabel(){
 
 function startGame(){
   ensureAudio();
-  const difficulty = document.getElementById('difficultySelect').value;
+  const difficulty = state.difficulty || 'level1';
   const settings = difficultySettings(difficulty);
 
   const dogStart = randCell();
@@ -838,7 +907,7 @@ function startGame(){
   setInstructions(plan.firstInstructions);
   state.playing = true;
 
-  document.getElementById('difficultySelect').disabled = true;
+  updateCurrentLevelBadge();
   document.getElementById('resultBox').style.display='none';
   document.getElementById('scoreLine').textContent = '';
   document.getElementById('viewLeaderboardBtn').style.display = 'none';
@@ -940,7 +1009,6 @@ function checkGoal(){
     state.treasureFound = true;
     state.playing = false;
     clearInterval(state.timerId);
-    document.getElementById('difficultySelect').disabled = false;
 
     const result = computeScore();
     const m = String(Math.floor(result.sec/60)).padStart(2,'0');
@@ -1364,16 +1432,48 @@ function setGreeting(name){
   g.innerHTML = name ? `<span>¡Hola, ${escapeHtml(name)}! 🐾</span>` : '';
 }
 
+// 難度說明文字，姓名頁的按鈕跟遊戲面板的徽章共用同一份資料，避免兩處文字不一致
+const DIFF_INFO = {
+  level1: { name:'NIVEL 1', desc:'7–15 obstáculos' },
+  level2: { name:'NIVEL 2', desc:'15–25 obstáculos, busca la llave primero' },
+  level3: { name:'NIVEL 3', desc:'20–30 obstáculos, llave primero, solo voz' },
+  level4: { name:'NIVEL 4', desc:'20–30 obstáculos, llave primero, solo voz, instrucciones combinadas' }
+};
+
+function selectGateDifficulty(level){
+  state.selectedLevel = level;
+  document.querySelectorAll('.gateDiffBtn').forEach(btn=>{
+    btn.classList.toggle('selected', btn.dataset.level === level);
+  });
+}
+
+function updateCurrentLevelBadge(){
+  const info = DIFF_INFO[state.difficulty] || DIFF_INFO.level1;
+  document.getElementById('currentLevelName').textContent = `${info.name} · ${info.desc}`;
+}
+
 function openGame(name){
   state.playerName = name;
+  state.difficulty = state.selectedLevel || 'level1';
   try{ localStorage.setItem(NAME_STORAGE_KEY, name); }catch(e){}
   setGreeting(name);
   document.body.classList.remove('gate-open');
   document.getElementById('nameGate').style.display = 'none';
   syncBoardHeight();
-  trackEvent('player_named', { has_name: true });
+  trackEvent('player_named', { has_name: true, level: state.difficulty });
   const input = document.getElementById('playerNameInput');
   if(input) input.blur();
+  startGame();
+}
+
+function reopenNameGate(){
+  if(state.timerId) clearInterval(state.timerId);
+  state.playing = false;
+  document.body.classList.add('gate-open');
+  document.getElementById('nameGate').style.display = 'flex';
+  selectGateDifficulty(state.difficulty || 'level1');
+  const input = document.getElementById('playerNameInput');
+  if(input){ input.value = state.playerName || input.value; setTimeout(()=> input.focus(), 50); }
 }
 
 function submitPlayerName(){
@@ -1394,7 +1494,12 @@ function submitPlayerName(){
   let saved = '';
   try{ saved = localStorage.getItem(NAME_STORAGE_KEY) || ''; }catch(e){}
   if(saved) input.value = saved;
+  selectGateDifficulty('level1');
+  document.querySelectorAll('.gateDiffBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=> selectGateDifficulty(btn.dataset.level));
+  });
   document.getElementById('nameGateBtn').addEventListener('click', submitPlayerName);
+  document.getElementById('changeLevelLink').addEventListener('click', reopenNameGate);
   input.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter'){ e.preventDefault(); submitPlayerName(); }
   });
