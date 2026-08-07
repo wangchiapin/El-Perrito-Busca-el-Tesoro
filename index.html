@@ -405,7 +405,7 @@
 
   /* ---------- 分數列 / 排行榜按鈕 / 練習提示 ---------- */
   #scoreLine{
-    font-size:14px;
+    font-size:18px;
     font-weight:bold;
     color:var(--brick);
     background:#fff;
@@ -419,7 +419,7 @@
     color:var(--ink);
   }
   #practiceHint{
-    font-size:12px;
+    font-size:15px;
     color:#7a7268;
     font-style:italic;
     margin-top:8px;
@@ -540,12 +540,12 @@
     <h1>🐾 El Perrito Busca el Tesoro</h1>
     <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
     <p id="namePrompt">¿Cómo te llamas, explorador/a?</p>
-    <p id="namePromptSimp">你叫什麼名字呢？</p>
-    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre / 輸入你的名字" autocomplete="off">
+   <!-- <p id="namePromptSimp">你叫什麼名字呢？</p>-->
+    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="off">
     <div id="nameGateError"></div>
 
     <div id="gateDifficultyRow">
-      <p id="gateDifficultyLabel">Elige un nivel de dificultad / 選擇難度</p>
+      <p id="gateDifficultyLabel">Elige un nivel de dificultad</p>
       <div id="gateDifficultyButtons">
         <button type="button" class="gateDiffBtn selected" data-level="level1">
           <span class="diffName">NIVEL 1</span>
@@ -854,9 +854,9 @@ function difficultySettings(difficulty){
     return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:1 };
   }
   if(difficulty === 'level4'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:1 };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:0.8 };
   }
-  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:1 };
+  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:0.8 };
 }
 
 function updateStageLabel(){
