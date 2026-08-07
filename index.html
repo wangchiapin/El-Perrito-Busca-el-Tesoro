@@ -540,12 +540,12 @@
     <h1>🐾 El Perrito Busca el Tesoro</h1>
     <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
     <p id="namePrompt">¿Cómo te llamas, explorador/a?</p>
-    <!---<p id="namePromptSimp">你叫什麼名字呢？</p>-->
-    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="off">
+    <p id="namePromptSimp">你叫什麼名字呢？</p>
+    <input id="playerNameInput" type="text" maxlength="20" placeholder="Escribe tu nombre / 輸入你的名字" autocomplete="off">
     <div id="nameGateError"></div>
 
     <div id="gateDifficultyRow">
-      <p id="gateDifficultyLabel">Elige un nivel de dificultad</p>
+      <p id="gateDifficultyLabel">Elige un nivel de dificultad / 選擇難度</p>
       <div id="gateDifficultyButtons">
         <button type="button" class="gateDiffBtn selected" data-level="level1">
           <span class="diffName">NIVEL 1</span>
@@ -676,7 +676,7 @@ let state = {
   instructions: [], chunkStarts:new Set(), chunkLabels:new Map(),
   curIndex:0, stepsDone:0,
   snapshot:null,
-  errorCount:0, totalPresses:0, startTime:0, timerId:null,
+  errorCount:0, totalPresses:0, startTime:0, timerId:null, speechRate:1,
   playing:false,
   lastScoreDocId:null, lastPlayedLevel:null
 };
@@ -844,17 +844,19 @@ function planGame(dogStart, treasure, key, minObs, maxObs){
   return { obstacles, firstInstructions: buildInstructionsFromRuns(compressRuns(path), 'down') };
 }
 
+// 每個難度的語音播放速度（Web Speech API 的 rate，範圍約 0.1~10，1 為正常速度）。
+// 現在四關都先設 1，之後想讓某個難度講快一點/慢一點，直接改這裡對應的數字即可。
 function difficultySettings(difficulty){
   if(difficulty === 'level2'){
-    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false };
+    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false, rate:1 };
   }
   if(difficulty === 'level3'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:1 };
   }
   if(difficulty === 'level4'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:1 };
   }
-  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false };
+  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:1 };
 }
 
 function updateStageLabel(){
@@ -889,6 +891,7 @@ function startGame(){
   state.requiresKey = settings.requiresKey;
   state.textHidden = settings.textHidden;
   state.chunked = settings.chunked;
+  state.speechRate = settings.rate;
   state.dogRow = dogStart.row;
   state.dogCol = dogStart.col;
   state.facing = 'down';
@@ -942,6 +945,7 @@ function speak(text){
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW';
+    u.rate = state.speechRate || 1;
     window.speechSynthesis.speak(u);
   }catch(e){}
 }
@@ -1582,7 +1586,7 @@ async function fetchLeaderboard(level){
   try{
     const snap = await db.collection(leaderboardCollectionName(level))
       .orderBy('score', 'desc')
-      .limit(20)
+      .limit(10)
       .get();
     return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
   }catch(e){
