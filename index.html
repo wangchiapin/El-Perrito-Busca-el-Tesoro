@@ -850,15 +850,15 @@ function planGame(dogStart, treasure, key, minObs, maxObs){
 // 現在四關都先設 1，之後想讓某個難度講快一點/慢一點，直接改這裡對應的數字即可。
 function difficultySettings(difficulty){
   if(difficulty === 'level2'){
-    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false, rate:1 };
+    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false, rate:0.5 };
   }
   if(difficulty === 'level3'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:1 };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:0.5 };
   }
   if(difficulty === 'level4'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:0.8 };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:0.7 };
   }
-  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:0.8 };
+  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:0.7 };
 }
 
 function updateStageLabel(){
@@ -1441,7 +1441,7 @@ function setGreeting(name){
 // 難度說明文字，姓名頁的按鈕跟遊戲面板的徽章共用同一份資料，避免兩處文字不一致
 const DIFF_INFO = {
   level1: { name:'NIVEL 1', desc:'7–15 obstáculos' },
-  level2: { name:'NIVEL 2', desc:'15–25 obstáculos,\nbusca la llave primero' },
+  level2: { name:'NIVEL 2', desc:'15–25 obstáculos, busca la llave primero' },
   level3: { name:'NIVEL 3', desc:'20–30 obstáculos, llave primero, solo voz' },
   level4: { name:'NIVEL 4', desc:'20–30 obstáculos, llave primero, solo voz, instrucciones combinadas' }
 };
