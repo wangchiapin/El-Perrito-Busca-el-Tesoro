@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>El Perrito Busca el Tesoro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M9GNL79T0G"></script>
 <script>
@@ -15,18 +18,27 @@
 </script>
 <style>
   :root{
-    --cream:#F3E9D8;
-    --brick:#9B3B2E;
-    --ink:#1C1B19;
-    --gold:#C9A24B;
-    --paper:#EFE3CC;
+    --sky:#8FD8F8;
+    --sky-light:#D9F3FF;
+    --card:#FFFFFF;
+    --ink:#26262B;
+    --primary:#FF6B4A;
+    --primary-dark:#E8532F;
+    --secondary:#FFD23F;
+    --secondary-dark:#E8A317;
+    --teal:#2EC4B6;
+    --teal-dark:#1FA294;
+    --outline:#26262B;
   }
   *{box-sizing:border-box;}
   html, body{ height:100%; }
   body{
     margin:0;
-    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-    background:var(--cream);
+    font-family:"Baloo 2","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    font-weight:600;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(255,255,255,.5), transparent 40%),
+      linear-gradient(180deg, var(--sky) 0%, var(--sky-light) 100%);
     color:var(--ink);
     padding:14px;
     overflow:hidden; /* 主畫面與說明欄同高後，整頁不需要捲動 */
@@ -41,20 +53,21 @@
     height:100%;           /* 撐滿扣除 body padding 後的可視高度 */
   }
   h1{
-    font-size:15px;
-    color:var(--brick);
-    letter-spacing:0px;
+    font-family:"Fredoka","Baloo 2","Noto Sans TC",sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--primary-dark);
+    letter-spacing:.3px;
     margin:0 0 8px 0;
-    border-left:4px solid var(--gold);
-    padding-left:6px;
+    -webkit-text-stroke:.4px var(--outline);
     line-height:1.25;
   }
   #boardWrap{
-    background:#000;
+    background:var(--outline);
     padding:10px;
-    border-radius:6px;
-    border:3px solid #000;
-    box-shadow:0 4px 10px rgba(0,0,0,.3);
+    border-radius:14px;
+    border:3px solid var(--outline);
+    box-shadow:5px 5px 0 rgba(0,0,0,.25);
     flex-shrink:0;
     display:flex;
     align-items:center;
@@ -63,15 +76,16 @@
   canvas{
     display:block;
     background:#fff;
+    border-radius:6px;
   }
   #panel{
     width:280px;
     flex-shrink:0;
-    background:var(--paper);
-    border:3px solid var(--brick);
-    border-radius:6px;
+    background:var(--card);
+    border:3px solid var(--outline);
+    border-radius:16px;
     padding:12px;
-    box-shadow:0 4px 10px rgba(0,0,0,.15);
+    box-shadow:5px 5px 0 rgba(0,0,0,.2);
     display:flex;
     flex-direction:column;
     overflow-y:auto;       /* 極端情況下的保險，正常狀況下不會出現捲軸 */
@@ -146,25 +160,28 @@
     display:inline-block;
     width:100%;
     text-align: center;
-    background:var(--brick);
-    color:var(--cream);
-    padding:2px 8px;
-    border-radius:4px;
+    background:var(--teal);
+    color:#fff;
+    padding:3px 8px;
+    border-radius:20px;
+    border:2px solid var(--outline);
     font-size:10px;
+    font-weight:700;
     letter-spacing:.5px;
     line-height:1.3;
   }
   #instructionBox{
-    background:#fff;
-    border:2px dashed var(--gold);
-    border-radius:6px;
+    background:var(--secondary);
+    border:3px solid var(--outline);
+    border-radius:12px;
     padding:8px;
     min-height:44px;
     font-size:14px;
-    font-weight:bold;
+    font-weight:700;
     text-align:center;
-    color:var(--brick);
-    margin:6px 0;
+    color:var(--ink);
+    margin:8px 0 6px;
+    box-shadow:3px 3px 0 rgba(0,0,0,.18);
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -173,8 +190,8 @@
   }
   #instructionBox .zh-simp{
     font-size:1em;
-    font-weight:bold;
-    color:var(--brick);
+    font-weight:700;
+    color:var(--ink);
     opacity:1;
   }
   #statRow{
@@ -185,61 +202,73 @@
   }
   #statRow div{
     background:#fff;
-    border:1px solid var(--gold);
-    border-radius:4px;
+    border:2px solid var(--outline);
+    border-radius:10px;
     padding:4px 8px;
     flex:1;
     margin:0 3px;
     text-align:center;
+    box-shadow:2px 2px 0 rgba(0,0,0,.15);
   }
   #statRow span{
     display:block;
-    font-size:15px;
-    font-weight:bold;
-    color:var(--brick);
+    font-size:16px;
+    font-weight:700;
+    color:var(--primary-dark);
   }
   #currentLevelBadge{
     margin-bottom:6px;
     background:#fff;
-    border:1px solid var(--gold);
-    border-radius:6px;
+    border:2px solid var(--outline);
+    border-radius:12px;
     padding:5px 8px;
     font-size:11px;
     text-align:center;
+    box-shadow:2px 2px 0 rgba(0,0,0,.15);
   }
   #currentLevelBadge b{
-    color:var(--brick);
+    color:var(--primary-dark);
     display:block;
     font-size:12px;
     margin-bottom:2px;
   }
   #currentLevelBadge a{
-    color:var(--brick);
+    color:var(--teal-dark);
     font-size:10.5px;
     text-decoration:underline;
+    font-weight:700;
     cursor:pointer;
   }
   #stageLabel{
     text-align:center;
     font-size:11px;
-    font-weight:bold;
-    color:var(--brick);
+    font-weight:700;
+    color:var(--primary-dark);
     min-height:14px;
     margin-bottom:2px;
   }
   button{
     width:100%;
-    padding:7px;
+    padding:8px;
     margin-top:6px;
-    background:var(--brick);
+    background:var(--primary);
     color:#fff;
-    border:none;
-    border-radius:6px;
+    border:2.5px solid var(--outline);
+    border-radius:12px;
+    font-family:inherit;
+    font-weight:700;
     font-size:13px;
     cursor:pointer;
     letter-spacing:.5px;
+    box-shadow:3px 3px 0 rgba(0,0,0,.35);
+    transform:translate(0,0);
+    transition:transform .08s ease, box-shadow .08s ease;
   }
-  button:hover{opacity:.85;}
+  button:hover{ filter:brightness(1.05); }
+  button:active{
+    transform:translate(2px,2px);
+    box-shadow:1px 1px 0 rgba(0,0,0,.35);
+  }
   #errorMsg{
     color:#c0392b;
     text-align:center;
@@ -252,17 +281,19 @@
     display:none;
     text-align:center;
     background:#fff;
-    border:2px solid var(--gold);
-    border-radius:6px;
+    border:3px solid var(--outline);
+    border-radius:12px;
     padding:8px;
     margin-top:6px;
+    box-shadow:3px 3px 0 rgba(0,0,0,.18);
   }
-  #resultBox h2{color:var(--brick);margin:0 0 4px;font-size:14px;}
+  #resultBox h2{color:var(--primary-dark);margin:0 0 4px;font-size:14px;}
   #resultBox .zh-simp{font-size:1em;opacity:1;display:block;}
   #resultBox p{font-size:11px;margin:2px 0;}
   #keysHint{
     font-size:10px;
-    color:#666;
+    color:#5b5b63;
+    font-weight:600;
     text-align:center;
     margin-top:6px;
     line-height:1.3;
@@ -271,7 +302,7 @@
     display:grid;
     grid-template-columns:42px 42px 42px;
     grid-template-rows:42px 42px 42px;
-    gap:3px;
+    gap:5px;
     justify-content:center;
     margin-top:8px;
     margin-bottom:2px;
@@ -282,6 +313,8 @@
     width:42px;
     height:42px;
     font-size:16px;
+    border-radius:10px;
+    background:var(--teal);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -312,27 +345,27 @@
     justify-content:center;
     padding:20px;
     background:
-      radial-gradient(circle at 20% 15%, rgba(201,162,75,.18), transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(155,59,46,.22), transparent 50%),
+      radial-gradient(circle at 20% 15%, rgba(255,210,63,.18), transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(232,83,47,.22), transparent 50%),
       var(--ink);
   }
   #nameCard{
     position:relative;
     width:100%;
     max-width:380px;
-    background:var(--paper);
-    border:3px solid var(--brick);
-    border-radius:14px;
+    background:var(--card);
+    border:3px solid var(--outline);
+    border-radius:20px;
     padding:28px 26px 24px;
     text-align:center;
-    box-shadow:0 14px 34px rgba(0,0,0,.45);
+    box-shadow:7px 7px 0 rgba(0,0,0,.3);
     overflow:hidden;
   }
   #nameCard::before{
     content:"";
     position:absolute;
     inset:8px;
-    border:1px solid var(--gold);
+    border:1px solid var(--secondary);
     border-radius:8px;
     pointer-events:none;
   }
@@ -343,8 +376,8 @@
     width:64px;
     height:64px;
     border-radius:50%;
-    background:var(--brick);
-    color:var(--cream);
+    background:var(--primary);
+    color:#fff;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -352,7 +385,7 @@
     font-weight:bold;
     box-shadow:0 4px 10px rgba(0,0,0,.3);
     transform:rotate(12deg);
-    border:2px solid var(--gold);
+    border:3px solid var(--outline);
   }
   #nameGateIcons{
     font-size:30px;
@@ -377,7 +410,7 @@
   }
   #namePromptSimp{
     font-size:13px;
-    color:var(--brick);
+    color:var(--primary-dark);
     opacity:.85;
     margin:0 0 14px;
   }
@@ -385,16 +418,18 @@
     width:100%;
     padding:12px 14px;
     font-size:16px;
-    border:2px solid var(--gold);
-    border-radius:8px;
+    font-family:inherit;
+    font-weight:600;
+    border:2.5px solid var(--outline);
+    border-radius:12px;
     background:#fff;
     color:var(--ink);
     text-align:center;
     outline:none;
   }
   #playerNameInput:focus{
-    border-color:var(--brick);
-    box-shadow:0 0 0 3px rgba(155,59,46,.15);
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(255,107,74,.25);
   }
   #nameGateError{
     color:#c0392b;
@@ -413,7 +448,7 @@
   #gateDifficultyLabel{
     font-size:13px;
     font-weight:bold;
-    color:var(--brick);
+    color:var(--primary-dark);
     margin:0 0 8px;
     text-align:center;
   }
@@ -428,17 +463,18 @@
     padding:8px 12px;
     background:#fff;
     color:var(--ink);
-    border:2px solid var(--gold);
-    border-radius:8px;
+    border:2.5px solid var(--outline);
+    border-radius:12px;
     text-align:left;
     cursor:pointer;
     font-family:inherit;
     letter-spacing:normal;
+    box-shadow:2px 2px 0 rgba(0,0,0,.18);
   }
   .gateDiffBtn .diffName{
     display:block;
     font-weight:bold;
-    color:var(--brick);
+    color:var(--primary-dark);
     font-size:14px;
   }
   .gateDiffBtn .diffDesc{
@@ -449,12 +485,14 @@
     margin-top:2px;
   }
   .gateDiffBtn.selected{
-    background:var(--brick);
-    border-color:var(--brick);
+    background:var(--primary);
+    border-color:var(--outline);
+    transform:translate(2px,2px);
+    box-shadow:0 0 0 rgba(0,0,0,.18);
   }
-  .gateDiffBtn.selected .diffName{ color:var(--cream); }
-  .gateDiffBtn.selected .diffDesc{ color:var(--cream); opacity:.9; }
-  .gateDiffBtn:hover{ opacity:.9; }
+  .gateDiffBtn.selected .diffName{ color:#fff; }
+  .gateDiffBtn.selected .diffDesc{ color:#fff; opacity:.9; }
+  .gateDiffBtn:hover{ filter:brightness(1.03); }
   #nameGateFooter{
     margin-top:14px;
     font-size:12px;
@@ -463,7 +501,7 @@
   #playerGreeting{
     font-size:11px;
     font-weight:bold;
-    color:var(--brick);
+    color:var(--primary-dark);
     text-align:center;
     margin:6px 0 2px;
     min-height:0;
@@ -475,7 +513,7 @@
   #playerGreeting span{
     display:inline-block;
     background:#fff;
-    border:1px solid var(--gold);
+    border:1px solid var(--secondary);
     border-radius:20px;
     padding:2px 10px;
   }
@@ -484,15 +522,15 @@
   #scoreLine{
     font-size:13px;
     font-weight:bold;
-    color:var(--brick);
+    color:var(--primary-dark);
     background:#fff;
-    border:1px dashed var(--gold);
-    border-radius:6px;
+    border:2px dashed var(--secondary-dark);
+    border-radius:10px;
     padding:5px;
     margin-top:5px;
   }
   #viewLeaderboardBtn{
-    background:var(--gold);
+    background:var(--secondary);
     color:var(--ink);
   }
   #practiceHint{
@@ -513,8 +551,8 @@
     justify-content:center;
     padding:20px;
     background:
-      radial-gradient(circle at 20% 15%, rgba(201,162,75,.18), transparent 45%),
-      radial-gradient(circle at 85% 85%, rgba(155,59,46,.22), transparent 50%),
+      radial-gradient(circle at 20% 15%, rgba(255,210,63,.18), transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(232,83,47,.22), transparent 50%),
       var(--ink);
   }
   #leaderboardCard{
@@ -524,12 +562,12 @@
     max-height:90vh;        /* 原本 86vh，多留一點高度 */
     display:flex;
     flex-direction:column;
-    background:var(--paper);
-    border:3px solid var(--brick);
-    border-radius:16px;
+    background:var(--card);
+    border:3px solid var(--outline);
+    border-radius:20px;
     padding:34px 30px 28px; /* 原本 26px 22px 22px，內距加大 */
     text-align:center;
-    box-shadow:0 14px 34px rgba(0,0,0,.45);
+    box-shadow:8px 8px 0 rgba(0,0,0,.3);
   }
   #leaderboardCloseBtn{
     position:absolute;
@@ -540,8 +578,8 @@
     padding:0;
     margin:0;
     border-radius:50%;
-    background:var(--brick);
-    color:var(--cream);
+    background:var(--primary);
+    color:#fff;
     font-size:16px;         /* 原本 14px */
     line-height:1;
   }
@@ -550,13 +588,13 @@
     margin-bottom:4px;
   }
   #leaderboardCard h2{
-    color:var(--brick);
+    color:var(--primary-dark);
     font-size:26px;         /* 原本 19px */
     margin:0 0 4px;
   }
   #lbSubtitle{
     font-size:16px;         /* 原本 13px */
-    color:var(--brick);
+    color:var(--primary-dark);
     opacity:.8;
     font-weight:bold;
     margin-bottom:18px;
@@ -564,13 +602,13 @@
   #lbList{
     overflow-y:auto;
     text-align:left;
-    border:1px solid var(--gold);
-    border-radius:10px;
+    border:2.5px solid var(--outline);
+    border-radius:12px;
     background:#fff;
   }
   .lbRow{
     padding:12px 16px;      /* 原本 8px 12px，每列更高、更好點 */
-    border-bottom:1px solid #eee0c4;
+    border-bottom:2px solid #EAF5FB;
   }
   .lbRow:last-child{ border-bottom:none; }
   .lbRowTop{
@@ -580,14 +618,14 @@
     gap:10px;
     font-size:18px;         /* 原本 14px */
   }
-  .lbRank{ font-weight:bold; color:var(--brick); text-align:center; font-size:20px; }
+  .lbRank{ font-weight:bold; color:var(--primary-dark); text-align:center; font-size:20px; }
   .lbName{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
     color:var(--ink);
   }
-  .lbScore{ font-weight:bold; color:var(--brick); text-align:right; font-size:19px; }
+  .lbScore{ font-weight:bold; color:var(--primary-dark); text-align:right; font-size:19px; }
   .lbRowMeta{
     margin-top:5px;
     padding-left:46px;      /* 對齊名字欄位，原本 36px */
@@ -597,7 +635,7 @@
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .lbRowMe{ background:rgba(201,162,75,.22); }
+  .lbRowMe{ background:rgba(255,210,63,.22); }
   #lbStatus{
     font-size:15px;         /* 原本 13px */
     color:#7a7268;
@@ -1274,10 +1312,15 @@ bindDpad('dpadRight','right');
 
 // ---------- Drawing ----------
 function draw(){
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 1;
+  // 卡通風格棋盤底色：淺藍/白 棋盤格交錯
+  for(let r=0;r<GRID;r++){
+    for(let c=0;c<GRID;c++){
+      ctx.fillStyle = ((r+c)%2===0) ? '#FFFFFF' : '#E8F7FF';
+      ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+    }
+  }
+  ctx.strokeStyle = '#2b2b2b';
+  ctx.lineWidth = 1.4;
   for(let i=0;i<=GRID;i++){
     ctx.beginPath();
     ctx.moveTo(i*CELL,0); ctx.lineTo(i*CELL, GRID*CELL);
@@ -1302,38 +1345,161 @@ function draw(){
 function drawObstacle(cx,cy){
   ctx.save();
   ctx.translate(cx,cy);
-  ctx.font = (CELL*0.85)+'px sans-serif';
-  ctx.textAlign='center';
-  ctx.textBaseline='middle';
-  ctx.fillText('🪨', 0, 1);
+  const s = CELL*0.86;
+  const black = '#1a1208';
+  const gray1 = '#B9C2CC';
+  const gray2 = '#8C97A3';
+  const white = '#fff';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  // 主體：不規則圓角石頭
+  ctx.beginPath();
+  ctx.moveTo(-s*0.42, s*0.06);
+  ctx.quadraticCurveTo(-s*0.46, -s*0.22, -s*0.18, -s*0.34);
+  ctx.quadraticCurveTo(s*0.04, -s*0.46, s*0.30, -s*0.28);
+  ctx.quadraticCurveTo(s*0.48, -s*0.14, s*0.42, s*0.10);
+  ctx.quadraticCurveTo(s*0.36, s*0.34, s*0.06, s*0.38);
+  ctx.quadraticCurveTo(-s*0.28, s*0.40, -s*0.42, s*0.06);
+  ctx.closePath();
+  ctx.fillStyle = gray1;
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, s*0.07);
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 陰影面（做出立體感）
+  ctx.save();
+  ctx.clip();
+  ctx.beginPath();
+  ctx.ellipse(s*0.14, s*0.14, s*0.34, s*0.26, 0.3, 0, Math.PI*2);
+  ctx.fillStyle = gray2;
+  ctx.fill();
+  ctx.restore();
+
+  // 裂紋線條
+  ctx.beginPath();
+  ctx.moveTo(-s*0.10,-s*0.20);
+  ctx.quadraticCurveTo(-s*0.02,-s*0.06, -s*0.14, s*0.08);
+  ctx.lineWidth = Math.max(1.4, s*0.035);
+  ctx.strokeStyle = black;
+  ctx.globalAlpha = 0.55;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // 高光
+  ctx.beginPath();
+  ctx.ellipse(-s*0.18,-s*0.16,s*0.09,s*0.05,-0.4,0,Math.PI*2);
+  ctx.fillStyle = white;
+  ctx.globalAlpha = 0.85;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
   ctx.restore();
 }
 
 function drawKey(cx,cy){
   ctx.save();
   ctx.translate(cx,cy);
-  ctx.font = (CELL*0.8)+'px sans-serif';
-  ctx.textAlign='center';
-  ctx.textBaseline='middle';
-  ctx.fillText('🔑', 0, 1);
+  ctx.rotate(-0.55);
+  const s = CELL*0.8;
+  const black = '#1a1208';
+  const gold = '#FFD23F';
+  const white = '#fff';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  const lw = Math.max(2, s*0.07);
+
+  // 鑰匙桿
+  ctx.beginPath();
+  ctx.moveTo(-s*0.02, -s*0.05);
+  ctx.lineTo(s*0.38, -s*0.05);
+  ctx.lineTo(s*0.38, s*0.05);
+  ctx.lineTo(-s*0.02, s*0.05);
+  ctx.closePath();
+  ctx.fillStyle = gold;
+  ctx.fill();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 鑰匙齒
+  ctx.beginPath();
+  ctx.rect(s*0.24, s*0.05, s*0.06, s*0.12);
+  ctx.rect(s*0.36, s*0.05, s*0.06, s*0.16);
+  ctx.fillStyle = gold;
+  ctx.fill();
+  ctx.lineWidth = lw*0.85;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 鑰匙頭（圓環）
+  ctx.beginPath();
+  ctx.arc(-s*0.24, 0, s*0.26, 0, Math.PI*2);
+  ctx.fillStyle = gold;
+  ctx.fill();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(-s*0.24, 0, s*0.11, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.lineWidth = lw*0.8;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 高光
+  ctx.beginPath();
+  ctx.ellipse(-s*0.33,-s*0.10,s*0.07,s*0.035,-0.5,0,Math.PI*2);
+  ctx.fillStyle = white;
+  ctx.globalAlpha = 0.8;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
   ctx.restore();
 }
 
 function drawTreasure(cx,cy){
   ctx.save();
   ctx.translate(cx,cy);
-  ctx.fillStyle = '#C9A24B';
-  ctx.strokeStyle = '#9B3B2E';
-  ctx.lineWidth = 2;
+  const s = CELL*0.42;
+  const black = '#1a1208';
+  const gold = '#FFD23F';
+  const goldDark = '#E8A317';
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  const lw = Math.max(2.2, s*0.11);
+
   ctx.beginPath();
-  ctx.arc(0,0,CELL*0.38,0,Math.PI*2);
+  ctx.arc(0,0,s,0,Math.PI*2);
+  ctx.fillStyle = gold;
   ctx.fill();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = black;
   ctx.stroke();
-  ctx.fillStyle = '#9B3B2E';
-  ctx.font = 'bold '+(CELL*0.4)+'px sans-serif';
+
+  // 內圈做硬幣質感
+  ctx.beginPath();
+  ctx.arc(0,0,s*0.72,0,Math.PI*2);
+  ctx.lineWidth = lw*0.5;
+  ctx.strokeStyle = goldDark;
+  ctx.stroke();
+
+  ctx.fillStyle = black;
+  ctx.font = 'bold '+(s*0.95)+'px "Noto Sans TC",sans-serif';
   ctx.textAlign='center';
   ctx.textBaseline='middle';
   ctx.fillText('寶',0,1);
+
+  // 高光
+  ctx.beginPath();
+  ctx.ellipse(-s*0.35,-s*0.35,s*0.22,s*0.12,-0.5,0,Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.globalAlpha = 0.55;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
   ctx.restore();
 }
 
