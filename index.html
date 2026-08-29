@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>El Perrito Busca el Tesoro</title>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M9GNL79T0G"></script>
@@ -87,17 +88,58 @@
     }
     #gameArea{
       flex-direction:column;
-      align-items:center;
+      align-items:stretch;   /* 讓每個區塊撐滿寬度，取代原本 #panel 提供的寬度 */
       height:auto;
-    }
-    #boardWrap{
-      width:100%;
       max-width:420px;
+      margin:0 auto;
+      gap:0;
     }
+    /* #panel 改成 display:contents，讓它裡面的元件「解散框架」，
+       變成跟 #boardWrap 同一層的 flex 項目，才能用 order 把棋盤
+       插進說明欄內容中間，達成你要的排列順序 */
     #panel{
+      display:contents;
+    }
+
+    /* 由上至下：標題/打招呼 → 時間錯誤 → 指令區塊 → 棋盤 →
+       方向鍵 → 等級顯示 → 開始遊戲鍵 */
+    #panel > h1{ order:10; margin-bottom:6px; }
+    #panel > .seal{ order:20; margin-bottom:6px; }
+    #panel > #playerGreeting{ order:30; }
+
+    #panel > #statRow{ order:40; margin:6px 0; }
+
+    #panel > #stageLabel{ order:50; }
+    #panel > #instructionBox{ order:60; }
+    #panel > #errorMsg{ order:70; }
+    #panel > #resultBox{ order:75; margin-bottom:8px; }
+
+    #boardWrap{
+      order:80;
       width:100%;
-      max-width:420px;
-      overflow-y:visible;   /* 改由整頁捲動，避免說明欄裡再有一層小捲軸 */
+      margin:8px 0;
+    }
+
+    #panel > #dpad{ order:90; margin:6px 0 10px; }
+
+    #panel > #currentLevelBadge{ order:100; margin-bottom:8px; }
+
+    #panel > #startBtn{ order:110; }
+
+    #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
+
+    /* 方向鍵在手機上改扁一點：變寬變矮，減少版面高度 */
+    #dpad{
+      grid-template-columns:72px 72px 72px;
+      grid-template-rows:38px 38px 38px;
+      gap:6px;
+    }
+    #dpad button{
+      width:72px;
+      height:38px;
+      border-radius:8px;
+      box-shadow:none;
+      font-size:16px;
     }
   }
   .seal{
