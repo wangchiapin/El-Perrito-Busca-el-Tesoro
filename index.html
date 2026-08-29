@@ -21,31 +21,32 @@
     --paper:#EFE3CC;
   }
   *{box-sizing:border-box;}
+  html, body{ height:100%; }
   body{
     margin:0;
     font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
     background:var(--cream);
     color:var(--ink);
-    min-height:100vh;
-    padding:20px;
+    padding:14px;
+    overflow:hidden; /* 主畫面與說明欄同高後，整頁不需要捲動 */
   }
   #gameArea{
     display:flex;
     flex-wrap:nowrap;
-    align-items:flex-start;
+    align-items:stretch;   /* 讓棋盤與右側說明欄自動同高 */
     justify-content:center;
-    gap:20px;
+    gap:14px;
     max-width:100%;
-    overflow-x:auto;
-    padding-bottom:8px;
+    height:100%;           /* 撐滿扣除 body padding 後的可視高度 */
   }
   h1{
-    font-size:18px;
+    font-size:15px;
     color:var(--brick);
     letter-spacing:0px;
-    margin:0 0 12px 0;
+    margin:0 0 8px 0;
     border-left:4px solid var(--gold);
     padding-left:6px;
+    line-height:1.25;
   }
   #boardWrap{
     background:#fff;
@@ -54,19 +55,26 @@
     border:3px solid #000;
     box-shadow:0 4px 10px rgba(0,0,0,.3);
     flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
   canvas{
     display:block;
     background:#fff;
   }
   #panel{
-    width:300px;
+    width:280px;
     flex-shrink:0;
     background:var(--paper);
     border:3px solid var(--brick);
     border-radius:6px;
-    padding:16px;
+    padding:12px;
     box-shadow:0 4px 10px rgba(0,0,0,.15);
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;       /* 極端情況下的保險，正常狀況下不會出現捲軸 */
+    min-height:0;
   }
   .seal{
     display:inline-block;
@@ -76,25 +84,26 @@
     color:var(--cream);
     padding:2px 8px;
     border-radius:4px;
-    font-size:12px;
-    letter-spacing:1px;
+    font-size:10px;
+    letter-spacing:.5px;
+    line-height:1.3;
   }
   #instructionBox{
     background:#fff;
     border:2px dashed var(--gold);
     border-radius:6px;
-    padding:14px;
-    min-height:70px;
-    font-size:18px;
+    padding:8px;
+    min-height:44px;
+    font-size:14px;
     font-weight:bold;
     text-align:center;
     color:var(--brick);
-    margin:12px 0;
+    margin:6px 0;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:4px;
+    gap:2px;
   }
   #instructionBox .zh-simp{
     font-size:1em;
@@ -105,73 +114,73 @@
   #statRow{
     display:flex;
     justify-content:space-between;
-    font-size:15px;
-    margin:8px 0;
+    font-size:12px;
+    margin:6px 0;
   }
   #statRow div{
     background:#fff;
     border:1px solid var(--gold);
     border-radius:4px;
-    padding:6px 10px;
+    padding:4px 8px;
     flex:1;
-    margin:0 4px;
+    margin:0 3px;
     text-align:center;
   }
   #statRow span{
     display:block;
-    font-size:18px;
+    font-size:15px;
     font-weight:bold;
     color:var(--brick);
   }
   #currentLevelBadge{
-    margin-bottom:10px;
+    margin-bottom:6px;
     background:#fff;
     border:1px solid var(--gold);
     border-radius:6px;
-    padding:8px 10px;
-    font-size:13px;
+    padding:5px 8px;
+    font-size:11px;
     text-align:center;
   }
   #currentLevelBadge b{
     color:var(--brick);
     display:block;
-    font-size:14px;
+    font-size:12px;
     margin-bottom:2px;
   }
   #currentLevelBadge a{
     color:var(--brick);
-    font-size:12px;
+    font-size:10.5px;
     text-decoration:underline;
     cursor:pointer;
   }
   #stageLabel{
     text-align:center;
-    font-size:13px;
+    font-size:11px;
     font-weight:bold;
     color:var(--brick);
-    min-height:16px;
-    margin-bottom:4px;
+    min-height:14px;
+    margin-bottom:2px;
   }
   button{
     width:100%;
-    padding:10px;
-    margin-top:10px;
+    padding:7px;
+    margin-top:6px;
     background:var(--brick);
     color:#fff;
     border:none;
     border-radius:6px;
-    font-size:16px;
+    font-size:13px;
     cursor:pointer;
-    letter-spacing:1px;
+    letter-spacing:.5px;
   }
   button:hover{opacity:.85;}
   #errorMsg{
     color:#c0392b;
     text-align:center;
     font-weight:bold;
-    min-height:20px;
-    margin-top:6px;
-    font-size:14px;
+    min-height:15px;
+    margin-top:3px;
+    font-size:11px;
   }
   #resultBox{
     display:none;
@@ -179,32 +188,34 @@
     background:#fff;
     border:2px solid var(--gold);
     border-radius:6px;
-    padding:14px;
-    margin-top:10px;
+    padding:8px;
+    margin-top:6px;
   }
-  #resultBox h2{color:var(--brick);margin:0 0 8px;font-size:18px;}
+  #resultBox h2{color:var(--brick);margin:0 0 4px;font-size:14px;}
   #resultBox .zh-simp{font-size:1em;opacity:1;display:block;}
-  #resultBox p{font-size:14px;margin:4px 0;}
+  #resultBox p{font-size:11px;margin:2px 0;}
   #keysHint{
-    font-size:12px;
+    font-size:10px;
     color:#666;
     text-align:center;
-    margin-top:10px;
+    margin-top:6px;
+    line-height:1.3;
   }
   #dpad{
     display:grid;
-    grid-template-columns:60px 60px 60px;
-    grid-template-rows:60px 60px 60px;
-    gap:4px;
+    grid-template-columns:42px 42px 42px;
+    grid-template-rows:42px 42px 42px;
+    gap:3px;
     justify-content:center;
-    margin-top:14px;
+    margin-top:8px;
+    margin-bottom:2px;
     user-select:none;
   }
   #dpad button{
     margin:0;
-    width:60px;
-    height:60px;
-    font-size:22px;
+    width:42px;
+    height:42px;
+    font-size:16px;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -384,12 +395,12 @@
     color:#7a7268;
   }
   #playerGreeting{
-    font-size:13px;
+    font-size:11px;
     font-weight:bold;
     color:var(--brick);
     text-align:center;
-    margin:12px 0 4px;
-    min-height:16px;
+    margin:6px 0 2px;
+    min-height:0;
   }
   #playerGreeting:empty{
     margin:0;
@@ -400,29 +411,30 @@
     background:#fff;
     border:1px solid var(--gold);
     border-radius:20px;
-    padding:4px 14px;
+    padding:2px 10px;
   }
 
   /* ---------- 分數列 / 排行榜按鈕 / 練習提示 ---------- */
   #scoreLine{
-    font-size:18px;
+    font-size:13px;
     font-weight:bold;
     color:var(--brick);
     background:#fff;
     border:1px dashed var(--gold);
     border-radius:6px;
-    padding:8px;
-    margin-top:8px;
+    padding:5px;
+    margin-top:5px;
   }
   #viewLeaderboardBtn{
     background:var(--gold);
     color:var(--ink);
   }
   #practiceHint{
-    font-size:15px;
+    font-size:10.5px;
     color:#7a7268;
     font-style:italic;
-    margin-top:8px;
+    margin-top:5px;
+    line-height:1.3;
   }
 
   /* ---------- 排行榜彈窗 ---------- */
@@ -1395,16 +1407,20 @@ function trackEvent(name, params = {}) {
   
 // 棋盤尺寸只依「視窗大小」計算，完全不受右側資訊欄（結果／錯誤訊息等）高度變化影響，
 // 這樣不管右側欄位內容如何增減，左側棋盤與整體版面都不會跟著跳動或放大。
+// 棋盤大小改用 #gameArea 實際渲染高度來算（#gameArea 現在是 height:100%，
+// 會撐滿扣除 body padding 後的可視區域），這樣棋盤與右側說明欄才會確實同高，
+// 且整頁不需要捲動。
 function computeBoardSize(){
   const panel = document.getElementById('panel');
   const gameArea = document.getElementById('gameArea');
-  const gap = 20;          // #gameArea 的 gap
+  const gap = 14;          // #gameArea 的 gap
   const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
-  const panelWidth = (panel && panel.getBoundingClientRect().width) || 300;
-  const areaTop = gameArea ? gameArea.getBoundingClientRect().top : 20;
+  const panelWidth = (panel && panel.getBoundingClientRect().width) || 280;
+  const areaRect = gameArea ? gameArea.getBoundingClientRect() : null;
+  const areaHeight = areaRect ? areaRect.height : (window.innerHeight - 28);
 
-  const availableWidth = window.innerWidth - panelWidth - gap - 40 - wrapChrome;
-  const availableHeight = window.innerHeight - areaTop - 20 - wrapChrome;
+  const availableWidth = window.innerWidth - panelWidth - gap - 28 - wrapChrome;
+  const availableHeight = areaHeight - wrapChrome;
 
   let size = Math.min(availableWidth, availableHeight);
   size = Math.max(240, Math.min(size, 640));
