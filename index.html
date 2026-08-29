@@ -56,10 +56,11 @@
     font-family:"Fredoka","Baloo 2","Noto Sans TC",sans-serif;
     font-weight:700;
     font-size:16px;
-    color:var(--primary-dark);
+    color:#fff;
     letter-spacing:.3px;
-    margin:0 0 8px 0;
-    -webkit-text-stroke:.4px var(--outline);
+    margin:0 0 6px 0;
+    text-align:center;
+    text-shadow:0 2px 0 rgba(0,0,0,.4);
     line-height:1.25;
   }
   #boardWrap{
@@ -70,8 +71,10 @@
     box-shadow:5px 5px 0 rgba(0,0,0,.25);
     flex-shrink:0;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
+    gap:6px;
   }
   canvas{
     display:block;
@@ -108,17 +111,24 @@
       margin:0 auto;
       gap:0;
     }
-    /* #panel 改成 display:contents，讓它裡面的元件「解散框架」，
-       變成跟 #boardWrap 同一層的 flex 項目，才能用 order 把棋盤
-       插進說明欄內容中間，達成你要的排列順序 */
+    /* #panel 跟 #boardWrap 都改成 display:contents，讓它們裡面的元件
+       「解散框架」，變成同一層的 flex 項目，才能用 order 自由排列 */
     #panel{
+      display:contents;
+    }
+    #boardWrap{
       display:contents;
     }
 
     /* 由上至下：標題/打招呼 → 時間錯誤 → 指令區塊 → 棋盤 →
        方向鍵 → 等級顯示 → 開始遊戲鍵 */
-    #panel > h1{ order:10; margin-bottom:6px; }
-    #panel > .seal{ order:20; margin-bottom:6px; }
+    #boardWrap > h1{
+      order:10;
+      margin-bottom:4px;
+      color:var(--primary-dark);
+      text-shadow:none;
+    }
+    #boardWrap > .seal{ order:20; margin-bottom:6px; }
     #panel > #playerGreeting{ order:30; }
 
     #panel > #statRow{ order:40; margin:6px 0; }
@@ -128,10 +138,16 @@
     #panel > #errorMsg{ order:70; }
     #panel > #resultBox{ order:75; margin-bottom:8px; }
 
-    #boardWrap{
+    #boardWrap > canvas{
       order:80;
-      width:100%;
+      align-self:center;    /* canvas 有內建尺寸，stretch 對它不生效，改用置中 */
       margin:8px 0;
+      background:#000;      /* #boardWrap 解散後，黑色相框改由 canvas 自己承擔 */
+      padding:10px;
+      border:3px solid var(--outline);
+      border-radius:14px;
+      box-shadow:5px 5px 0 rgba(0,0,0,.25);
+      box-sizing:content-box;
     }
 
     #panel > #dpad{ order:90; margin:6px 0 10px; }
@@ -142,11 +158,11 @@
 
     #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
 
-    /* 方向鍵在手機上改扁一點：變寬變矮，減少版面高度 */
+    /* 方向鍵在手機上改扁一點：上下鍵間距縮小，變寬變矮，減少版面高度 */
     #dpad{
       grid-template-columns:72px 72px 72px;
       grid-template-rows:38px 38px 38px;
-      gap:6px;
+      gap:3px 6px;
     }
     #dpad button{
       width:72px;
@@ -176,7 +192,7 @@
     border-radius:12px;
     padding:8px;
     min-height:44px;
-    font-size:14px;
+    font-size:15px;
     font-weight:700;
     text-align:center;
     color:var(--ink);
@@ -194,10 +210,27 @@
     color:var(--ink);
     opacity:1;
   }
+  #instructionBox .zh-pair-inline{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  #instructionBox .zh-simp-inline{
+    font-size:.85em;
+    font-weight:600;
+    color:var(--ink);
+    opacity:.65;
+  }
+  #instructionBox .zh-simp-inline::before{
+    content:"/ ";
+    opacity:.6;
+  }
   #statRow{
     display:flex;
     justify-content:space-between;
-    font-size:12px;
+    font-size:13px;
     margin:6px 0;
   }
   #statRow div{
@@ -212,7 +245,7 @@
   }
   #statRow span{
     display:block;
-    font-size:16px;
+    font-size:18px;
     font-weight:700;
     color:var(--primary-dark);
   }
@@ -222,26 +255,26 @@
     border:2px solid var(--outline);
     border-radius:12px;
     padding:5px 8px;
-    font-size:11px;
+    font-size:12px;
     text-align:center;
     box-shadow:2px 2px 0 rgba(0,0,0,.15);
   }
   #currentLevelBadge b{
     color:var(--primary-dark);
     display:block;
-    font-size:12px;
+    font-size:13px;
     margin-bottom:2px;
   }
   #currentLevelBadge a{
     color:var(--teal-dark);
-    font-size:10.5px;
+    font-size:11px;
     text-decoration:underline;
     font-weight:700;
     cursor:pointer;
   }
   #stageLabel{
     text-align:center;
-    font-size:11px;
+    font-size:12px;
     font-weight:700;
     color:var(--primary-dark);
     min-height:14px;
@@ -257,7 +290,7 @@
     border-radius:12px;
     font-family:inherit;
     font-weight:700;
-    font-size:13px;
+    font-size:14px;
     cursor:pointer;
     letter-spacing:.5px;
     box-shadow:3px 3px 0 rgba(0,0,0,.35);
@@ -275,7 +308,7 @@
     font-weight:bold;
     min-height:15px;
     margin-top:3px;
-    font-size:11px;
+    font-size:12px;
   }
   #resultBox{
     display:none;
@@ -287,9 +320,9 @@
     margin-top:6px;
     box-shadow:3px 3px 0 rgba(0,0,0,.18);
   }
-  #resultBox h2{color:var(--primary-dark);margin:0 0 4px;font-size:14px;}
+  #resultBox h2{color:var(--primary-dark);margin:0 0 4px;font-size:15px;}
   #resultBox .zh-simp{font-size:1em;opacity:1;display:block;}
-  #resultBox p{font-size:11px;margin:2px 0;}
+  #resultBox p{font-size:12px;margin:2px 0;}
   #keysHint{
     font-size:10px;
     color:#5b5b63;
@@ -302,7 +335,7 @@
     display:grid;
     grid-template-columns:42px 42px 42px;
     grid-template-rows:42px 42px 42px;
-    gap:5px;
+    gap:3px 5px;
     justify-content:center;
     margin-top:8px;
     margin-bottom:2px;
@@ -359,7 +392,7 @@
     padding:28px 26px 24px;
     text-align:center;
     box-shadow:7px 7px 0 rgba(0,0,0,.3);
-    overflow:hidden;
+    overflow:visible;
   }
   #nameCard::before{
     content:"";
@@ -395,9 +428,10 @@
   #nameCard h1{
     font-size:19px;
     margin:0 0 4px;
-    border-left:none;
     padding-left:0;
     letter-spacing:.5px;
+    color:var(--primary-dark);
+    text-shadow:none;
   }
   #nameCard .seal{
     margin:8px 0 16px;
@@ -520,7 +554,7 @@
 
   /* ---------- 分數列 / 排行榜按鈕 / 練習提示 ---------- */
   #scoreLine{
-    font-size:13px;
+    font-size:14px;
     font-weight:bold;
     color:var(--primary-dark);
     background:#fff;
@@ -534,7 +568,7 @@
     color:var(--ink);
   }
   #practiceHint{
-    font-size:10.5px;
+    font-size:11px;
     color:#7a7268;
     font-style:italic;
     margin-top:5px;
@@ -703,12 +737,12 @@
 
 <div id="gameArea">
   <div id="boardWrap">
+    <h1>🐾 El Perrito Busca el Tesoro</h1>
+    <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
     <canvas id="board" width="480" height="480"></canvas>
   </div>
 
   <div id="panel">
-    <h1>🐾 El Perrito Busca el Tesoro</h1>
-    <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
     <div id="playerGreeting"></div>
 
     <div id="statRow">
@@ -1072,6 +1106,12 @@ function renderPair(box, pair){
   box.innerHTML = `<div class="zh-trad">${pair.trad}</div><div class="zh-simp">${pair.simp}</div>`;
 }
 
+// 給文字較短、可以塞在同一行的訊息用（例如「找到寶藏了！」），
+// 繁簡兩行合併成一行顯示，節省垂直空間
+function renderPairInline(box, pair){
+  box.innerHTML = `<div class="zh-pair-inline"><span class="zh-trad">${pair.trad}</span><span class="zh-simp-inline">${pair.simp}</span></div>`;
+}
+
 function showCurrentInstruction(){
   const box = document.getElementById('instructionBox');
   if(state.curIndex >= state.instructions.length){
@@ -1163,7 +1203,7 @@ function checkGoal(){
 
     const box = document.getElementById('instructionBox');
     if(!state.textHidden){
-      renderPair(box, TREASURE_FOUND_PAIR);
+      renderPairInline(box, TREASURE_FOUND_PAIR);
     } else {
       box.textContent = '🎉';
     }
@@ -1771,13 +1811,25 @@ function computeBoardSize(){
 
   const panel = document.getElementById('panel');
   const gameArea = document.getElementById('gameArea');
+  const boardWrap = document.getElementById('boardWrap');
   const gap = 14;          // #gameArea 的 gap
   const panelWidth = (panel && panel.getBoundingClientRect().width) || 280;
   const areaRect = gameArea ? gameArea.getBoundingClientRect() : null;
   const areaHeight = areaRect ? areaRect.height : (window.innerHeight - 28);
 
+  // #boardWrap 桌面版現在把標題／標語也放在棋盤上方，算可用高度時要扣掉
+  // 這兩個元素實際佔用的高度，不然棋盤會被撐出黑色相框外
+  let headerHeight = 0;
+  if(boardWrap){
+    const h1El = boardWrap.querySelector('h1');
+    const sealEl = boardWrap.querySelector('.seal');
+    if(h1El) headerHeight += h1El.getBoundingClientRect().height;
+    if(sealEl) headerHeight += sealEl.getBoundingClientRect().height;
+    if(h1El || sealEl) headerHeight += 14; // boardWrap 的 gap(6px) 累計近似值
+  }
+
   const availableWidth = window.innerWidth - panelWidth - gap - 28 - wrapChrome;
-  const availableHeight = areaHeight - wrapChrome;
+  const availableHeight = areaHeight - wrapChrome - headerHeight;
 
   let size = Math.min(availableWidth, availableHeight);
   size = Math.max(240, Math.min(size, 640));
