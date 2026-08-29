@@ -76,6 +76,30 @@
     overflow-y:auto;       /* 極端情況下的保險，正常狀況下不會出現捲軸 */
     min-height:0;
   }
+
+  /* ---------- 手機版：改為上下堆疊，並允許整頁上下捲動 ---------- */
+  @media (max-width: 700px){
+    body{
+      height:auto;
+      min-height:100vh;
+      overflow-x:hidden;
+      overflow-y:auto;
+    }
+    #gameArea{
+      flex-direction:column;
+      align-items:center;
+      height:auto;
+    }
+    #boardWrap{
+      width:100%;
+      max-width:420px;
+    }
+    #panel{
+      width:100%;
+      max-width:420px;
+      overflow-y:visible;   /* 改由整頁捲動，避免說明欄裡再有一層小捲軸 */
+    }
+  }
   .seal{
     display:inline-block;
     width:100%;
@@ -1409,12 +1433,22 @@ function trackEvent(name, params = {}) {
 // 這樣不管右側欄位內容如何增減，左側棋盤與整體版面都不會跟著跳動或放大。
 // 棋盤大小改用 #gameArea 實際渲染高度來算（#gameArea 現在是 height:100%，
 // 會撐滿扣除 body padding 後的可視區域），這樣棋盤與右側說明欄才會確實同高，
-// 且整頁不需要捲動。
+// 且整頁不需要捲動。手機版（<=700px）改成直式堆疊＋整頁可捲動，棋盤大小
+// 改成主要依螢幕「寬度」來決定。
 function computeBoardSize(){
+  const isMobileLayout = window.matchMedia('(max-width: 700px)').matches;
+  const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
+
+  if(isMobileLayout){
+    const availableWidth = window.innerWidth - 28 - wrapChrome; // 扣掉 body 左右 padding
+    let size = Math.min(availableWidth, 420 - wrapChrome);
+    size = Math.max(220, size);
+    return Math.floor(size);
+  }
+
   const panel = document.getElementById('panel');
   const gameArea = document.getElementById('gameArea');
   const gap = 14;          // #gameArea 的 gap
-  const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
   const panelWidth = (panel && panel.getBoundingClientRect().width) || 280;
   const areaRect = gameArea ? gameArea.getBoundingClientRect() : null;
   const areaHeight = areaRect ? areaRect.height : (window.innerHeight - 28);
