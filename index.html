@@ -55,7 +55,7 @@
   h1{
     font-family:"Fredoka","Baloo 2","Noto Sans TC",sans-serif;
     font-weight:700;
-    font-size:16px;
+    font-size:19px;
     color:#fff;
     letter-spacing:.3px;
     margin:0 0 6px 0;
@@ -158,11 +158,12 @@
 
     #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
 
-    /* 方向鍵在手機上改扁一點：上下鍵間距縮小，變寬變矮，減少版面高度 */
+    /* 方向鍵在手機上改扁一點：變寬變矮，減少版面高度 */
     #dpad{
-      grid-template-columns:72px 72px 72px;
-      grid-template-rows:38px 38px 38px;
-      gap:3px 6px;
+      gap:10px;
+    }
+    #dpadCenterCol{
+      gap:4px;
     }
     #dpad button{
       width:72px;
@@ -178,13 +179,14 @@
     text-align: center;
     background:var(--teal);
     color:#fff;
-    padding:3px 8px;
+    padding:4px 8px;
     border-radius:20px;
     border:2px solid var(--outline);
-    font-size:10px;
+    font-size:12px;
     font-weight:700;
-    letter-spacing:.5px;
+    letter-spacing:.2px;
     line-height:1.3;
+  }
   }
   #instructionBox{
     background:var(--secondary);
@@ -218,14 +220,14 @@
     flex-wrap:wrap;
   }
   #instructionBox .zh-simp-inline{
-    font-size:.85em;
-    font-weight:600;
+    font-size:1em;
+    font-weight:700;
     color:var(--ink);
-    opacity:.65;
+    opacity:1;
   }
   #instructionBox .zh-simp-inline::before{
     content:"/ ";
-    opacity:.6;
+    opacity:1;
   }
   #statRow{
     display:flex;
@@ -320,9 +322,6 @@
     margin-top:6px;
     box-shadow:3px 3px 0 rgba(0,0,0,.18);
   }
-  #resultBox h2{color:var(--primary-dark);margin:0 0 4px;font-size:15px;}
-  #resultBox .zh-simp{font-size:1em;opacity:1;display:block;}
-  #resultBox p{font-size:12px;margin:2px 0;}
   #keysHint{
     font-size:10px;
     color:#5b5b63;
@@ -332,14 +331,18 @@
     line-height:1.3;
   }
   #dpad{
-    display:grid;
-    grid-template-columns:42px 42px 42px;
-    grid-template-rows:42px 42px 42px;
-    gap:3px 5px;
+    display:flex;
+    align-items:center;
     justify-content:center;
+    gap:8px;
     margin-top:8px;
     margin-bottom:2px;
     user-select:none;
+  }
+  #dpadCenterCol{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
   }
   #dpad button{
     margin:0;
@@ -354,16 +357,6 @@
     padding:0;
     touch-action:manipulation;
   }
-  #dpad .empty{
-    background:transparent;
-    border:none;
-    box-shadow:none;
-  }
-  #dpadUp{grid-column:2;grid-row:1;}
-  #dpadLeft{grid-column:1;grid-row:2;}
-  #dpadCenter{grid-column:2;grid-row:2;}
-  #dpadRight{grid-column:3;grid-row:2;}
-  #dpadDown{grid-column:2;grid-row:3;}
 
   /* ---------- 玩家姓名輸入頁（進場畫面） ---------- */
   body.gate-open{ overflow:hidden; }
@@ -533,7 +526,7 @@
     color:#7a7268;
   }
   #playerGreeting{
-    font-size:11px;
+    font-size:14px;
     font-weight:bold;
     color:var(--primary-dark);
     text-align:center;
@@ -690,7 +683,7 @@
     <div id="nameSeal">寶</div>
     <div id="nameGateIcons">🐶 🪨 🔑 💰</div>
     <h1>🐾 El Perrito Busca el Tesoro</h1>
-    <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
+    <div class="seal">Cada día unos minutos · Práctica de direcciones</div>
     <p id="namePrompt">¿Cómo te llamas, explorador?</p>
    <!-- <p id="namePromptSimp">你叫什麼名字呢？</p>-->
     <input id="playerNameInput" type="text" maxlength="20" placeholder="你的名字" autocomplete="off">
@@ -738,7 +731,7 @@
 <div id="gameArea">
   <div id="boardWrap">
     <h1>🐾 El Perrito Busca el Tesoro</h1>
-    <div class="seal">Cada día unos minutos <br>Práctica de direcciones</div>
+    <div class="seal">Cada día unos minutos · Práctica de direcciones</div>
     <canvas id="board" width="480" height="480"></canvas>
   </div>
 
@@ -760,9 +753,6 @@
     <div id="errorMsg"></div>
 
     <div id="resultBox">
-      <h2></h2>
-      <p>Tiempo empleado: <b id="finalTime"></b></p>
-      <p>Número de errores: <b id="finalError"></b></p>
       <div id="scoreLine"></div>
       <button id="viewLeaderboardBtn" style="display:none;">🏆 Ver clasificación</button>
       <div id="practiceHint" style="display:none;">¡Bien hecho! 🐾 Prueba el NIVEL 2 o superior para entrar en la clasificación.</div>
@@ -772,11 +762,12 @@
     <div id="keysHint">En la computadora usa las flechas ↑ ↓ ← →; en el móvil usa los botones de abajo</div>
 
     <div id="dpad">
-      <button id="dpadUp">↑</button>
       <button id="dpadLeft">←</button>
-      <div id="dpadCenter" class="empty"></div>
+      <div id="dpadCenterCol">
+        <button id="dpadUp">↑</button>
+        <button id="dpadDown">↓</button>
+      </div>
       <button id="dpadRight">→</button>
-      <button id="dpadDown">↓</button>
     </div>
   </div>
 </div>
@@ -1173,13 +1164,6 @@ function checkGoal(){
     clearInterval(state.timerId);
 
     const result = computeScore();
-    const m = String(Math.floor(result.sec/60)).padStart(2,'0');
-    const s = String(result.sec%60).padStart(2,'0');
-    document.getElementById('finalTime').textContent = `${m}:${s}`;
-    document.getElementById('finalError').textContent = state.errorCount;
-
-    const h2 = document.querySelector('#resultBox h2');
-    h2.innerHTML = `🎉 ${TREASURE_FOUND_PAIR.trad} <span class="zh-simp">${TREASURE_FOUND_PAIR.simp}</span>`;
     document.getElementById('resultBox').style.display='block';
 
     const scoreLine = document.getElementById('scoreLine');
