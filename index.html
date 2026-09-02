@@ -773,6 +773,7 @@
 
 <!-- Firebase（排行榜用）：請於下方 script 中的 firebaseConfig 填入你的 Firebase 專案設定 -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
@@ -1964,6 +1965,15 @@ try{
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     firebaseReady = true;
+
+    // 執行 Firebase 匿名登入
+    firebase.auth().signInAnonymously()
+      .then(() => {
+        console.log("Firebase 匿名登入成功！");
+      })
+      .catch((error) => {
+        console.error("Firebase 匿名登入失敗:", error);
+      });
   }
 }catch(e){ console.error('Firebase 初始化失敗', e); }
 
