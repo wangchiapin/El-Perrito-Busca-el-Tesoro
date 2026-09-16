@@ -991,15 +991,15 @@ function planGame(dogStart, treasure, key, minObs, maxObs){
 // 現在四關都先設 1，之後想讓某個難度講快一點/慢一點，直接改這裡對應的數字即可。
 function difficultySettings(difficulty){
   if(difficulty === 'level2'){
-    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false, rate:0.2 };
+    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false, rate:0.1 };
   }
   if(difficulty === 'level3'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:0.3 };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:0.2 };
   }
   if(difficulty === 'level4'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:0.5 };
+    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:0.4 };
   }
-  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:0.5 };
+  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:0.4 };
 }
 
 function updateStageLabel(){
