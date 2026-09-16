@@ -102,6 +102,8 @@
       min-height:100vh;
       overflow-x:hidden;
       overflow-y:auto;
+      /* 底部手勢列安全區域，避免方向鍵/開始鍵貼著螢幕邊緣 */
+      padding-bottom:calc(14px + env(safe-area-inset-bottom));
     }
     #gameArea{
       flex-direction:column;
@@ -136,7 +138,6 @@
     #panel > #stageLabel{ order:50; }
     #panel > #instructionBox{ order:60; }
     #panel > #errorMsg{ order:70; }
-    #panel > #resultBox{ order:75; margin-bottom:8px; }
 
     #boardWrap > canvas{
       order:80;
@@ -160,17 +161,33 @@
 
     /* 方向鍵在手機上改扁一點：變寬變矮，減少版面高度 */
     #dpad{
-      gap:10px;
+      gap:8px;
     }
     #dpadCenterCol{
-      gap:4px;
+      gap:5px;
     }
     #dpad button{
-      width:72px;
-      height:38px;
+      width:66px;
+      height:48px;         /* 原本 38px，低於建議的最小可觸控尺寸，容易點錯/點不到 */
       border-radius:8px;
       box-shadow:none;
-      font-size:16px;
+      font-size:17px;
+    }
+
+    /* 遊戲進行中收合非必要資訊，讓棋盤＋方向鍵能一起留在畫面內 */
+    body.mobile-playing #boardWrap > h1,
+    body.mobile-playing #boardWrap > .seal,
+    body.mobile-playing #panel > #playerGreeting,
+    body.mobile-playing #panel > #currentLevelBadge{
+      display:none;
+    }
+    body.mobile-playing #panel > #statRow{ margin:0 0 6px; }
+    body.mobile-playing #boardWrap > canvas{ margin:4px 0; }
+
+    /* 極矮的螢幕（例如手機橫向）：彈窗內容可能比畫面還高，允許彈窗內部捲動 */
+    #resultCard, #nameCard{
+      max-height:calc(100vh - 40px);
+      overflow-y:auto;
     }
   }
   .seal{
@@ -311,16 +328,39 @@
     margin-top:3px;
     font-size:12px;
   }
-  #resultBox{
+  /* ---------- 結算彈窗 ---------- */
+  #resultModal{
+    position:fixed;
+    inset:0;
+    z-index:1000;
     display:none;
-    text-align:center;
-    background:#fff;
-    border:3px solid var(--outline);
-    border-radius:12px;
-    padding:8px;
-    margin-top:6px;
-    box-shadow:3px 3px 0 rgba(0,0,0,.18);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,210,63,.18), transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(232,83,47,.22), transparent 50%),
+      var(--ink);
   }
+  #resultCard{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    text-align:center;
+    background:var(--card);
+    border:3px solid var(--outline);
+    border-radius:20px;
+    padding:30px 26px 26px;
+    box-shadow:8px 8px 0 rgba(0,0,0,.3);
+  }
+  #resultSeal{ font-size:44px; margin-bottom:4px; }
+  #resultCard h2{
+    color:var(--primary-dark);
+    font-size:22px;
+    margin:0 0 10px;
+  }
+  #resultBtnRow{ margin-top:14px; }
+  #nextLevelBtn{ background:var(--teal); }
   #keysHint{
     font-size:10px;
     color:#5b5b63;
@@ -727,6 +767,20 @@
   </div>
 </div>
 
+<div id="resultModal">
+  <div id="resultCard">
+    <div id="resultSeal">🎉</div>
+    <h2 id="resultTitle">¡Tesoro encontrado!</h2>
+    <div id="scoreLine"></div>
+    <div id="practiceHint" style="display:none;">¡Bien hecho! 🐾 Prueba el NIVEL 2 o superior para entrar en la clasificación.</div>
+    <div id="resultBtnRow">
+      <button id="playAgainBtn">🔄 Jugar de nuevo</button>
+      <button id="nextLevelBtn" style="display:none;">➡️ Siguiente nivel</button>
+      <button id="viewLeaderboardBtn" style="display:none;">🏆 Ver clasificación</button>
+    </div>
+  </div>
+</div>
+
 <div id="gameArea">
   <div id="boardWrap">
     <h1>🐾 El Perrito Busca el Tesoro</h1>
@@ -750,12 +804,6 @@
     <div id="stageLabel"></div>
     <div id="instructionBox">¡Pulsa «Comenzar juego» para empezar!</div>
     <div id="errorMsg"></div>
-
-    <div id="resultBox">
-      <div id="scoreLine"></div>
-      <button id="viewLeaderboardBtn" style="display:none;">🏆 Ver clasificación</button>
-      <div id="practiceHint" style="display:none;">¡Bien hecho! 🐾 Prueba el NIVEL 2 o superior para entrar en la clasificación.</div>
-    </div>
 
     <button id="startBtn">Comenzar juego</button>
     <div id="keysHint">En la computadora usa las flechas ↑ ↓ ← →; en el móvil usa los botones de abajo</div>
@@ -1052,9 +1100,10 @@ function startGame(){
   state.stepsDone = 0;
   setInstructions(plan.firstInstructions);
   state.playing = true;
+  setMobilePlayingCompact(true);
 
   updateCurrentLevelBadge();
-  document.getElementById('resultBox').style.display='none';
+  document.getElementById('resultModal').style.display='none';
   document.getElementById('scoreLine').textContent = '';
   document.getElementById('viewLeaderboardBtn').style.display = 'none';
   document.getElementById('practiceHint').style.display = 'none';
@@ -1083,14 +1132,22 @@ function updateTimer(){
   document.getElementById('timerDisp').textContent = `${m}:${s}`;
 }
 
-function speak(text){
+function speak(text, onEnd){
   try{
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-TW';
     u.rate = state.speechRate || 1;
+    if(onEnd){
+      let called = false;
+      const done = () => { if(!called){ called = true; onEnd(); } };
+      u.onend = done;
+      u.onerror = done;
+    }
     window.speechSynthesis.speak(u);
-  }catch(e){}
+  }catch(e){
+    if(onEnd) onEnd();
+  }
 }
 
 function renderPair(box, pair){
@@ -1143,7 +1200,6 @@ function checkGoal(){
       } else {
         box.textContent = '🔊';
       }
-      speak(KEY_FOUND_PAIR.trad);
       const route = planRoute(state.dogRow, state.dogCol, state.facing, state.treasureRow, state.treasureCol, state.obstacles) || [];
       setInstructions(route);
       state.curIndex = 0;
@@ -1151,7 +1207,15 @@ function checkGoal(){
       state.stage = 'treasure';
       snapshotInstruction();
       updateStageLabel();
-      setTimeout(showCurrentInstruction, 1300);
+      let keyMsgDone = false;
+      const proceedToNextInstruction = () => {
+        if(keyMsgDone) return;
+        keyMsgDone = true;
+        showCurrentInstruction();
+      };
+      speak(KEY_FOUND_PAIR.trad, proceedToNextInstruction);
+      // 若語音因故無法觸發 onend（例如裝置封鎖語音合成），最多等待 3 秒後仍會顯示下一個指令
+      setTimeout(proceedToNextInstruction, 3000);
       trackEvent('stage_transition', { level: state.difficulty, from: 'key', to: 'treasure' });
       return true;
     }
@@ -1161,23 +1225,30 @@ function checkGoal(){
   if(state.dogRow===state.treasureRow && state.dogCol===state.treasureCol){
     state.treasureFound = true;
     state.playing = false;
+    setMobilePlayingCompact(false);
     clearInterval(state.timerId);
 
     const result = computeScore();
-    document.getElementById('resultBox').style.display='block';
+    document.getElementById('resultModal').style.display='flex';
 
     const scoreLine = document.getElementById('scoreLine');
     scoreLine.textContent = `Puntuación: ${result.score}  ·  Precisión ${Math.round(result.accuracy*100)}%  ·  Ritmo ${result.avgTimePerStep.toFixed(1)}s/paso`;
 
     const viewBtn = document.getElementById('viewLeaderboardBtn');
     const hint = document.getElementById('practiceHint');
+    const nextBtn = document.getElementById('nextLevelBtn');
+    nextBtn.style.display = LEVEL_ORDER.indexOf(state.difficulty) < LEVEL_ORDER.length - 1 ? 'block' : 'none';
+
     if(state.difficulty === 'level1'){
       viewBtn.style.display = 'none';
       hint.style.display = 'block';
     } else {
       hint.style.display = 'none';
       viewBtn.style.display = 'block';
-      viewBtn.onclick = () => openLeaderboard(state.difficulty);
+      viewBtn.onclick = () => {
+        document.getElementById('resultModal').style.display = 'none';
+        openLeaderboard(state.difficulty);
+      };
       state.lastScoreDocId = null;
       state.lastPlayedLevel = state.difficulty;
       saveScoreToLeaderboard(state.difficulty, result).then(id=>{
@@ -1789,7 +1860,28 @@ function computeBoardSize(){
   if(isMobileLayout){
     const availableWidth = window.innerWidth - 28 - wrapChrome; // 扣掉 body 左右 padding
     let size = Math.min(availableWidth, 420 - wrapChrome);
-    size = Math.max(220, size);
+    size = Math.max(180, size);
+
+    // 再用「畫面高度」夾一次：量測棋盤上方（標題/狀態列/指令框等，遊戲進行中
+    // 這些會被收合）與下方方向鍵的實際高度，確保棋盤＋方向鍵能同時塞進畫面，
+    // 不用捲動就看得到——手機橫向（寬但矮）時這一步特別重要。
+    const aboveIds = ['playerGreeting','statRow','stageLabel','instructionBox','errorMsg'];
+    let chromeHeight = 0;
+    aboveIds.forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && window.getComputedStyle(el).display !== 'none'){
+        chromeHeight += el.getBoundingClientRect().height;
+      }
+    });
+    const h1El = document.querySelector('#boardWrap > h1');
+    const sealEl = document.querySelector('#boardWrap > .seal');
+    if(h1El && window.getComputedStyle(h1El).display !== 'none') chromeHeight += h1El.getBoundingClientRect().height;
+    if(sealEl && window.getComputedStyle(sealEl).display !== 'none') chromeHeight += sealEl.getBoundingClientRect().height;
+    const dpadEl = document.getElementById('dpad');
+    if(dpadEl) chromeHeight += dpadEl.getBoundingClientRect().height;
+
+    const availableHeight = window.innerHeight - chromeHeight - wrapChrome - 40; // 40px 抓 margin/gap 餘裕
+    size = Math.min(size, Math.max(160, availableHeight));
     return Math.floor(size);
   }
 
@@ -1828,8 +1920,16 @@ function syncBoardHeight(){
   draw();
 }
 
+// 手機版：遊戲進行中收合標題/問候語/關卡徽章等非必要資訊，把空間讓給棋盤＋方向鍵，
+// 避免玩家操作時還要捲動畫面。只透過 body class 切換，桌面版不受影響。
+function setMobilePlayingCompact(isPlaying){
+  document.body.classList.toggle('mobile-playing', !!isPlaying);
+  requestAnimationFrame(syncBoardHeight);
+}
+
 window.addEventListener('resize', syncBoardHeight);
 window.addEventListener('load', syncBoardHeight);
+window.addEventListener('orientationchange', ()=> requestAnimationFrame(syncBoardHeight));
 
 draw();
 syncBoardHeight();
@@ -1854,6 +1954,16 @@ const DIFF_INFO = {
   level3: { name:'NIVEL 3', desc:'20–30 obstáculos, llave primero, solo voz' },
   level4: { name:'NIVEL 4', desc:'20–30 obstáculos, llave primero, solo voz, instrucciones combinadas' }
 };
+
+const LEVEL_ORDER = ['level1','level2','level3','level4'];
+
+function goToNextLevel(){
+  const idx = LEVEL_ORDER.indexOf(state.difficulty);
+  if(idx === -1 || idx >= LEVEL_ORDER.length - 1) return;
+  document.getElementById('resultModal').style.display = 'none';
+  state.difficulty = LEVEL_ORDER[idx + 1];
+  startGame();
+}
 
 function selectGateDifficulty(level){
   state.selectedLevel = level;
@@ -1884,6 +1994,7 @@ function openGame(name){
 function reopenNameGate(){
   if(state.timerId) clearInterval(state.timerId);
   state.playing = false;
+  setMobilePlayingCompact(false);
   document.body.classList.add('gate-open');
   document.getElementById('nameGate').style.display = 'flex';
   selectGateDifficulty(state.difficulty || 'level1');
@@ -2084,6 +2195,12 @@ function closeLeaderboard(){
 
 document.getElementById('leaderboardCloseBtn').addEventListener('click', closeLeaderboard);
 document.getElementById('lbBackBtn').addEventListener('click', closeLeaderboard);
+
+document.getElementById('playAgainBtn').addEventListener('click', () => {
+  document.getElementById('resultModal').style.display = 'none';
+  startGame();
+});
+document.getElementById('nextLevelBtn').addEventListener('click', goToNextLevel);
 
 </script>
 </body>
