@@ -187,7 +187,15 @@
     /* 極矮的螢幕（例如手機橫向）：彈窗內容可能比畫面還高，允許彈窗內部捲動 */
     #resultCard, #nameCard{
       max-height:calc(100vh - 40px);
+      max-height:calc(100svh - 40px); /* 有支援 svh 的瀏覽器覆蓋掉上一行 */
       overflow-y:auto;
+    }
+
+    /* iOS Safari 的網址列會讓 inset:0 的彈窗撐出畫面看不到的範圍，
+       導致最下面的按鈕點不到；改用 100svh 確保彈窗高度扣掉工具列 */
+    #nameGate, #resultModal, #leaderboardModal{
+      height:100vh;
+      height:100svh;
     }
   }
   .seal{
