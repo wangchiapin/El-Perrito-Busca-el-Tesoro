@@ -208,7 +208,9 @@
       inset:auto;
       min-height:100vh;
       min-height:100svh;
-      padding:20px 20px calc(40px + env(safe-area-inset-bottom));
+      /* 卡片右上角的「寶」字圓章往外凸出、還帶旋轉角度，實際占用範圍比看起來大，
+         頂部要留夠空間才不會被畫面邊界切掉 */
+      padding:44px 20px calc(40px + env(safe-area-inset-bottom));
     }
     html body.gate-open{
       overflow-y:auto;
