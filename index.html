@@ -193,10 +193,52 @@
       align-items:flex-start;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
-      padding-top:max(24px, env(safe-area-inset-top));
-      padding-bottom:calc(120px + env(safe-area-inset-bottom));
+      padding-top:max(16px, env(safe-area-inset-top));
+      padding-bottom:calc(90px + env(safe-area-inset-bottom));
       min-height:100vh;
       min-height:100svh;
+    }
+
+    /* 縮減姓名/難度選擇畫面各區塊間的留白，讓整欄盡量在一屏內顯示完，
+       減少需要捲動的機會；下面這句提示語手機版直接拿掉騰空間 */
+    #nameCard{
+      padding:18px 18px 16px;
+    }
+    #nameGateIcons{
+      font-size:26px;
+      letter-spacing:8px;
+      margin:2px 0 6px;
+    }
+    #nameCard h1{
+      font-size:17px;
+    }
+    #nameCard .seal{
+      margin:6px 0 10px;
+    }
+    #playerNameInput{
+      padding:10px 12px;
+    }
+    #nameGateError{
+      min-height:12px;
+      margin-top:4px;
+    }
+    #gateDifficultyRow{
+      margin:10px 0 2px;
+    }
+    #gateDifficultyLabel{
+      margin:0 0 6px;
+    }
+    #gateDifficultyButtons{
+      gap:6px;
+    }
+    .gateDiffBtn{
+      padding:7px 10px;
+    }
+    #nameGateBtn{
+      margin-top:10px;
+    }
+    #nameGateFooter{
+      display:none;
     }
   }
   .seal{
