@@ -184,12 +184,13 @@
     body.mobile-playing #panel > #statRow{ margin:0 0 6px; }
     body.mobile-playing #boardWrap > canvas{ margin:4px 0; }
 
-    /* 手機上有些瀏覽器（LINE 內建瀏覽器、Chrome 等）自己的工具列是固定貼在畫面
-       底部的，並不會被 100vh/100svh 這類視窗高度單位排除掉，算出來的高度會比
-       實際看得到的範圍還高，導致最下面的按鈕被工具列蓋住、點不到。
-       與其去猜工具列的高度，改成讓整個彈窗本身可以上下捲動、由畫面頂端開始排列，
+    /* 結算/排行榜彈窗在遊戲進行中要疊在畫面上面，維持 fixed；
+       手機上有些瀏覽器（LINE 內建瀏覽器、Chrome 等）自己的工具列是固定貼在
+       畫面底部的，並不會被 100vh/100svh 這類視窗高度單位排除掉，算出來的高度
+       會比實際看得到的範圍還高，導致最下面的按鈕被工具列蓋住、點不到。
+       與其去猜工具列的高度，改成讓彈窗本身可以上下捲動、由畫面頂端開始排列，
        並在底部留一大段安全空間，不管哪種瀏覽器、工具列多高，都能捲動到看得見按鈕為止 */
-    #nameGate, #resultModal, #leaderboardModal{
+    #resultModal, #leaderboardModal{
       align-items:flex-start;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
@@ -197,6 +198,21 @@
       padding-bottom:calc(90px + env(safe-area-inset-bottom));
       min-height:100vh;
       min-height:100svh;
+    }
+
+    /* 姓名/選難度畫面是進遊戲前的第一個畫面，這時候遊戲本體本來就是隱藏的，
+       不需要疊在畫面「上面」。改成一般文件流裡的區塊，直接交給瀏覽器原生的
+       頁面捲動處理，徹底避開 fixed 疊層 + 動態工具列這整類不穩定的行為 */
+    #nameGate{
+      position:static;
+      inset:auto;
+      min-height:100vh;
+      min-height:100svh;
+      padding:20px 20px calc(40px + env(safe-area-inset-bottom));
+    }
+    html body.gate-open{
+      overflow-y:auto;
+      height:auto;
     }
 
     /* 縮減姓名/難度選擇畫面各區塊間的留白，讓整欄盡量在一屏內顯示完，
@@ -2048,6 +2064,7 @@ function reopenNameGate(){
   setMobilePlayingCompact(false);
   document.body.classList.add('gate-open');
   document.getElementById('nameGate').style.display = 'flex';
+  window.scrollTo(0, 0);
   selectGateDifficulty(state.difficulty || 'level1');
   const input = document.getElementById('playerNameInput');
   if(input){ input.value = state.playerName || input.value; setTimeout(()=> input.focus(), 50); }
