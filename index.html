@@ -276,6 +276,8 @@
     margin-top:6px;
     line-height:1.3;
   }
+  /* 手機版才用的「換關卡」按鈕；桌面版沿用原本徽章裡的文字連結，這顆先藏起來 */
+  #changeLevelBtn{ display:none; }
   #dpad{
     display:flex;
     align-items:center;
@@ -680,7 +682,20 @@
 
     #panel > #currentLevelBadge{ order:100; margin-bottom:8px; }
 
-    #panel > #startBtn{ order:110; }
+    #panel > #mobileActionRow{
+      order:110;
+      display:flex;
+      gap:8px;
+    }
+    #mobileActionRow button{
+      width:auto;
+      flex:1;
+      margin-top:0;
+    }
+    #changeLevelBtn{
+      display:block;
+      background:var(--teal);
+    }
 
     #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
 
@@ -876,7 +891,10 @@
     <div id="instructionBox">¡Pulsa «Comenzar juego» para empezar!</div>
     <div id="errorMsg"></div>
 
-    <button id="startBtn">Comenzar juego</button>
+    <div id="mobileActionRow">
+      <button id="startBtn">Comenzar juego</button>
+      <button id="changeLevelBtn">🔁 Cambiar nivel</button>
+    </div>
     <div id="keysHint">En la computadora usa las flechas ↑ ↓ ← →; en el móvil usa los botones de abajo</div>
 
     <div id="dpad">
@@ -1288,8 +1306,9 @@ function checkGoal(){
         showCurrentInstruction();
       };
       speak(KEY_FOUND_PAIR.trad, proceedToNextInstruction);
-      // 若語音因故無法觸發 onend（例如裝置封鎖語音合成），最多等待 3 秒後仍會顯示下一個指令
-      setTimeout(proceedToNextInstruction, 3000);
+      // 保險：萬一語音合成沒有正常觸發結束事件（例如被瀏覽器封鎖），最多等 8 秒還是會繼續；
+      // 正常情況下一定是語音真的講完的事件先觸發，不會被這個保險提早蓋過去
+      setTimeout(proceedToNextInstruction, 8000);
       trackEvent('stage_transition', { level: state.difficulty, from: 'key', to: 'treasure' });
       return true;
     }
@@ -1310,7 +1329,6 @@ function checkGoal(){
     } else {
       box.textContent = '🎉';
     }
-    speak('恭喜，' + TREASURE_FOUND_PAIR.trad);
     draw();
     trackEvent('level_complete', {
       level: state.difficulty,
@@ -1320,7 +1338,7 @@ function checkGoal(){
       error_count: result.errors
     });
 
-    playTreasureCelebration(() => showTreasureResultModal(result));
+    playTreasureCelebration('恭喜，' + TREASURE_FOUND_PAIR.trad, () => showTreasureResultModal(result));
     return true;
   }
   return false;
@@ -2073,33 +2091,51 @@ function drawSparkleBurst(cx, cy, spread, alpha){
 
 // 找到寶藏後，在棋盤正中央（不管寶藏實際在哪一格）快速播放幾格「閃光→小狗吐舌頭+寶藏」
 // 的慶祝畫面，播完再呼叫 onDone 顯示結算彈窗
-function playTreasureCelebration(onDone){
+function playTreasureCelebration(speechText, onDone){
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
   const boxSize = Math.min(canvas.width, canvas.height) / 3; // 佔棋盤 9 宮格正中間那一格
-  const frames = [
-    { sparkle: 0.9, sparkleSpread: boxSize*0.30, showChars: false, charScale: 0 },
-    { sparkle: 0.7, sparkleSpread: boxSize*0.38, showChars: true,  charScale: 0.7 },
-    { sparkle: 0.9, sparkleSpread: boxSize*0.46, showChars: true,  charScale: 1 },
-    { sparkle: 0.5, sparkleSpread: boxSize*0.42, showChars: true,  charScale: 1 }
+  const introFrames = [
+    { sparkle:0.9, spread:0.30, chars:false, scale:0 },
+    { sparkle:0.7, spread:0.38, chars:true,  scale:0.7 }
   ];
-  let i = 0;
-  function renderFrame(){
-    draw(); // 棋盤本身維持顯示在背景
-    const f = frames[i];
-    if(f.showChars){
-      drawTreasure(cx + boxSize*0.16, cy + boxSize*0.06, boxSize*0.30 * f.charScale);
-      drawHappyDog(cx - boxSize*0.14, cy + boxSize*0.02, boxSize*0.62 * f.charScale);
-    }
-    drawSparkleBurst(cx, cy, f.sparkleSpread, f.sparkle);
-    i++;
-    if(i >= frames.length){
-      clearInterval(timerRef);
-      onDone();
-    }
+  // 語音還沒講完之前，畫面會一直停在這兩格輕微閃爍的「定格」狀態循環
+  const loopFrames = [
+    { sparkle:0.9,  spread:0.46, chars:true, scale:1 },
+    { sparkle:0.55, spread:0.40, chars:true, scale:1 }
+  ];
+  let step = 0;
+  let finished = false;
+
+  function frameAt(n){
+    return n < introFrames.length ? introFrames[n] : loopFrames[(n - introFrames.length) % loopFrames.length];
   }
+  function renderFrame(){
+    if(finished) return;
+    draw(); // 棋盤本身維持顯示在背景
+    const f = frameAt(step);
+    if(f.chars){
+      drawTreasure(cx + boxSize*0.16, cy + boxSize*0.06, boxSize*0.30 * f.scale);
+      drawHappyDog(cx - boxSize*0.14, cy + boxSize*0.02, boxSize*0.62 * f.scale);
+    }
+    drawSparkleBurst(cx, cy, boxSize * f.spread, f.sparkle);
+    step++;
+  }
+
   renderFrame();
-  const timerRef = setInterval(renderFrame, 375);
+  const timer = setInterval(renderFrame, 375);
+
+  function finish(){
+    if(finished) return;
+    finished = true;
+    clearInterval(timer);
+    onDone();
+  }
+
+  // 判斷語音是否已經講完，講完才會顯示結算彈窗；不管語速多慢都不會被切掉
+  speak(speechText, finish);
+  // 保險：萬一語音合成沒有正常觸發結束事件（例如被瀏覽器封鎖），最多等 8 秒還是會繼續
+  setTimeout(finish, 8000);
 }
 
 function trackEvent(name, params = {}) {
@@ -2288,6 +2324,7 @@ function submitPlayerName(){
   });
   document.getElementById('nameGateBtn').addEventListener('click', submitPlayerName);
   document.getElementById('changeLevelLink').addEventListener('click', reopenNameGate);
+  document.getElementById('changeLevelBtn').addEventListener('click', reopenNameGate);
   input.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter'){ e.preventDefault(); submitPlayerName(); }
   });
