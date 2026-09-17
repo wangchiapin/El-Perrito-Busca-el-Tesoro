@@ -1171,6 +1171,7 @@ function startGame(){
   state.stepsDone = 0;
   setInstructions(plan.firstInstructions);
   state.playing = true;
+  state.awaitingKeyAnnouncement = false;
   setMobilePlayingCompact(true);
 
   updateCurrentLevelBadge();
@@ -1279,9 +1280,11 @@ function checkGoal(){
       snapshotInstruction();
       updateStageLabel();
       let keyMsgDone = false;
+      state.awaitingKeyAnnouncement = true;
       const proceedToNextInstruction = () => {
         if(keyMsgDone) return;
         keyMsgDone = true;
+        state.awaitingKeyAnnouncement = false;
         showCurrentInstruction();
       };
       speak(KEY_FOUND_PAIR.trad, proceedToNextInstruction);
@@ -1300,32 +1303,6 @@ function checkGoal(){
     clearInterval(state.timerId);
 
     const result = computeScore();
-    document.getElementById('resultModal').style.display='flex';
-
-    const scoreLine = document.getElementById('scoreLine');
-    scoreLine.textContent = `Puntuación: ${result.score}  ·  Precisión ${Math.round(result.accuracy*100)}%  ·  Ritmo ${result.avgTimePerStep.toFixed(1)}s/paso`;
-
-    const viewBtn = document.getElementById('viewLeaderboardBtn');
-    const hint = document.getElementById('practiceHint');
-    const nextBtn = document.getElementById('nextLevelBtn');
-    nextBtn.style.display = LEVEL_ORDER.indexOf(state.difficulty) < LEVEL_ORDER.length - 1 ? 'block' : 'none';
-
-    if(state.difficulty === 'level1'){
-      viewBtn.style.display = 'none';
-      hint.style.display = 'block';
-    } else {
-      hint.style.display = 'none';
-      viewBtn.style.display = 'block';
-      viewBtn.onclick = () => {
-        document.getElementById('resultModal').style.display = 'none';
-        openLeaderboard(state.difficulty);
-      };
-      state.lastScoreDocId = null;
-      state.lastPlayedLevel = state.difficulty;
-      saveScoreToLeaderboard(state.difficulty, result).then(id=>{
-        state.lastScoreDocId = id;
-      });
-    }
 
     const box = document.getElementById('instructionBox');
     if(!state.textHidden){
@@ -1342,9 +1319,40 @@ function checkGoal(){
       time_spent: result.sec,
       error_count: result.errors
     });
+
+    playTreasureCelebration(() => showTreasureResultModal(result));
     return true;
   }
   return false;
+}
+
+function showTreasureResultModal(result){
+  document.getElementById('resultModal').style.display='flex';
+
+  const scoreLine = document.getElementById('scoreLine');
+  scoreLine.textContent = `Puntuación: ${result.score}  ·  Precisión ${Math.round(result.accuracy*100)}%  ·  Ritmo ${result.avgTimePerStep.toFixed(1)}s/paso`;
+
+  const viewBtn = document.getElementById('viewLeaderboardBtn');
+  const hint = document.getElementById('practiceHint');
+  const nextBtn = document.getElementById('nextLevelBtn');
+  nextBtn.style.display = LEVEL_ORDER.indexOf(state.difficulty) < LEVEL_ORDER.length - 1 ? 'block' : 'none';
+
+  if(state.difficulty === 'level1'){
+    viewBtn.style.display = 'none';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+    viewBtn.style.display = 'block';
+    viewBtn.onclick = () => {
+      document.getElementById('resultModal').style.display = 'none';
+      openLeaderboard(state.difficulty);
+    };
+    state.lastScoreDocId = null;
+    state.lastPlayedLevel = state.difficulty;
+    saveScoreToLeaderboard(state.difficulty, result).then(id=>{
+      state.lastScoreDocId = id;
+    });
+  }
 }
 
 function handleWrongKey(){
@@ -1422,6 +1430,7 @@ function playErrorTone(){
 
 function pressDirection(dir){
   if(!state.playing){ playBeep(0); return; }
+  if(state.awaitingKeyAnnouncement) return; // 「找到鑰匙了」的語音還沒講完，先忽略操作，避免蓋過去
   if(state.curIndex >= state.instructions.length) return;
   const ins = state.instructions[state.curIndex];
 
@@ -1627,10 +1636,10 @@ function drawKey(cx,cy){
   ctx.restore();
 }
 
-function drawTreasure(cx,cy){
+function drawTreasure(cx,cy,sizeOverride){
   ctx.save();
   ctx.translate(cx,cy);
-  const s = CELL*0.42;
+  const s = sizeOverride || CELL*0.42;
   const black = '#1a1208';
   const gold = '#FFD23F';
   const goldDark = '#E8A317';
@@ -1911,7 +1920,188 @@ function drawDog(cx,cy,facing){
   }
   ctx.restore();
 }
-  
+
+// ---------- 找到寶藏的慶祝動畫（吐舌頭小狗 + 寶藏 + 閃光，疊在棋盤正中央） ----------
+function drawHappyDog(cx, cy, s){
+  ctx.save();
+  ctx.translate(cx, cy);
+  const black = '#1a1208';
+  const brown = '#5C3A21';
+  const brownDark = '#4a2e19';
+  const tan = '#E8B268';
+  const white = '#fff';
+  const collar = '#B23A2E';
+  const tongue = '#FF6F91';
+  const tongueDark = '#D94F72';
+  const lw = Math.max(2, s*0.06);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  function roundRectPath(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  // 耳朵（開心地往外翹）
+  ctx.fillStyle = brownDark;
+  ctx.beginPath();
+  ctx.ellipse(-s*0.20,-s*0.32,s*0.09,s*0.17,-0.5,0,Math.PI*2);
+  ctx.fill();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(s*0.20,-s*0.32,s*0.09,s*0.17,0.5,0,Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  // 腳
+  ctx.fillStyle = tan;
+  [-s*0.24, s*0.15].forEach(lx=>{
+    roundRectPath(lx, s*0.24, s*0.10, s*0.14, s*0.03);
+    ctx.fill();
+    ctx.lineWidth = lw*0.85;
+    ctx.strokeStyle = black;
+    ctx.stroke();
+  });
+
+  // 身體
+  ctx.beginPath();
+  ctx.ellipse(0, s*0.20, s*0.30, s*0.20, 0, 0, Math.PI*2);
+  ctx.fillStyle = brown;
+  ctx.fill();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 頭
+  ctx.beginPath();
+  ctx.arc(0,-s*0.06,s*0.25,0,Math.PI*2);
+  ctx.fillStyle = brown;
+  ctx.fill();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 口鼻貼片
+  ctx.beginPath();
+  ctx.ellipse(0, s*0.06, s*0.14, s*0.10, 0, 0, Math.PI*2);
+  ctx.fillStyle = tan;
+  ctx.fill();
+  ctx.lineWidth = lw*0.85;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+
+  // 吐出來的舌頭
+  ctx.beginPath();
+  ctx.moveTo(-s*0.06, s*0.10);
+  ctx.quadraticCurveTo(-s*0.07, s*0.26, 0, s*0.30);
+  ctx.quadraticCurveTo(s*0.07, s*0.26, s*0.06, s*0.10);
+  ctx.closePath();
+  ctx.fillStyle = tongue;
+  ctx.fill();
+  ctx.lineWidth = lw*0.7;
+  ctx.strokeStyle = black;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, s*0.12);
+  ctx.lineTo(0, s*0.25);
+  ctx.lineWidth = lw*0.4;
+  ctx.strokeStyle = tongueDark;
+  ctx.stroke();
+
+  // 鼻子
+  ctx.beginPath();
+  ctx.ellipse(0, s*0.02, s*0.045, s*0.035, 0, 0, Math.PI*2);
+  ctx.fillStyle = black;
+  ctx.fill();
+
+  // 項圈
+  ctx.fillStyle = collar;
+  ctx.fillRect(-s*0.16, s*0.115, s*0.32, s*0.065);
+
+  // 開心瞇眼（往上彎的弧線）
+  ctx.lineWidth = lw*0.9;
+  ctx.strokeStyle = black;
+  ctx.beginPath();
+  ctx.arc(-s*0.10, -s*0.09, s*0.05, Math.PI*0.15, Math.PI*0.85);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(s*0.10, -s*0.09, s*0.05, Math.PI*0.15, Math.PI*0.85);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawStar(cx, cy, r, rotation){
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation || 0);
+  ctx.beginPath();
+  for(let i=0;i<4;i++){
+    const a1 = (Math.PI/2)*i;
+    ctx.lineTo(Math.cos(a1)*r, Math.sin(a1)*r);
+    const a2 = a1 + Math.PI/4;
+    ctx.lineTo(Math.cos(a2)*r*0.35, Math.sin(a2)*r*0.35);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#FFF3B0';
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#E8A317';
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSparkleBurst(cx, cy, spread, alpha){
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+  const positions = [
+    { dx:-spread, dy:-spread*0.6, r:spread*0.22, rot:0.3 },
+    { dx: spread, dy:-spread*0.75, r:spread*0.16, rot:-0.2 },
+    { dx:-spread*0.85, dy: spread*0.7, r:spread*0.15, rot:0.6 },
+    { dx: spread*0.9, dy: spread*0.65, r:spread*0.20, rot:-0.5 }
+  ];
+  positions.forEach(p => drawStar(cx+p.dx, cy+p.dy, p.r, p.rot));
+  ctx.restore();
+}
+
+// 找到寶藏後，在棋盤正中央（不管寶藏實際在哪一格）快速播放幾格「閃光→小狗吐舌頭+寶藏」
+// 的慶祝畫面，播完再呼叫 onDone 顯示結算彈窗
+function playTreasureCelebration(onDone){
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const boxSize = Math.min(canvas.width, canvas.height) / 3; // 佔棋盤 9 宮格正中間那一格
+  const frames = [
+    { sparkle: 0.9, sparkleSpread: boxSize*0.30, showChars: false, charScale: 0 },
+    { sparkle: 0.7, sparkleSpread: boxSize*0.38, showChars: true,  charScale: 0.7 },
+    { sparkle: 0.9, sparkleSpread: boxSize*0.46, showChars: true,  charScale: 1 },
+    { sparkle: 0.5, sparkleSpread: boxSize*0.42, showChars: true,  charScale: 1 }
+  ];
+  let i = 0;
+  function renderFrame(){
+    draw(); // 棋盤本身維持顯示在背景
+    const f = frames[i];
+    if(f.showChars){
+      drawTreasure(cx + boxSize*0.16, cy + boxSize*0.06, boxSize*0.30 * f.charScale);
+      drawHappyDog(cx - boxSize*0.14, cy + boxSize*0.02, boxSize*0.62 * f.charScale);
+    }
+    drawSparkleBurst(cx, cy, f.sparkleSpread, f.sparkle);
+    i++;
+    if(i >= frames.length){
+      clearInterval(timerRef);
+      onDone();
+    }
+  }
+  renderFrame();
+  const timerRef = setInterval(renderFrame, 375);
+}
+
 function trackEvent(name, params = {}) {
   if (typeof gtag !== 'undefined') {
     gtag('event', name, params);
