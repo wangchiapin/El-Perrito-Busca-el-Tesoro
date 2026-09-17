@@ -184,18 +184,19 @@
     body.mobile-playing #panel > #statRow{ margin:0 0 6px; }
     body.mobile-playing #boardWrap > canvas{ margin:4px 0; }
 
-    /* 極矮的螢幕（例如手機橫向）：彈窗內容可能比畫面還高，允許彈窗內部捲動 */
-    #resultCard, #nameCard{
-      max-height:calc(100vh - 40px);
-      max-height:calc(100svh - 40px); /* 有支援 svh 的瀏覽器覆蓋掉上一行 */
-      overflow-y:auto;
-    }
-
-    /* iOS Safari 的網址列會讓 inset:0 的彈窗撐出畫面看不到的範圍，
-       導致最下面的按鈕點不到；改用 100svh 確保彈窗高度扣掉工具列 */
+    /* 手機上有些瀏覽器（LINE 內建瀏覽器、Chrome 等）自己的工具列是固定貼在畫面
+       底部的，並不會被 100vh/100svh 這類視窗高度單位排除掉，算出來的高度會比
+       實際看得到的範圍還高，導致最下面的按鈕被工具列蓋住、點不到。
+       與其去猜工具列的高度，改成讓整個彈窗本身可以上下捲動、由畫面頂端開始排列，
+       並在底部留一大段安全空間，不管哪種瀏覽器、工具列多高，都能捲動到看得見按鈕為止 */
     #nameGate, #resultModal, #leaderboardModal{
-      height:100vh;
-      height:100svh;
+      align-items:flex-start;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-top:max(24px, env(safe-area-inset-top));
+      padding-bottom:calc(120px + env(safe-area-inset-bottom));
+      min-height:100vh;
+      min-height:100svh;
     }
   }
   .seal{
