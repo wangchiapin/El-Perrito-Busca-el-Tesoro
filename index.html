@@ -96,169 +96,7 @@
   }
 
   /* ---------- 手機版：改為上下堆疊，並允許整頁上下捲動 ---------- */
-  @media (max-width: 700px){
-    body{
-      height:auto;
-      min-height:100vh;
-      overflow-x:hidden;
-      overflow-y:auto;
-      /* 底部手勢列安全區域，避免方向鍵/開始鍵貼著螢幕邊緣 */
-      padding-bottom:calc(14px + env(safe-area-inset-bottom));
-    }
-    #gameArea{
-      flex-direction:column;
-      align-items:stretch;   /* 讓每個區塊撐滿寬度，取代原本 #panel 提供的寬度 */
-      height:auto;
-      max-width:420px;
-      margin:0 auto;
-      gap:0;
-    }
-    /* #panel 跟 #boardWrap 都改成 display:contents，讓它們裡面的元件
-       「解散框架」，變成同一層的 flex 項目，才能用 order 自由排列 */
-    #panel{
-      display:contents;
-    }
-    #boardWrap{
-      display:contents;
-    }
-
-    /* 由上至下：標題/打招呼 → 時間錯誤 → 指令區塊 → 棋盤 →
-       方向鍵 → 等級顯示 → 開始遊戲鍵 */
-    #boardWrap > h1{
-      order:10;
-      margin-bottom:4px;
-      color:var(--primary-dark);
-      text-shadow:none;
-    }
-    #boardWrap > .seal{ order:20; margin-bottom:6px; }
-    #panel > #playerGreeting{ order:30; }
-
-    #panel > #statRow{ order:40; margin:6px 0; }
-
-    #panel > #stageLabel{ order:50; }
-    #panel > #instructionBox{ order:60; }
-    #panel > #errorMsg{ order:70; }
-
-    #boardWrap > canvas{
-      order:80;
-      align-self:center;    /* canvas 有內建尺寸，stretch 對它不生效，改用置中 */
-      margin:8px 0;
-      background:#000;      /* #boardWrap 解散後，黑色相框改由 canvas 自己承擔 */
-      padding:10px;
-      border:3px solid var(--outline);
-      border-radius:14px;
-      box-shadow:5px 5px 0 rgba(0,0,0,.25);
-      box-sizing:content-box;
-    }
-
-    #panel > #dpad{ order:90; margin:6px 0 10px; }
-
-    #panel > #currentLevelBadge{ order:100; margin-bottom:8px; }
-
-    #panel > #startBtn{ order:110; }
-
-    #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
-
-    /* 方向鍵在手機上改扁一點：變寬變矮，減少版面高度 */
-    #dpad{
-      gap:8px;
-    }
-    #dpadCenterCol{
-      gap:5px;
-    }
-    #dpad button{
-      width:66px;
-      height:48px;         /* 原本 38px，低於建議的最小可觸控尺寸，容易點錯/點不到 */
-      border-radius:8px;
-      box-shadow:none;
-      font-size:17px;
-    }
-
-    /* 遊戲進行中收合非必要資訊，讓棋盤＋方向鍵能一起留在畫面內 */
-    body.mobile-playing #boardWrap > h1,
-    body.mobile-playing #boardWrap > .seal,
-    body.mobile-playing #panel > #playerGreeting,
-    body.mobile-playing #panel > #currentLevelBadge{
-      display:none;
-    }
-    body.mobile-playing #panel > #statRow{ margin:0 0 6px; }
-    body.mobile-playing #boardWrap > canvas{ margin:4px 0; }
-
-    /* 結算/排行榜彈窗在遊戲進行中要疊在畫面上面，維持 fixed；
-       手機上有些瀏覽器（LINE 內建瀏覽器、Chrome 等）自己的工具列是固定貼在
-       畫面底部的，並不會被 100vh/100svh 這類視窗高度單位排除掉，算出來的高度
-       會比實際看得到的範圍還高，導致最下面的按鈕被工具列蓋住、點不到。
-       與其去猜工具列的高度，改成讓彈窗本身可以上下捲動、由畫面頂端開始排列，
-       並在底部留一大段安全空間，不管哪種瀏覽器、工具列多高，都能捲動到看得見按鈕為止 */
-    #resultModal, #leaderboardModal{
-      align-items:flex-start;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      padding-top:max(16px, env(safe-area-inset-top));
-      padding-bottom:calc(90px + env(safe-area-inset-bottom));
-      min-height:100vh;
-      min-height:100svh;
-    }
-
-    /* 姓名/選難度畫面是進遊戲前的第一個畫面，這時候遊戲本體本來就是隱藏的，
-       不需要疊在畫面「上面」。改成一般文件流裡的區塊，直接交給瀏覽器原生的
-       頁面捲動處理，徹底避開 fixed 疊層 + 動態工具列這整類不穩定的行為 */
-    #nameGate{
-      position:static;
-      inset:auto;
-      min-height:100vh;
-      min-height:100svh;
-      /* 卡片右上角的「寶」字圓章往外凸出、還帶旋轉角度，實際占用範圍比看起來大，
-         頂部要留夠空間才不會被畫面邊界切掉 */
-      padding:44px 20px calc(40px + env(safe-area-inset-bottom));
-    }
-    html body.gate-open{
-      overflow-y:auto;
-      height:auto;
-    }
-
-    /* 縮減姓名/難度選擇畫面各區塊間的留白，讓整欄盡量在一屏內顯示完，
-       減少需要捲動的機會；下面這句提示語手機版直接拿掉騰空間 */
-    #nameCard{
-      padding:18px 18px 16px;
-    }
-    #nameGateIcons{
-      font-size:26px;
-      letter-spacing:8px;
-      margin:2px 0 6px;
-    }
-    #nameCard h1{
-      font-size:17px;
-    }
-    #nameCard .seal{
-      margin:6px 0 10px;
-    }
-    #playerNameInput{
-      padding:10px 12px;
-    }
-    #nameGateError{
-      min-height:12px;
-      margin-top:4px;
-    }
-    #gateDifficultyRow{
-      margin:10px 0 2px;
-    }
-    #gateDifficultyLabel{
-      margin:0 0 6px;
-    }
-    #gateDifficultyButtons{
-      gap:6px;
-    }
-    .gateDiffBtn{
-      padding:7px 10px;
-    }
-    #nameGateBtn{
-      margin-top:10px;
-    }
-    #nameGateFooter{
-      display:none;
-    }
-  }
+  
   .seal{
     display:inline-block;
     width:100%;
@@ -781,6 +619,170 @@
     margin-top:18px;
     font-size:16px;
     padding:12px 20px;      /* 按鈕也稍微放大 */
+  }
+
+  @media (max-width: 700px){
+    body{
+      height:auto;
+      min-height:100vh;
+      overflow-x:hidden;
+      overflow-y:auto;
+      /* 底部手勢列安全區域，避免方向鍵/開始鍵貼著螢幕邊緣 */
+      padding-bottom:calc(14px + env(safe-area-inset-bottom));
+    }
+    #gameArea{
+      flex-direction:column;
+      align-items:stretch;   /* 讓每個區塊撐滿寬度，取代原本 #panel 提供的寬度 */
+      height:auto;
+      max-width:420px;
+      margin:0 auto;
+      gap:0;
+    }
+    /* #panel 跟 #boardWrap 都改成 display:contents，讓它們裡面的元件
+       「解散框架」，變成同一層的 flex 項目，才能用 order 自由排列 */
+    #panel{
+      display:contents;
+    }
+    #boardWrap{
+      display:contents;
+    }
+
+    /* 由上至下：標題/打招呼 → 時間錯誤 → 指令區塊 → 棋盤 →
+       方向鍵 → 等級顯示 → 開始遊戲鍵 */
+    #boardWrap > h1{
+      order:10;
+      margin-bottom:4px;
+      color:var(--primary-dark);
+      text-shadow:none;
+    }
+    #boardWrap > .seal{ order:20; margin-bottom:6px; }
+    #panel > #playerGreeting{ order:30; }
+
+    #panel > #statRow{ order:40; margin:6px 0; }
+
+    #panel > #stageLabel{ order:50; }
+    #panel > #instructionBox{ order:60; }
+    #panel > #errorMsg{ order:70; }
+
+    #boardWrap > canvas{
+      order:80;
+      align-self:center;    /* canvas 有內建尺寸，stretch 對它不生效，改用置中 */
+      margin:8px 0;
+      background:#000;      /* #boardWrap 解散後，黑色相框改由 canvas 自己承擔 */
+      padding:10px;
+      border:3px solid var(--outline);
+      border-radius:14px;
+      box-shadow:5px 5px 0 rgba(0,0,0,.25);
+      box-sizing:content-box;
+    }
+
+    #panel > #dpad{ order:90; margin:6px 0 10px; }
+
+    #panel > #currentLevelBadge{ order:100; margin-bottom:8px; }
+
+    #panel > #startBtn{ order:110; }
+
+    #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
+
+    /* 方向鍵在手機上改扁一點：變寬變矮，減少版面高度 */
+    #dpad{
+      gap:8px;
+    }
+    #dpadCenterCol{
+      gap:5px;
+    }
+    #dpad button{
+      width:66px;
+      height:48px;         /* 原本 38px，低於建議的最小可觸控尺寸，容易點錯/點不到 */
+      border-radius:8px;
+      box-shadow:none;
+      font-size:17px;
+    }
+
+    /* 遊戲進行中收合非必要資訊，讓棋盤＋方向鍵能一起留在畫面內 */
+    body.mobile-playing #boardWrap > h1,
+    body.mobile-playing #boardWrap > .seal,
+    body.mobile-playing #panel > #playerGreeting,
+    body.mobile-playing #panel > #currentLevelBadge{
+      display:none;
+    }
+    body.mobile-playing #panel > #statRow{ margin:0 0 6px; }
+    body.mobile-playing #boardWrap > canvas{ margin:4px 0; }
+
+    /* 結算/排行榜彈窗在遊戲進行中要疊在畫面上面，維持 fixed；
+       手機上有些瀏覽器（LINE 內建瀏覽器、Chrome 等）自己的工具列是固定貼在
+       畫面底部的，並不會被 100vh/100svh 這類視窗高度單位排除掉，算出來的高度
+       會比實際看得到的範圍還高，導致最下面的按鈕被工具列蓋住、點不到。
+       與其去猜工具列的高度，改成讓彈窗本身可以上下捲動、由畫面頂端開始排列，
+       並在底部留一大段安全空間，不管哪種瀏覽器、工具列多高，都能捲動到看得見按鈕為止 */
+    #resultModal, #leaderboardModal{
+      align-items:flex-start;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding-top:max(16px, env(safe-area-inset-top));
+      padding-bottom:calc(90px + env(safe-area-inset-bottom));
+      min-height:100vh;
+      min-height:100svh;
+    }
+
+    /* 姓名/選難度畫面是進遊戲前的第一個畫面，這時候遊戲本體本來就是隱藏的，
+       不需要疊在畫面「上面」。改成一般文件流裡的區塊，直接交給瀏覽器原生的
+       頁面捲動處理，徹底避開 fixed 疊層 + 動態工具列這整類不穩定的行為 */
+    #nameGate{
+      position:static;
+      inset:auto;
+      min-height:100vh;
+      min-height:100svh;
+      /* 卡片右上角的「寶」字圓章往外凸出、還帶旋轉角度，實際占用範圍比看起來大，
+         頂部要留夠空間才不會被畫面邊界切掉 */
+      padding:44px 20px calc(40px + env(safe-area-inset-bottom));
+    }
+    html body.gate-open{
+      overflow-y:auto;
+      height:auto;
+    }
+
+    /* 縮減姓名/難度選擇畫面各區塊間的留白，讓整欄盡量在一屏內顯示完，
+       減少需要捲動的機會；下面這句提示語手機版直接拿掉騰空間 */
+    #nameCard{
+      padding:18px 18px 16px;
+    }
+    #nameGateIcons{
+      font-size:26px;
+      letter-spacing:8px;
+      margin:2px 0 6px;
+    }
+    #nameCard h1{
+      font-size:17px;
+    }
+    #nameCard .seal{
+      margin:6px 0 10px;
+    }
+    #playerNameInput{
+      padding:10px 12px;
+    }
+    #nameGateError{
+      min-height:12px;
+      margin-top:4px;
+    }
+    #gateDifficultyRow{
+      margin:10px 0 2px;
+    }
+    #gateDifficultyLabel{
+      margin:0 0 6px;
+    }
+    #gateDifficultyButtons{
+      gap:6px;
+    }
+    .gateDiffBtn{
+      padding:7px 10px;
+    }
+    #nameGateBtn{
+      margin-top:10px;
+    }
+    #nameGateFooter{
+      display:none;
+    }
   }
 </style>
 </head>
