@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>El Perrito Busca el Tesoro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -212,7 +212,7 @@
     background:var(--primary);
     color:#fff;
     border:2.5px solid var(--outline);
-    border-radius:12px;
+    border-radius:999px;
     font-family:inherit;
     font-weight:700;
     font-size:14px;
@@ -276,8 +276,6 @@
     margin-top:6px;
     line-height:1.3;
   }
-  /* 手機版才用的「換關卡」按鈕；桌面版沿用原本徽章裡的文字連結，這顆先藏起來 */
-  #changeLevelBtn{ display:none; }
   #dpad{
     display:flex;
     align-items:center;
@@ -297,7 +295,7 @@
     width:42px;
     height:42px;
     font-size:16px;
-    border-radius:10px;
+    border-radius:999px;
     background:var(--teal);
     display:flex;
     align-items:center;
@@ -346,7 +344,7 @@
   #nameSeal{
     position:absolute;
     top:-18px;
-    right:-18px;
+    left:-18px;
     width:64px;
     height:64px;
     border-radius:50%;
@@ -358,7 +356,7 @@
     font-size:26px;
     font-weight:bold;
     box-shadow:0 4px 10px rgba(0,0,0,.3);
-    transform:rotate(12deg);
+    transform:rotate(-12deg);
     border:3px solid var(--outline);
   }
   #nameGateIcons{
@@ -439,7 +437,8 @@
     background:#fff;
     color:var(--ink);
     border:2.5px solid var(--outline);
-    border-radius:12px;
+    border-radius:26px;
+    padding:8px 18px;
     text-align:left;
     cursor:pointer;
     font-family:inherit;
@@ -682,20 +681,6 @@
 
     #panel > #currentLevelBadge{ order:100; margin-bottom:8px; }
 
-    #panel > #mobileActionRow{
-      order:110;
-      display:flex;
-      gap:8px;
-    }
-    #mobileActionRow button{
-      width:auto;
-      flex:1;
-      margin-top:0;
-    }
-    #changeLevelBtn{
-      display:block;
-      background:var(--teal);
-    }
 
     #panel > #keysHint{ display:none; }  /* 方向鍵就在棋盤下方，手機上不需要文字提示 */
 
@@ -709,7 +694,7 @@
     #dpad button{
       width:66px;
       height:48px;         /* 原本 38px，低於建議的最小可觸控尺寸，容易點錯/點不到 */
-      border-radius:8px;
+      border-radius:999px;
       box-shadow:none;
       font-size:17px;
     }
@@ -799,121 +784,221 @@
       display:none;
     }
   }
+
+  /* ===================== v2：共用設定、膠囊按鈕、拼音注音、控制鍵、彈窗 ===================== */
+  .hide{ display:none !important; }
+  small{ display:block; font-size:.72em; font-weight:500; opacity:.85; line-height:1.2; letter-spacing:0; }
+  button{ touch-action:manipulation; }
+  button:disabled{ opacity:.45; cursor:default; filter:none; }
+  .secBtn{ background:#fff; color:var(--ink); }
+  #nextLevelBtn{ background:var(--teal); }
+  .gameTitle small{ font-size:.62em; }
+  .seal small{ display:inline; font-size:.95em; }
+  .seal small::before{ content:" · "; }
+  .ver{ font-size:11px; color:#a9a39a; margin:10px 0 0; font-weight:500; }
+  #gateLbBtn{ margin-top:8px; }
+
+  /* ⚙️：三款遊戲都放右上角 */
+  .gear{
+    width:40px; height:40px; padding:0; margin:0; flex:0 0 auto;
+    border-radius:999px; background:#fff; color:var(--ink); font-size:19px; letter-spacing:0;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:2px 2px 0 rgba(0,0,0,.2);
+  }
+  #nameCard .gear{ position:absolute; top:14px; right:14px; z-index:2; }
+  #statRow{ align-items:center; }
+  #statRow .gear{ margin-left:3px; }
+  #statRow .statLbl{ font-size:12px; font-weight:600; color:var(--ink); }
+  #statRow .statLbl small{ font-size:10px; }
+  #statRow .statVal{ font-size:18px; }
+
+  .warn{ background:#fff7e6; border:1.5px solid #f5d28a; color:#8a5a00; border-radius:12px; padding:6px 10px; font-size:12px; margin:6px 0; text-align:center; font-weight:600; }
+  #nameCard .warn{ margin:0 0 10px; }
+
+  /* 指令文字：每個字上面放拼音／注音 */
+  #instructionBox{ font-size:22px; min-height:52px; }
+  .zhl{ display:inline-flex; flex-wrap:wrap; justify-content:center; align-items:flex-end; row-gap:4px; }
+  .ru{ display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; margin:0 1px; }
+  .ru .ph{ font-size:.5em; font-weight:500; line-height:1.25; white-space:nowrap; }
+  .ru .ph.zy{ font-size:.48em; }
+  .ru .hz{ font-weight:700; }
+  .listen{ font-size:15px; }
+  #currentLevelName small{ display:inline; font-size:11px; }
+  #currentLevelName small::before{ content:" · "; }
+  #currentLevelDesc{ display:block; font-size:11px; color:#5b5b63; font-weight:600; }
+  #stageLabel small{ font-size:10px; }
+  #errorMsg small{ font-size:11px; }
+
+  /* 再聽一次／暫停／重新開始／主選單 */
+  #ctlRow{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:4px; }
+  #ctlRow button{ margin:0; padding:6px 4px; font-size:13px; letter-spacing:0; }
+  #ctlRow button small{ font-size:10px; }
+  #replayBtn{ background:var(--secondary); color:var(--ink); }
+
+  /* 第 1 關提示：該按的方向鍵發亮 */
+  #dpad button.hintGlow{ background:var(--secondary); color:var(--ink); animation:hintGlow .8s ease-in-out infinite alternate; }
+  @keyframes hintGlow{ from{ box-shadow:0 0 0 0 rgba(255,210,63,.95); } to{ box-shadow:0 0 0 9px rgba(255,210,63,.15); } }
+
+  /* 暫停／確認／⚙️ 彈窗 */
+  .ov{ position:fixed; inset:0; z-index:1100; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(38,38,43,.6); overflow-y:auto; }
+  #confirmov{ z-index:1150; }
+  #setov{ z-index:1200; }
+  .ovCard{ width:100%; max-width:380px; margin:auto; background:#fff; border:3px solid var(--outline); border-radius:20px; padding:18px 16px; text-align:center; box-shadow:6px 6px 0 rgba(0,0,0,.3); }
+  .ovIcon{ font-size:40px; }
+  .ovCard h2{ margin:0 0 10px; color:var(--primary-dark); font-size:20px; }
+  .ovRow{ display:flex; gap:8px; }
+  .ovRow button{ flex:1; }
+  #confirmMsg{ font-size:16px; margin:4px 0 10px; }
+  .setGroup{ margin:10px 0; text-align:left; }
+  .setGroup h3{ font-size:13px; margin:0 0 6px; color:var(--primary-dark); }
+  .setGroup h3 small{ display:inline; font-size:11px; }
+  .setGroup h3 small::before{ content:" · "; }
+  .opts{ display:flex; flex-wrap:wrap; gap:6px; }
+  .opt{ flex:1 1 0; min-width:0; width:auto; margin:0; padding:6px 8px; background:#fff; color:var(--ink); font-size:14px; letter-spacing:0; box-shadow:2px 2px 0 rgba(0,0,0,.18); }
+  .opts.two .opt{ flex:1 1 40%; }
+  .opt.on{ background:var(--primary); color:#fff; }
+
+  /* 結果畫面 */
+  #resultCard{ padding:24px 20px 20px; }
+  #resultCard h2 small{ font-size:.6em; color:var(--ink); }
+  .resLevel{ font-size:13px; color:#5b5b63; margin-bottom:6px; }
+  .resLevel small{ display:inline; }
+  .resLevel small::before{ content:" · "; }
+  .resScoreLbl{ font-size:13px; }
+  .resScoreLbl small{ display:inline; }
+  .resScoreLbl small::before{ content:" · "; }
+  .resScore{ font-size:46px; font-weight:800; color:var(--primary-dark); line-height:1.1; }
+  .resTable{ width:100%; border-collapse:collapse; margin:8px 0; font-size:13px; }
+  .resTable td{ padding:4px 6px; border-bottom:1px dashed #e3dccf; text-align:left; }
+  .resTable td small{ font-size:11px; color:#7a7268; }
+  .gateDiffBtn .diffName small{ display:inline; font-size:12px; }
+  .gateDiffBtn .diffName small::before{ content:" · "; }
+  .resTable td:last-child{ text-align:right; font-weight:700; white-space:nowrap; }
+  .comment{ background:#FFF6D6; border:2px dashed var(--secondary-dark); border-radius:12px; padding:6px; margin:8px 0; font-size:15px; }
+  #practiceHint{ font-size:12px; color:#7a7268; margin:6px 0; }
+  #lbArea{ margin:8px 0; }
+  .lbList{ border:2.5px solid var(--outline); border-radius:12px; overflow:hidden; text-align:left; background:#fff; }
+  .lbRowTop{ font-size:16px; grid-template-columns:32px 1fr 64px; }
+  .lbRank{ font-size:17px; }
+  .lbScore{ font-size:17px; }
+  .lbRowMeta{ font-size:12px; padding-left:42px; }
+  .lbStatus{ font-size:13px; color:#7a7268; margin:6px 0; }
+  .lbNote{ font-size:12px; color:#7a7268; margin:0 0 8px; }
+  #lbTabs{ display:flex; gap:6px; margin-bottom:10px; }
+  #lbBody{ overflow-y:auto; min-height:0; }
+  #leaderboardCard{ padding:24px 18px 18px; }
+  #leaderboardCard h2 small{ font-size:.6em; color:var(--ink); }
+  #lbBackBtn{ margin-top:12px; }
+
+  @media (max-width: 700px){
+    #panel > #voiceWarnGame{ order:55; }
+    #panel > #ctlRow{ order:95; grid-template-columns:repeat(4,1fr); gap:5px; margin:0 0 8px; }
+    #ctlRow button{ font-size:12px; padding:6px 2px; }
+    #ctlRow button small{ font-size:9px; }
+    #nameCard .gear{ top:10px; right:10px; }
+  }
 </style>
 </head>
 <body class="gate-open">
-
 <div id="nameGate">
   <div id="nameCard">
     <div id="nameSeal">寶</div>
+    <button type="button" class="gear" id="gateGear" aria-label="⚙️">⚙️</button>
     <div id="nameGateIcons">🐶 🪨 🔑 💰</div>
-    <h1>🐾 El Perrito Busca el Tesoro</h1>
-    <div class="seal">Cada día unos minutos · Práctica de direcciones</div>
-    <p id="namePrompt">¿Cómo te llamas, explorador?</p>
-   <!-- <p id="namePromptSimp">你叫什麼名字呢？</p>-->
-    <input id="playerNameInput" type="text" maxlength="20" placeholder="你的名字" autocomplete="off">
+    <h1 class="gameTitle" data-t="title"></h1>
+    <div class="seal" data-t="tagline"></div>
+    <div id="voiceWarnGate" class="warn hide"></div>
+    <p id="namePrompt" data-t="namePrompt"></p>
+    <input id="playerNameInput" type="text" maxlength="12" autocomplete="off">
     <div id="nameGateError"></div>
-
     <div id="gateDifficultyRow">
-      <p id="gateDifficultyLabel">Elige un nivel de dificultad</p>
+      <p id="gateDifficultyLabel" data-t="chooseLevel"></p>
       <div id="gateDifficultyButtons">
-        <button type="button" class="gateDiffBtn selected" data-level="level1">
-          <span class="diffName">NIVEL 1</span>
-          <span class="diffDesc">7–15 obstáculos</span>
-        </button>
-        <button type="button" class="gateDiffBtn" data-level="level2">
-          <span class="diffName">NIVEL 2</span>
-          <span class="diffDesc">15–25 obstáculos, la llave -> el tesoro </span>
-        </button>
-        <button type="button" class="gateDiffBtn" data-level="level3">
-          <span class="diffName">NIVEL 3</span>
-          <span class="diffDesc">20–30 obstáculos, la llave -> el tesoro, solo voz</span>
-        </button>
-        <button type="button" class="gateDiffBtn" data-level="level4">
-          <span class="diffName">NIVEL 4</span>
-          <span class="diffDesc">20–30 obstáculos, la llave -> el tesoro, solo voz, instrucciones combinadas</span>
-        </button>
+        <button type="button" class="gateDiffBtn selected" data-level="level1"><span class="diffName"></span><span class="diffDesc"></span></button>
+        <button type="button" class="gateDiffBtn" data-level="level2"><span class="diffName"></span><span class="diffDesc"></span></button>
+        <button type="button" class="gateDiffBtn" data-level="level3"><span class="diffName"></span><span class="diffDesc"></span></button>
+        <button type="button" class="gateDiffBtn" data-level="level4"><span class="diffName"></span><span class="diffDesc"></span></button>
       </div>
     </div>
-
-    <button id="nameGateBtn">¡Vamos a buscar el tesoro! 🐾</button>
-    <div id="nameGateFooter">El perrito te espera con la llave y el tesoro 🔑💰</div>
+    <button id="nameGateBtn" data-t="go"></button>
+    <button id="gateLbBtn" class="secBtn" data-t="lbBtn"></button>
+    <p class="ver">v2-0</p>
   </div>
 </div>
 
 <div id="leaderboardModal">
   <div id="leaderboardCard">
-    <button id="leaderboardCloseBtn" aria-label="Cerrar">✕</button>
     <div id="lbSeal">🏆</div>
-    <h2 id="lbTitle">Clasificación</h2>
-    <div id="lbSubtitle"></div>
-    <div id="lbList"></div>
-    <div id="lbStatus"></div>
-    <button id="lbBackBtn">Volver al juego</button>
+    <h2 id="lbTitle" data-t="lbTitle"></h2>
+    <div id="lbTabs"></div>
+    <div id="lbBody"></div>
+    <button id="lbBackBtn" data-t="close"></button>
   </div>
 </div>
 
 <div id="resultModal">
-  <div id="resultCard">
-    <div id="resultSeal">🎉</div>
-    <h2 id="resultTitle">¡Tesoro encontrado!</h2>
-    <div id="scoreLine"></div>
-    <div id="practiceHint" style="display:none;">¡Bien hecho! 🐾 Prueba el NIVEL 2 o superior para entrar en la clasificación.</div>
-    <div id="resultBtnRow">
-      <button id="playAgainBtn">🔄 Jugar de nuevo</button>
-      <button id="nextLevelBtn" style="display:none;">➡️ Siguiente nivel</button>
-      <button id="viewLeaderboardBtn" style="display:none;">🏆 Ver clasificación</button>
+  <div id="resultCard"></div>
+</div>
+
+<div id="setov" class="ov hide"></div>
+<div id="pauseov" class="ov hide">
+  <div class="ovCard">
+    <div class="ovIcon">⏸</div>
+    <h2 data-t="paused"></h2>
+    <button id="resumeBtn" data-t="resume"></button>
+  </div>
+</div>
+<div id="confirmov" class="ov hide">
+  <div class="ovCard">
+    <p id="confirmMsg"></p>
+    <div class="ovRow">
+      <button id="confirmNo" class="secBtn" data-t="no"></button>
+      <button id="confirmYes" data-t="yes"></button>
     </div>
   </div>
 </div>
 
 <div id="gameArea">
   <div id="boardWrap">
-    <h1>🐾 El Perrito Busca el Tesoro</h1>
-    <div class="seal">Cada día unos minutos · Práctica de direcciones</div>
+    <h1 class="gameTitle" data-t="title"></h1>
+    <div class="seal" data-t="tagline"></div>
     <canvas id="board" width="480" height="480"></canvas>
   </div>
-
   <div id="panel">
     <div id="playerGreeting"></div>
-
     <div id="statRow">
-      <div>Tiempo<span id="timerDisp">00:00</span></div>
-      <div>Errores<span id="errorDisp">0</span></div>
+      <div><span class="statLbl" data-t="time"></span><span id="timerDisp" class="statVal">00:00</span></div>
+      <div><span class="statLbl" data-t="errors"></span><span id="errorDisp" class="statVal">0</span></div>
+      <button type="button" class="gear" id="gameGear" aria-label="⚙️">⚙️</button>
     </div>
-
     <div id="currentLevelBadge">
-      <b id="currentLevelName">NIVEL 1</b>
-      <a id="changeLevelLink">🔁 Cambiar nivel</a>
+      <b id="currentLevelName"></b>
+      <span id="currentLevelDesc"></span>
     </div>
-
+    <div id="voiceWarnGame" class="warn hide"></div>
     <div id="stageLabel"></div>
-    <div id="instructionBox">¡Pulsa «Comenzar juego» para empezar!</div>
+    <div id="instructionBox"></div>
     <div id="errorMsg"></div>
-
-    <div id="mobileActionRow">
-      <button id="startBtn">Comenzar juego</button>
-      <button id="changeLevelBtn">🔁 Cambiar nivel</button>
+    <div id="ctlRow">
+      <button type="button" id="replayBtn" data-t="replay"></button>
+      <button type="button" id="pauseBtn" data-t="pause"></button>
+      <button type="button" id="restartBtn" class="secBtn" data-t="restart"></button>
+      <button type="button" id="menuBtn" class="secBtn" data-t="menu"></button>
     </div>
-    <div id="keysHint">En la computadora usa las flechas ↑ ↓ ← →; en el móvil usa los botones de abajo</div>
-
+    <div id="keysHint" data-t="keysHint"></div>
     <div id="dpad">
-      <button id="dpadLeft">←</button>
+      <button id="dpadLeft" aria-label="←">←</button>
       <div id="dpadCenterCol">
-        <button id="dpadUp">↑</button>
-        <button id="dpadDown">↓</button>
+        <button id="dpadUp" aria-label="↑">↑</button>
+        <button id="dpadDown" aria-label="↓">↓</button>
       </div>
-      <button id="dpadRight">→</button>
+      <button id="dpadRight" aria-label="→">→</button>
     </div>
   </div>
 </div>
 
-<!-- Firebase（排行榜用）：請於下方 script 中的 firebaseConfig 填入你的 Firebase 專案設定 -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
+const VERSION = 'v2-0';
 const GRID = 20;
 let CELL = 24;
 const canvas = document.getElementById('board');
@@ -923,28 +1008,188 @@ const DIRS = ['up','right','down','left']; // clockwise order
 const DELTA = { up:{dr:-1,dc:0}, down:{dr:1,dc:0}, left:{dr:0,dc:-1}, right:{dr:0,dc:1} };
 const OPPOSITE = { up:'down', down:'up', left:'right', right:'left' };
 const KEYMAP = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+const DPAD_ID = { up:'dpadUp', down:'dpadDown', left:'dpadLeft', right:'dpadRight' };
 
-// 中文數字（口語計數用「兩」而非「二」）：簡繁並列
-const NUM_TRAD = ['','一','兩','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九'];
-const NUM_SIMP = ['','一','两','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九'];
-
-const WORDS_TRAD = { forward:'前進', backward:'後退', turnLeft:'向左轉', turnRight:'向右轉', turnAround:'向後轉', unit:'格' };
-const WORDS_SIMP = { forward:'前进', backward:'后退', turnLeft:'向左转', turnRight:'向右转', turnAround:'向后转', unit:'格' };
-
-const KEY_FOUND_PAIR = { trad:'找到鑰匙了！前往寶藏', simp:'找到钥匙了！前往宝藏' };
-const TREASURE_FOUND_PAIR = { trad:'找到寶藏了！', simp:'找到宝藏了！' };
-
-function moveLabelPair(kind, steps){
-  const numT = NUM_TRAD[steps] || String(steps);
-  const numS = NUM_SIMP[steps] || String(steps);
-  return {
-    trad: WORDS_TRAD[kind] + numT + WORDS_TRAD.unit,
-    simp: WORDS_SIMP[kind] + numS + WORDS_SIMP.unit
-  };
+function esc(str){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
 
-function turnLabelPair(kind){
-  return { trad: WORDS_TRAD[kind], simp: WORDS_SIMP[kind] };
+// ===== 三款遊戲共用的基本設定（⚙️）：localStorage 'hanziGames.settings'，格式見 corre/README.md =====
+//   { v:1, script:'trad'|'simp', lang:'es'|'en'|'zh', phon:'pinyin'|'zhuyin'|'both'|'off', rate:'slow'|'normal'|'fast' }
+//   「慢／正常／快」實際的語速每款遊戲各自決定，小狗找寶藏給外國學生聽指令，設得比色數慢。
+//   ★ 想調語速或句子間的停頓，只要改下面這兩行的數字。
+const RATE_VALUE = { slow:0.45, normal:0.65, fast:0.85 };   // Web Speech 的 rate，1 = 系統正常速度
+const CHUNK_GAP  = { slow:1000, normal:600,  fast:350  };   // 第 4 關連續指令：句子和句子之間停幾毫秒
+const SETTINGS_KEY = 'hanziGames.settings';
+const SET_OPTS = { script:['trad','simp'], lang:['es','en','zh'], phon:['pinyin','zhuyin','both','off'], rate:['slow','normal','fast'] };
+function readSettings(){
+  const out = { v:1, script:'trad', lang:'es', phon:'pinyin', rate:'normal' };
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); }catch(e){}
+  if(saved && typeof saved === 'object'){
+    Object.keys(SET_OPTS).forEach(k => { if(SET_OPTS[k].includes(saved[k])) out[k] = saved[k]; });
+  }else{
+    writeSettings(out);
+  }
+  return out;
+}
+function writeSettings(o){
+  try{
+    let cur = {};
+    try{ cur = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {}; }catch(e){}
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(Object.assign(cur, { v:1, script:o.script, lang:o.lang, phon:o.phon, rate:o.rate })));
+  }catch(e){}
+}
+const SETTINGS = readSettings();
+const simp = () => SETTINGS.script === 'simp';
+
+// ===== 介面文字：[繁, 簡, 西, 英]。畫面上中文在上、西文或英文小字在下；「只有中文」就只有中文 =====
+const T = {
+  title:['小狗找寶藏','小狗找宝藏','El Perrito Busca el Tesoro','El Perrito Busca el Tesoro'],
+  tagline:['每天一分鐘・方向練習','每天一分钟・方向练习','Cada día unos minutos · Práctica de direcciones','A few minutes a day · Directions practice'],
+  namePrompt:['你叫什麼名字？','你叫什么名字？','¿Cómo te llamas, explorador?','What\'s your name, explorer?'],
+  namePh:['你的名字','你的名字','Tu nombre','Your name'],
+  nameErr:['請輸入名字','请输入名字','Escribe tu nombre para continuar','Type your name to continue'],
+  chooseLevel:['選擇難度','选择难度','Elige un nivel','Choose a level'],
+  level1:['第 1 關','第 1 关','Nivel 1','Level 1'],
+  level2:['第 2 關','第 2 关','Nivel 2','Level 2'],
+  level3:['第 3 關','第 3 关','Nivel 3','Level 3'],
+  level4:['第 4 關','第 4 关','Nivel 4','Level 4'],
+  desc1:['7–15 個障礙物・練習關','7–15 个障碍物・练习关','7–15 obstáculos · práctica','7–15 obstacles · practice'],
+  desc2:['15–25 個障礙物・先找鑰匙再找寶藏','15–25 个障碍物・先找钥匙再找宝藏','15–25 obstáculos · primero la llave, luego el tesoro','15–25 obstacles · key first, then the treasure'],
+  desc3:['20–30 個障礙物・先找鑰匙・只有聲音','20–30 个障碍物・先找钥匙・只有声音','20–30 obstáculos · primero la llave · solo voz','20–30 obstacles · key first · audio only'],
+  desc4:['20–30 個障礙物・先找鑰匙・只有聲音・連續指令','20–30 个障碍物・先找钥匙・只有声音・连续指令','20–30 obstáculos · primero la llave · solo voz · instrucciones seguidas','20–30 obstacles · key first · audio only · chained instructions'],
+  go:['出發找寶藏！🐾','出发找宝藏！🐾','¡Vamos a buscar el tesoro! 🐾','Let\'s find the treasure! 🐾'],
+  hello:['你好，{n}！🐾','你好，{n}！🐾','¡Hola, {n}!','Hi, {n}!'],
+  time:['時間','时间','Tiempo','Time'],
+  errors:['錯誤','错误','Errores','Mistakes'],
+  goalTreasure:['🎯 目標：找到寶藏','🎯 目标：找到宝藏','Objetivo: encontrar el tesoro','Goal: find the treasure'],
+  stageKey:['🔑 第一步：找鑰匙','🔑 第一步：找钥匙','Etapa 1: encuentra la llave','Step 1: find the key'],
+  stageTreasure:['💰 第二步：去找寶藏','💰 第二步：去找宝藏','Etapa 2: ve al tesoro','Step 2: go to the treasure'],
+  listen:['🔊 仔細聽','🔊 仔细听','Escucha la instrucción','Listen to the instruction'],
+  wrong:['方向不對，再試一次','方向不对，再试一次','¡Dirección incorrecta! Inténtalo de nuevo','Wrong direction! Try again'],
+  hint:['提示：按亮起來的方向鍵','提示：按亮起来的方向键','Pista: pulsa la flecha que brilla','Hint: press the glowing arrow'],
+  replay:['🔊 再聽一次','🔊 再听一次','Escuchar otra vez','Listen again'],
+  pause:['⏸ 暫停','⏸ 暂停','Pausa','Pause'],
+  paused:['暫停中','暂停中','En pausa','Paused'],
+  resume:['▶ 繼續','▶ 继续','Seguir','Resume'],
+  restart:['↻ 重新開始','↻ 重新开始','Reiniciar','Restart'],
+  menu:['🏠 主選單','🏠 主选单','Menú principal','Main menu'],
+  confirmRestart:['要重新開始這一局嗎？','要重新开始这一局吗？','¿Empezar de nuevo esta partida?','Restart this game?'],
+  confirmMenu:['要回到主選單嗎？這一局不會記錄。','要回到主选单吗？这一局不会记录。','¿Volver al menú? Esta partida no se guardará.','Back to the menu? This game won\'t be saved.'],
+  yes:['確定','确定','Sí','Yes'],
+  no:['取消','取消','No','No'],
+  keysHint:['電腦用方向鍵 ↑ ↓ ← →，手機用下面的按鈕','电脑用方向键 ↑ ↓ ← →，手机用下面的按钮','En la computadora usa las flechas ↑ ↓ ← →; en el móvil, los botones','On a computer use the arrow keys ↑ ↓ ← →; on a phone, the buttons'],
+  found:['找到寶藏了！','找到宝藏了！','¡Tesoro encontrado!','Treasure found!'],
+  score:['分數','分数','Puntuación','Score'],
+  accuracy:['正確率','正确率','Precisión','Accuracy'],
+  think:['平均思考時間','平均思考时间','Tiempo medio de respuesta','Avg. response time'],
+  thinkUnit:['秒／步','秒／步','s/paso','s/step'],
+  replays:['再聽次數','再听次数','Veces que escuchaste otra vez','Times replayed'],
+  k0:['沒關係，再試一次！','没关系，再试一次！','¡No pasa nada, inténtalo otra vez!','No worries, try again!'],
+  k1:['慢慢來，會越來越好！','慢慢来，会越来越好！','¡Con calma, cada vez lo harás mejor!','Take your time, you\'ll keep improving!'],
+  k2:['不錯！再多練習會更好！','不错！再多练习会更好！','¡Bien! Con un poco más de práctica, mejor aún','Nice! A bit more practice and it\'ll be even better!'],
+  k3:['很棒，只錯了幾次！','很棒，只错了几次！','¡Muy bien, solo unos pocos errores!','Great, only a few mistakes!'],
+  k4:['完美！一次都沒錯！','完美！一次都没错！','¡Perfecto! ¡Sin ningún error!','Perfect! Not a single mistake!'],
+  practiceHint:['第 1 關是練習關，挑戰第 2 關以上就能上排行榜！','第 1 关是练习关，挑战第 2 关以上就能上排行榜！','Nivel 1 es de práctica. ¡Prueba el nivel 2 o superior para entrar en la clasificación!','Level 1 is practice. Try level 2 or higher to get on the leaderboard!'],
+  again:['🔄 再玩一次','🔄 再玩一次','Jugar de nuevo','Play again'],
+  next:['➡️ 下一關','➡️ 下一关','Siguiente nivel','Next level'],
+  lbBtn:['🏆 排行榜','🏆 排行榜','Clasificación','Leaderboard'],
+  lbTitle:['排行榜','排行榜','Clasificación','Leaderboard'],
+  loading:['載入中…','载入中…','Cargando...','Loading...'],
+  lbEmpty:['還沒有人上榜，你會是第一個！🐾','还没有人上榜，你会是第一个！🐾','Todavía no hay puntuaciones. ¡Sé el primero/a!','No scores yet. Be the first!'],
+  lbError:['排行榜暫時無法使用','排行榜暂时无法使用','La clasificación no está disponible ahora','The leaderboard is unavailable right now'],
+  lbNew:['新紀錄！已更新排行榜','新纪录！已更新排行榜','¡Nuevo récord! Clasificación actualizada','New record! Leaderboard updated'],
+  lbNotBetter:['沒有超過你的最佳成績，排行榜保留最好的一次','没有超过你的最佳成绩，排行榜保留最好的一次','No superaste tu mejor puntuación; se guarda la mejor','Not better than your best; your best score is kept'],
+  lbNote:['每台裝置每一關只留最高分','每台装置每一关只留最高分','Se guarda solo la mejor puntuación de cada dispositivo','Only each device\'s best score is kept'],
+  close:['關閉','关闭','Cerrar','Close'],
+  settings:['設定','设置','Ajustes','Settings'],
+  script:['中文字形','中文字形','Escritura china','Chinese script'],
+  langLbl:['語言','语言','Idioma','Language'],
+  zhOnly:['只有中文','只有中文','Solo chino','Chinese only'],
+  phon:['拼音／注音','拼音／注音','Pinyin / Zhuyin','Pinyin / Zhuyin'],
+  pinyin:['拼音','拼音','Pinyin','Pinyin'],
+  zhuyin:['注音','注音','Zhuyin','Zhuyin'],
+  both:['兩個都顯示','两个都显示','Los dos','Both'],
+  phOff:['關','关','No','Off'],
+  rate:['語速','语速','Velocidad de voz','Voice speed'],
+  slow:['慢','慢','Lenta','Slow'],
+  normal:['正常','正常','Normal','Normal'],
+  fast:['快','快','Rápida','Fast'],
+  done:['完成','完成','Listo','Done'],
+  novoice:['找不到台灣華語（zh-TW）語音，請安裝語音或換一個裝置。','找不到台湾华语（zh-TW）语音，请安装语音或换一个装置。','No se encontró voz de chino (zh-TW). Instala una o usa otro dispositivo.','No zh-TW voice found. Install one or use another device.'],
+  fallback:['找不到 zh-TW 語音，已改用其他中文語音，發音可能不同。','找不到 zh-TW 语音，已改用其他中文语音，发音可能不同。','No hay voz zh-TW; se usa otra voz china (la pronunciación puede variar).','No zh-TW voice; using another Chinese voice (pronunciation may differ).']
+};
+function tr(k){ return T[k][simp() ? 1 : 0]; }
+function fo(k){ return SETTINGS.lang === 'zh' ? '' : T[k][SETTINGS.lang === 'es' ? 2 : 3]; }
+function L(k){ const f = fo(k); return esc(tr(k)) + (f ? `<small>${esc(f)}</small>` : ''); }   // 中文＋外語小字
+function lab(k){ const f = fo(k); return tr(k) + (f ? ' · ' + f : ''); }                       // 單行
+function applyTexts(root){
+  (root || document).querySelectorAll('[data-t]').forEach(el => { el.innerHTML = L(el.dataset.t); });
+}
+
+// ===== 指令用到的字：繁體 → [簡體, 台灣讀音拼音] =====
+const CH = {
+  '前':['前','qián'],'進':['进','jìn'],'後':['后','hòu'],'退':['退','tuì'],'向':['向','xiàng'],'左':['左','zuǒ'],'右':['右','yòu'],'轉':['转','zhuǎn'],'格':['格','gé'],
+  '一':['一','yī'],'兩':['两','liǎng'],'二':['二','èr'],'三':['三','sān'],'四':['四','sì'],'五':['五','wǔ'],'六':['六','liù'],'七':['七','qī'],'八':['八','bā'],'九':['九','jiǔ'],'十':['十','shí'],
+  '找':['找','zhǎo'],'到':['到','dào'],'鑰':['钥','yào'],'匙':['匙','shi'],'了':['了','le'],'往':['往','wǎng'],'寶':['宝','bǎo'],'藏':['藏','zàng'],
+  '！':['！',''],'，':['，','']
+};
+// 中文數字（口語計數用「兩」而非「二」）
+const NUM_T = ['','一','兩','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九'];
+// 一串繁體字 → 每個字 {t:繁, s:簡, p:拼音}
+function toks(trad){ return [...trad].map(c => ({ t:c, s:CH[c] ? CH[c][0] : c, p:CH[c] ? CH[c][1] : '' })); }
+const COMMA = { t:'，', s:'，', p:'' };
+function moveToks(kind, steps){
+  const tk = toks((kind === 'backward' ? '後退' : '前進') + (NUM_T[steps] || String(steps)) + '格');
+  if(steps === 1) tk[2].p = 'yì';   // 一格：「一」變調唸 yì
+  return tk;
+}
+function turnToks(kind){ return toks({ turnLeft:'向左轉', turnRight:'向右轉', turnAround:'向後轉' }[kind]); }
+const KEY_TK = toks('找到鑰匙了！前往寶藏');
+const TREASURE_TK = toks('找到寶藏了！');
+const tradOf = tk => tk.map(x => x.t).join('');
+
+/* 拼音（帶聲調符號）→ 注音（與跑吧！漢字、色數消消樂同一份轉換器） */
+const ZY=(function(){
+  var INI={b:'ㄅ',p:'ㄆ',m:'ㄇ',f:'ㄈ',d:'ㄉ',t:'ㄊ',n:'ㄋ',l:'ㄌ',g:'ㄍ',k:'ㄎ',h:'ㄏ',j:'ㄐ',q:'ㄑ',x:'ㄒ',zh:'ㄓ',ch:'ㄔ',sh:'ㄕ',r:'ㄖ',z:'ㄗ',c:'ㄘ',s:'ㄙ'};
+  var FIN={a:'ㄚ',o:'ㄛ',e:'ㄜ',ê:'ㄝ',ai:'ㄞ',ei:'ㄟ',ao:'ㄠ',ou:'ㄡ',an:'ㄢ',en:'ㄣ',ang:'ㄤ',eng:'ㄥ',er:'ㄦ',
+    i:'ㄧ',ia:'ㄧㄚ',io:'ㄧㄛ',ie:'ㄧㄝ',iao:'ㄧㄠ',iu:'ㄧㄡ',iou:'ㄧㄡ',ian:'ㄧㄢ',in:'ㄧㄣ',iang:'ㄧㄤ',ing:'ㄧㄥ',
+    u:'ㄨ',ua:'ㄨㄚ',uo:'ㄨㄛ',uai:'ㄨㄞ',ui:'ㄨㄟ',uei:'ㄨㄟ',uan:'ㄨㄢ',un:'ㄨㄣ',uen:'ㄨㄣ',uang:'ㄨㄤ',ong:'ㄨㄥ',ueng:'ㄨㄥ',
+    v:'ㄩ',ve:'ㄩㄝ',van:'ㄩㄢ',vn:'ㄩㄣ',iong:'ㄩㄥ'};
+  var MARK=['','','ˊ','ˇ','ˋ'];
+  function one(syl){
+    var s=syl.normalize('NFD'),tone=5;
+    if(/̄/.test(s))tone=1;else if(/́/.test(s))tone=2;else if(/̌/.test(s))tone=3;else if(/̀/.test(s))tone=4;
+    s=s.replace(/ü/g,'v').replace(/ü/g,'v').replace(/Ü/g,'v').replace(/[̀-ͯ]/g,'').toLowerCase();
+    if(!/^[a-zê]+$/.test(s))return syl;
+    var ini='',rest=s,m;
+    if(s==='n'||s==='m'){var zz=s==='n'?'ㄣ':'ㄇㄨ';return tone===5?'˙'+zz:zz+MARK[tone];}
+    if(s==='er'||s==='r'){rest='er';}
+    else if((m=s.match(/^(zh|ch|sh|[bpmfdtnlgkhjqxrzcs])/))){ini=m[1];rest=s.slice(ini.length);}
+    else if(s[0]==='y'){rest=s.slice(1);if(/^u/.test(rest))rest=rest.replace(/^u/,'v');else if(!(rest==='i'||rest==='in'||rest==='ing'))rest='i'+rest;}
+    else if(s[0]==='w'){rest=s.slice(1);rest=(rest==='u')?'u':'u'+rest;}
+    if(ini&&/^[jqx]$/.test(ini))rest=rest.replace(/^u/,'v');
+    if(/^(zh|ch|sh|r|z|c|s)$/.test(ini)&&rest==='i')rest='';
+    var f=rest===''?'':FIN[rest];
+    if(f===undefined)return syl;
+    var z=(ini?INI[ini]:'')+f;
+    return tone===5?'˙'+z:z+MARK[tone];
+  }
+  function conv(py){return String(py||'').trim().split(/\s+/).filter(Boolean).map(one).join(' ');}
+  return {one:one,conv:conv};
+})();
+
+// 一串字 → HTML：每個字上面放拼音／注音（依 ⚙️；標點符號上面留空白，字才會對齊）
+function zhHtml(tk){
+  const ph = SETTINGS.phon;
+  const top = p => {
+    if(ph === 'off') return '';
+    const py = p ? `<span class="ph">${esc(p)}</span>` : '<span class="ph">&nbsp;</span>';
+    const zy = p ? `<span class="ph zy">${esc(ZY.one(p))}</span>` : '<span class="ph zy">&nbsp;</span>';
+    return ph === 'pinyin' ? py : ph === 'zhuyin' ? zy : py + zy;
+  };
+  return '<span class="zhl">' + tk.map(x => `<span class="ru">${top(x.p)}<span class="hz">${esc(simp() ? x.s : x.t)}</span></span>`).join('') + '</span>';
 }
 
 let state = {
@@ -954,24 +1199,21 @@ let state = {
   difficulty:'level1', requiresKey:false, textHidden:false, chunked:false,
   keyRow:null, keyCol:null, keyFound:false, stage:'treasure',
   instructions: [], chunkStarts:new Set(), chunkLabels:new Map(),
-  curIndex:0, stepsDone:0,
+  curIndex:0, stepsDone:0, snapIndex:0,
   snapshot:null,
-  errorCount:0, totalPresses:0, startTime:0, timerId:null, speechRate:1,
-  playing:false,
-  lastScoreDocId:null, lastPlayedLevel:null
+  errorCount:0, totalPresses:0, replays:0, sameErr:0,
+  timerId:null, playing:false, paused:false, speaking:false,
+  clockOn:false, clockLast:0, activeMs:0, thinkMs:0,
+  gameId:0, keyAnnounceId:0, box:'idle',
+  playerName:'', selectedLevel:'level1'
 };
 
 function sameCell(a,b){ return a.row===b.row && a.col===b.col; }
-
-function randCell(){
-  return { row: Math.floor(Math.random()*GRID), col: Math.floor(Math.random()*GRID) };
-}
-
+function randCell(){ return { row: Math.floor(Math.random()*GRID), col: Math.floor(Math.random()*GRID) }; }
 function turnKind(oldF, newF){
   const oi = DIRS.indexOf(oldF), ni = DIRS.indexOf(newF);
   return ( (oi+1)%4 === ni ) ? 'turnRight' : 'turnLeft';
 }
-
 function cellKey(row,col){ return row+','+col; }
 
 function tryObstacles(excluded, count){
@@ -1026,11 +1268,8 @@ function bfsPath(startRow,startCol,targetRow,targetCol,obstacles){
 function compressRuns(dirArray){
   const runs = [];
   for(const d of dirArray){
-    if(runs.length && runs[runs.length-1].dir === d){
-      runs[runs.length-1].steps++;
-    } else {
-      runs.push({dir:d, steps:1});
-    }
+    if(runs.length && runs[runs.length-1].dir === d) runs[runs.length-1].steps++;
+    else runs.push({dir:d, steps:1});
   }
   return runs;
 }
@@ -1041,42 +1280,39 @@ function buildInstructionsFromRuns(runs, startFacing){
   for(const run of runs){
     const { dir, steps } = run;
     if(dir !== facing && dir !== OPPOSITE[facing]){
-      const kind = turnKind(facing, dir);
-      instructions.push({ kind:'turn', dir, pair: turnLabelPair(kind) });
+      instructions.push({ kind:'turn', dir, tk: turnToks(turnKind(facing, dir)) });
       facing = dir;
     }
     if(dir === OPPOSITE[facing]){
       if(Math.random() < 0.5){
-        instructions.push({ kind:'move', dir, steps, pair: moveLabelPair('backward', steps) });
+        instructions.push({ kind:'move', dir, steps, tk: moveToks('backward', steps) });
       } else {
-        instructions.push({ kind:'turn', dir, pair: turnLabelPair('turnAround') });
+        instructions.push({ kind:'turn', dir, tk: turnToks('turnAround') });
         facing = dir;
-        instructions.push({ kind:'move', dir, steps, pair: moveLabelPair('forward', steps) });
+        instructions.push({ kind:'move', dir, steps, tk: moveToks('forward', steps) });
       }
     } else {
-      instructions.push({ kind:'move', dir, steps, pair: moveLabelPair('forward', steps) });
+      instructions.push({ kind:'move', dir, steps, tk: moveToks('forward', steps) });
     }
   }
   return instructions;
 }
 
+// 把指令分組：第 4 關每 2～3 句一組連續唸；其他關一句一組
 function chunkInstructions(list, chunked){
   const starts = new Set();
-  const labels = new Map();
-  if(!chunked){
-    list.forEach((_,i)=> starts.add(i));
-    return { starts, labels };
-  }
+  const labels = new Map();   // 組的第一句 index → { tk:整組文字, texts:[一句一句的繁體，給語音用] }
   let i = 0;
   while(i < list.length){
-    const size = Math.min(2 + Math.floor(Math.random()*2), list.length - i);
+    const size = chunked ? Math.min(2 + Math.floor(Math.random()*2), list.length - i) : 1;
     starts.add(i);
-    const tradParts = [], simpParts = [];
+    const tk = [], texts = [];
     for(let j=i; j<i+size; j++){
-      tradParts.push(list[j].pair.trad);
-      simpParts.push(list[j].pair.simp);
+      if(j > i) tk.push(COMMA);
+      tk.push(...list[j].tk);
+      texts.push(tradOf(list[j].tk));
     }
-    labels.set(i, { trad: tradParts.join('，'), simp: simpParts.join('，') });
+    labels.set(i, { tk, texts });
     i += size;
   }
   return { starts, labels };
@@ -1092,14 +1328,12 @@ function setInstructions(list){
 function planRoute(row, col, facing, targetRow, targetCol, obstacles){
   const dirPath = bfsPath(row, col, targetRow, targetCol, obstacles);
   if(!dirPath) return null;
-  const runs = compressRuns(dirPath);
-  return buildInstructionsFromRuns(runs, facing);
+  return buildInstructionsFromRuns(compressRuns(dirPath), facing);
 }
 
 function planGame(dogStart, treasure, key, minObs, maxObs){
   const excluded = new Set([cellKey(dogStart.row,dogStart.col), cellKey(treasure.row,treasure.col)]);
   if(key) excluded.add(cellKey(key.row,key.col));
-
   for(let attempt=0; attempt<40; attempt++){
     const count = minObs + Math.floor(Math.random()*(maxObs-minObs+1));
     const obstacles = tryObstacles(excluded, count);
@@ -1116,62 +1350,168 @@ function planGame(dogStart, treasure, key, minObs, maxObs){
     }
   }
   const obstacles = new Set();
-  if(key){
-    const path1 = bfsPath(dogStart.row, dogStart.col, key.row, key.col, obstacles);
-    return { obstacles, firstInstructions: buildInstructionsFromRuns(compressRuns(path1), 'down') };
-  }
-  const path = bfsPath(dogStart.row, dogStart.col, treasure.row, treasure.col, obstacles);
+  const target = key || treasure;
+  const path = bfsPath(dogStart.row, dogStart.col, target.row, target.col, obstacles);
   return { obstacles, firstInstructions: buildInstructionsFromRuns(compressRuns(path), 'down') };
 }
 
-// 每個難度的語音播放速度（Web Speech API 的 rate，範圍約 0.1~10，1 為正常速度）。
-// 現在四關都先設 1，之後想讓某個難度講快一點/慢一點，直接改這裡對應的數字即可。
+// 各關設定。語速不再每關各自設定，改用 ⚙️ 的共用語速（上面的 RATE_VALUE）。
 function difficultySettings(difficulty){
-  if(difficulty === 'level2'){
-    return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false, rate:0.2 };
+  if(difficulty === 'level2') return { minObs:15, maxObs:25, requiresKey:true, textHidden:false, chunked:false };
+  if(difficulty === 'level3') return { minObs:20, maxObs:30, requiresKey:true, textHidden:true,  chunked:false };
+  if(difficulty === 'level4') return { minObs:20, maxObs:30, requiresKey:true, textHidden:true,  chunked:true  };
+  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false };
+}
+const LEVEL_ORDER = ['level1','level2','level3','level4'];
+const levelNum = lv => LEVEL_ORDER.indexOf(lv) + 1;
+
+// ===== 計時：「時間」不算暫停；「思考時間」再扣掉語音播放的時間（選慢速的學生不會吃虧） =====
+function clockTick(){
+  const now = Date.now();
+  if(state.clockOn && !state.paused){
+    state.activeMs += now - state.clockLast;
+    if(!state.speaking) state.thinkMs += now - state.clockLast;
   }
-  if(difficulty === 'level3'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:false, rate:0.3 };
-  }
-  if(difficulty === 'level4'){
-    return { minObs:20, maxObs:30, requiresKey:true, textHidden:true, chunked:true, rate:0.4 };
-  }
-  return { minObs:7, maxObs:15, requiresKey:false, textHidden:false, chunked:false, rate:0.2 };
+  state.clockLast = now;
+}
+function fmtMMSS(sec){
+  sec = Math.max(0, Math.floor(sec || 0));
+  return String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+}
+function updateTimer(){
+  clockTick();
+  document.getElementById('timerDisp').textContent = fmtMMSS(state.activeMs/1000);
 }
 
+// ===== 語音 =====
+let voice = null, voiceFallback = null, speechTok = 0;
+function loadVoice(){
+  if(!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  const norm = v => v.lang.replace('_','-').toLowerCase();
+  voice = vs.find(v => norm(v) === 'zh-tw') || null;
+  voiceFallback = vs.find(v => norm(v).startsWith('zh')) || null;
+}
+let voicesSeen = false;
+function refreshVoiceNote(){
+  let k = '';
+  if(!('speechSynthesis' in window)) k = 'novoice';
+  else if(voicesSeen && !voice) k = voiceFallback ? 'fallback' : 'novoice';
+  ['voiceWarnGate','voiceWarnGame'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.toggle('hide', !k);
+    el.innerHTML = k ? L(k) : '';
+  });
+}
+if('speechSynthesis' in window){
+  loadVoice();
+  speechSynthesis.onvoiceschanged = () => { loadVoice(); voicesSeen = true; refreshVoiceNote(); };
+  setTimeout(() => { loadVoice(); refreshVoiceNote(); }, 800);
+  setTimeout(() => { loadVoice(); voicesSeen = true; refreshVoiceNote(); }, 2500);
+}
+function setSpeaking(on){ clockTick(); state.speaking = on; }
+// 依序唸好幾句（第 4 關連續指令用），句子之間停一下；全部唸完才呼叫 onEnd
+function speakSeq(texts, onEnd){
+  const my = ++speechTok;
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  if(!('speechSynthesis' in window) || !texts.length){
+    setSpeaking(false);
+    if(onEnd) setTimeout(() => { if(my === speechTok) onEnd(); }, 300);
+    return;
+  }
+  setSpeaking(true);
+  let i = 0;
+  const next = () => {
+    if(my !== speechTok) return;
+    if(i >= texts.length){ setSpeaking(false); if(onEnd) onEnd(); return; }
+    let u;
+    try{
+      u = new SpeechSynthesisUtterance(texts[i++]);
+      u.lang = 'zh-TW';
+      const v = voice || voiceFallback; if(v) u.voice = v;
+      u.rate = RATE_VALUE[SETTINGS.rate] || RATE_VALUE.normal;
+    }catch(e){ setSpeaking(false); if(onEnd) onEnd(); return; }
+    let done = false;
+    const fin = () => {
+      if(done) return; done = true;
+      if(my !== speechTok) return;
+      if(i < texts.length) setTimeout(next, CHUNK_GAP[SETTINGS.rate] || CHUNK_GAP.normal);
+      else next();
+    };
+    u.onend = fin; u.onerror = fin;
+    setTimeout(fin, 12000);   // 保險：有些瀏覽器不會觸發結束事件
+    try{ window.speechSynthesis.speak(u); }catch(e){ fin(); }
+  };
+  setTimeout(next, 60);   // cancel 後馬上 speak，有些瀏覽器會吃掉，稍等一下
+}
+function stopSpeech(){
+  speechTok++;
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  setSpeaking(false);
+}
+
+// ===== 指令框 =====
 function updateStageLabel(){
   const el = document.getElementById('stageLabel');
-  if(!state.requiresKey){
-    el.textContent = '🎯 Objetivo: encontrar el tesoro';
-  } else if(state.stage === 'key'){
-    el.textContent = '🔑 Etapa 1: encuentra la llave';
-  } else {
-    el.textContent = '💰 Etapa 2: ve al tesoro';
-  }
+  const k = !state.requiresKey ? 'goalTreasure' : (state.stage === 'key' ? 'stageKey' : 'stageTreasure');
+  el.innerHTML = L(k);
+}
+function curChunk(){ return state.chunkLabels.get(state.snapIndex); }
+function renderBox(){
+  const box = document.getElementById('instructionBox');
+  if(state.box === 'idle'){ box.innerHTML = ''; return; }
+  if(state.box === 'treasure'){ box.innerHTML = state.textHidden ? '🎉' : zhHtml(TREASURE_TK); return; }
+  if(state.textHidden){ box.innerHTML = state.box === 'key' ? '🔑' : `<div class="listen">${L('listen')}</div>`; return; }
+  if(state.box === 'key'){ box.innerHTML = zhHtml(KEY_TK); return; }
+  const c = curChunk();
+  box.innerHTML = c ? zhHtml(c.tk) : '';
+}
+// 顯示並唸出目前這一組指令（組的第一句才會觸發；同一組後面的句子不重唸）
+function showCurrentInstruction(){
+  if(state.curIndex >= state.instructions.length) return;
+  if(!state.chunkStarts.has(state.curIndex)) return;
+  state.box = 'ins';
+  renderBox();
+  const c = curChunk();
+  if(c) speakSeq(c.texts);
+}
+// 重唸目前這一組（按錯、按 🔊、暫停回來時用）
+function sayCurrentChunk(){
+  if(!state.playing || state.paused || state.awaitingKeyAnnouncement) return;
+  state.box = 'ins';
+  renderBox();
+  const c = curChunk();
+  if(c) speakSeq(c.texts);
+}
+
+function snapshotInstruction(){
+  state.snapshot = { row:state.dogRow, col:state.dogCol, facing:state.facing };
+  state.snapIndex = state.curIndex;
 }
 
 function startGame(){
   ensureAudio();
+  stopSpeech();
+  clearHint();
+  const gid = ++state.gameId;
   const difficulty = state.difficulty || 'level1';
   const settings = difficultySettings(difficulty);
 
   const dogStart = randCell();
   let treasure = randCell();
   while(sameCell(treasure, dogStart)) treasure = randCell();
-
   let key = null;
   if(settings.requiresKey){
     key = randCell();
     while(sameCell(key, dogStart) || sameCell(key, treasure)) key = randCell();
   }
-
   const plan = planGame(dogStart, treasure, key, settings.minObs, settings.maxObs);
 
   state.difficulty = difficulty;
   state.requiresKey = settings.requiresKey;
   state.textHidden = settings.textHidden;
   state.chunked = settings.chunked;
-  state.speechRate = settings.rate;
   state.dogRow = dogStart.row;
   state.dogCol = dogStart.col;
   state.facing = 'down';
@@ -1185,111 +1525,50 @@ function startGame(){
   state.obstacles = plan.obstacles;
   state.errorCount = 0;
   state.totalPresses = 0;
+  state.replays = 0;
+  state.sameErr = 0;
   state.curIndex = 0;
   state.stepsDone = 0;
   setInstructions(plan.firstInstructions);
   state.playing = true;
+  state.paused = false;
   state.awaitingKeyAnnouncement = false;
+  state.keyAnnounceId = 0;
   setMobilePlayingCompact(true);
 
   updateCurrentLevelBadge();
-  document.getElementById('resultModal').style.display='none';
-  document.getElementById('scoreLine').textContent = '';
-  document.getElementById('viewLeaderboardBtn').style.display = 'none';
-  document.getElementById('practiceHint').style.display = 'none';
-  document.getElementById('errorMsg').textContent='';
-  document.getElementById('errorDisp').textContent='0';
-  state.startTime = Date.now();
+  hideOverlays();
+  document.getElementById('errorMsg').textContent = '';
+  document.getElementById('errorDisp').textContent = '0';
+  state.activeMs = 0; state.thinkMs = 0;
+  state.clockLast = Date.now(); state.clockOn = true;
   if(state.timerId) clearInterval(state.timerId);
   state.timerId = setInterval(updateTimer, 500);
   updateTimer();
+  updateCtlButtons();
 
   updateStageLabel();
   snapshotInstruction();
   showCurrentInstruction();
   draw();
   trackEvent('game_start', { level: state.difficulty });
+  return gid;
 }
 
-function snapshotInstruction(){
-  state.snapshot = { row:state.dogRow, col:state.dogCol, facing:state.facing };
-}
-
-function updateTimer(){
-  const sec = Math.floor((Date.now()-state.startTime)/1000);
-  const m = String(Math.floor(sec/60)).padStart(2,'0');
-  const s = String(sec%60).padStart(2,'0');
-  document.getElementById('timerDisp').textContent = `${m}:${s}`;
-}
-
-function speak(text, onEnd){
-  try{
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-TW';
-    u.rate = state.speechRate || 1;
-    if(onEnd){
-      let called = false;
-      const done = () => { if(!called){ called = true; onEnd(); } };
-      u.onend = done;
-      u.onerror = done;
-    }
-    window.speechSynthesis.speak(u);
-  }catch(e){
-    if(onEnd) onEnd();
-  }
-}
-
-function renderPair(box, pair){
-  box.innerHTML = `<div class="zh-trad">${pair.trad}</div><div class="zh-simp">${pair.simp}</div>`;
-}
-
-// 給文字較短、可以塞在同一行的訊息用（例如「找到寶藏了！」），
-// 繁簡兩行合併成一行顯示，節省垂直空間
-function renderPairInline(box, pair){
-  box.innerHTML = `<div class="zh-pair-inline"><span class="zh-trad">${pair.trad}</span><span class="zh-simp-inline">${pair.simp}</span></div>`;
-}
-
-function showCurrentInstruction(){
-  const box = document.getElementById('instructionBox');
-  if(state.curIndex >= state.instructions.length){
-    box.textContent = state.textHidden ? '🔊' : 'Dirígete al objetivo...';
-    return;
-  }
-  if(!state.chunkStarts.has(state.curIndex)){
-    return;
-  }
-  const ins = state.instructions[state.curIndex];
-  const pair = state.chunkLabels.has(state.curIndex) ? state.chunkLabels.get(state.curIndex) : ins.pair;
-  if(state.textHidden){
-    box.textContent = '🔊 Escucha la instrucción de voz';
-  } else {
-    renderPair(box, pair);
-  }
-  speak(pair.trad);
-}
-
-function reannounceAfterError(){
-  const ins = state.instructions[state.curIndex];
-  if(!ins) return;
-  const box = document.getElementById('instructionBox');
-  if(!state.textHidden){
-    renderPair(box, ins.pair);
-  }
-  speak(ins.pair.trad);
+function stopClock(){
+  clockTick();
+  state.clockOn = false;
+  if(state.timerId){ clearInterval(state.timerId); state.timerId = null; }
 }
 
 function checkGoal(){
+  const gid = state.gameId;
   if(state.stage === 'key'){
     if(state.dogRow===state.keyRow && state.dogCol===state.keyCol){
       state.keyFound = true;
       draw();
-      const box = document.getElementById('instructionBox');
-      if(!state.textHidden){
-        renderPair(box, KEY_FOUND_PAIR);
-      } else {
-        box.textContent = '🔊';
-      }
+      state.box = 'key';
+      renderBox();
       const route = planRoute(state.dogRow, state.dogCol, state.facing, state.treasureRow, state.treasureCol, state.obstacles) || [];
       setInstructions(route);
       state.curIndex = 0;
@@ -1297,18 +1576,19 @@ function checkGoal(){
       state.stage = 'treasure';
       snapshotInstruction();
       updateStageLabel();
-      let keyMsgDone = false;
+      clearHint();
       state.awaitingKeyAnnouncement = true;
-      const proceedToNextInstruction = () => {
-        if(keyMsgDone) return;
-        keyMsgDone = true;
+      const myId = state.keyAnnounceId = Date.now() + Math.random();
+      const proceed = () => {
+        // 同一局、同一次宣布才繼續（避免重新開始或暫停後，舊的計時器又把指令唸出來）
+        if(gid !== state.gameId || myId !== state.keyAnnounceId) return;
+        state.keyAnnounceId = 0;
         state.awaitingKeyAnnouncement = false;
+        if(state.paused) return;
         showCurrentInstruction();
       };
-      speak(KEY_FOUND_PAIR.trad, proceedToNextInstruction);
-      // 保險：萬一語音合成沒有正常觸發結束事件（例如被瀏覽器封鎖），最多等 8 秒還是會繼續；
-      // 正常情況下一定是語音真的講完的事件先觸發，不會被這個保險提早蓋過去
-      setTimeout(proceedToNextInstruction, 8000);
+      speakSeq([tradOf(KEY_TK)], proceed);
+      setTimeout(proceed, 12000);   // 保險：語音沒有正常結束時，最多等 12 秒
       trackEvent('stage_transition', { level: state.difficulty, from: 'key', to: 'treasure' });
       return true;
     }
@@ -1318,83 +1598,78 @@ function checkGoal(){
   if(state.dogRow===state.treasureRow && state.dogCol===state.treasureCol){
     state.treasureFound = true;
     state.playing = false;
+    stopClock();
+    clearHint();
     setMobilePlayingCompact(false);
-    clearInterval(state.timerId);
-
+    updateCtlButtons();
     const result = computeScore();
-
-    const box = document.getElementById('instructionBox');
-    if(!state.textHidden){
-      renderPairInline(box, TREASURE_FOUND_PAIR);
-    } else {
-      box.textContent = '🎉';
-    }
+    state.box = 'treasure';
+    renderBox();
     draw();
     trackEvent('level_complete', {
       level: state.difficulty,
       score: result.score,
       accuracy: Math.round(result.accuracy*100),
       time_spent: result.sec,
-      error_count: result.errors
+      think_per_step: Math.round(result.avgThink*10)/10,
+      error_count: result.errors,
+      replays: result.replays
     });
-
-    playTreasureCelebration('恭喜，' + TREASURE_FOUND_PAIR.trad, () => showTreasureResultModal(result));
+    playTreasureCelebration('恭喜，' + tradOf(TREASURE_TK), gid, () => showResult(result));
     return true;
   }
   return false;
 }
 
-function showTreasureResultModal(result){
-  document.getElementById('resultModal').style.display='flex';
-
-  const scoreLine = document.getElementById('scoreLine');
-  scoreLine.textContent = `Puntuación: ${result.score}  ·  Precisión ${Math.round(result.accuracy*100)}%  ·  Ritmo ${result.avgTimePerStep.toFixed(1)}s/paso`;
-
-  const viewBtn = document.getElementById('viewLeaderboardBtn');
-  const hint = document.getElementById('practiceHint');
-  const nextBtn = document.getElementById('nextLevelBtn');
-  nextBtn.style.display = LEVEL_ORDER.indexOf(state.difficulty) < LEVEL_ORDER.length - 1 ? 'block' : 'none';
-
-  if(state.difficulty === 'level1'){
-    viewBtn.style.display = 'none';
-    hint.style.display = 'block';
-  } else {
-    hint.style.display = 'none';
-    viewBtn.style.display = 'block';
-    viewBtn.onclick = () => {
-      document.getElementById('resultModal').style.display = 'none';
-      openLeaderboard(state.difficulty);
-    };
-    state.lastScoreDocId = null;
-    state.lastPlayedLevel = state.difficulty;
-    saveScoreToLeaderboard(state.difficulty, result).then(id=>{
-      state.lastScoreDocId = id;
-    });
-  }
+// ===== 提示（只有第 1 關）：同一組指令連續錯 3 次，該按的方向鍵會亮起來 =====
+function showHint(){
+  const ins = state.instructions[state.curIndex];
+  if(!ins) return;
+  clearHint();
+  const b = document.getElementById(DPAD_ID[ins.dir]);
+  if(b) b.classList.add('hintGlow');
+  document.getElementById('errorMsg').innerHTML = L('hint');
+}
+function clearHint(){
+  document.querySelectorAll('#dpad .hintGlow').forEach(b => b.classList.remove('hintGlow'));
 }
 
+// 按錯：小狗回到「這一組」的起點，整組重唸（第 4 關連續指令也是整組重來）
 function handleWrongKey(){
+  const gid = state.gameId;
   state.errorCount++;
+  state.sameErr++;
   document.getElementById('errorDisp').textContent = state.errorCount;
-  document.getElementById('errorMsg').textContent = '¡Dirección incorrecta! Inténtalo de nuevo';
+  document.getElementById('errorMsg').innerHTML = L('wrong');
+  clearHint();
   state.dogRow = state.snapshot.row;
   state.dogCol = state.snapshot.col;
   state.facing = state.snapshot.facing;
+  state.curIndex = state.snapIndex;
   state.stepsDone = 0;
   draw();
-  setTimeout(()=>{
-    document.getElementById('errorMsg').textContent='';
-    reannounceAfterError();
+  const errNo = state.errorCount;
+  setTimeout(() => {
+    if(gid !== state.gameId || !state.playing || errNo !== state.errorCount) return;
+    document.getElementById('errorMsg').textContent = '';
+    if(state.paused) return;
+    sayCurrentChunk();
+    if(state.difficulty === 'level1' && state.sameErr >= 3) showHint();
   }, 900);
-  trackEvent('error_made', { stage: state.stage });
+  trackEvent('error_made', { level: state.difficulty, stage: state.stage });
 }
 
 function advanceInstruction(){
   state.curIndex++;
   state.stepsDone = 0;
-  snapshotInstruction();
   if(state.curIndex < state.instructions.length){
-    showCurrentInstruction();
+    if(state.chunkStarts.has(state.curIndex)){
+      state.sameErr = 0;
+      clearHint();
+      document.getElementById('errorMsg').textContent = '';
+      snapshotInstruction();
+      showCurrentInstruction();
+    }
   } else {
     if(!checkGoal()){
       const target = state.stage === 'key'
@@ -1403,6 +1678,7 @@ function advanceInstruction(){
       const rerouted = planRoute(state.dogRow, state.dogCol, state.facing, target.row, target.col, state.obstacles);
       setInstructions(rerouted || []);
       state.curIndex = 0;
+      snapshotInstruction();
       showCurrentInstruction();
     }
   }
@@ -1411,15 +1687,10 @@ function advanceInstruction(){
 let audioCtx = null;
 function ensureAudio(){
   try{
-    if(!audioCtx){
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if(audioCtx.state === 'suspended'){
-      audioCtx.resume();
-    }
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
   }catch(e){}
 }
-
 function playTone(freq, duration, type, gain){
   try{
     ensureAudio();
@@ -1436,67 +1707,53 @@ function playTone(freq, duration, type, gain){
     o.stop(audioCtx.currentTime + duration);
   }catch(e){}
 }
-
-function playBeep(pressIndex){
-  const idx = Math.min(pressIndex || 0, 6);
-  playTone(900 + idx*90, 0.12, 'sine', 0.22);
-}
-
-function playErrorTone(){
-  playTone(220, 0.22, 'square', 0.18);
-}
+function playBeep(pressIndex){ playTone(900 + Math.min(pressIndex || 0, 6)*90, 0.12, 'sine', 0.22); }
+function playErrorTone(){ playTone(220, 0.22, 'square', 0.18); }
 
 function pressDirection(dir){
   if(!state.playing){ playBeep(0); return; }
+  if(state.paused) return;
   if(state.awaitingKeyAnnouncement) return; // 「找到鑰匙了」的語音還沒講完，先忽略操作，避免蓋過去
   if(state.curIndex >= state.instructions.length) return;
   const ins = state.instructions[state.curIndex];
-
-  if(ins.kind==='turn'){
-    if(dir === ins.dir){
-      playBeep(0);
-      state.facing = dir;
-      state.totalPresses = (state.totalPresses||0) + 1;
-      draw();
-      advanceInstruction();
-    } else {
-      playErrorTone();
-      handleWrongKey();
-    }
+  if(dir !== ins.dir){
+    playErrorTone();
+    handleWrongKey();
+    return;
+  }
+  clearHint();
+  state.totalPresses++;
+  if(ins.kind === 'turn'){
+    playBeep(0);
+    state.facing = dir;
+    draw();
+    advanceInstruction();
   } else {
-    if(dir === ins.dir){
-      playBeep(state.stepsDone);
-      const d = DELTA[dir];
-      state.dogRow += d.dr;
-      state.dogCol += d.dc;
-      state.stepsDone++;
-      state.totalPresses = (state.totalPresses||0) + 1;
-      draw();
-      if(checkGoal()) return;
-      if(state.stepsDone >= ins.steps){
-        advanceInstruction();
-      }
-    } else {
-      playErrorTone();
-      handleWrongKey();
-    }
+    playBeep(state.stepsDone);
+    const d = DELTA[dir];
+    state.dogRow += d.dr;
+    state.dogCol += d.dc;
+    state.stepsDone++;
+    draw();
+    if(checkGoal()) return;
+    if(state.stepsDone >= ins.steps) advanceInstruction();
   }
 }
 
 function handleKey(e){
   const dir = KEYMAP[e.key];
   if(!dir) return;
+  if(document.body.classList.contains('gate-open')) return;
+  if(!document.getElementById('setov').classList.contains('hide')) return;
   e.preventDefault();
   pressDirection(dir);
 }
-
 document.addEventListener('keydown', handleKey);
-document.getElementById('startBtn').addEventListener('click', startGame);
 
 function bindDpad(id, dir){
   const el = document.getElementById(id);
-  el.addEventListener('click', ()=> pressDirection(dir));
-  el.addEventListener('touchstart', (e)=>{ e.preventDefault(); pressDirection(dir); }, {passive:false});
+  el.addEventListener('click', () => pressDirection(dir));
+  el.addEventListener('touchstart', e => { e.preventDefault(); pressDirection(dir); }, {passive:false});
 }
 bindDpad('dpadUp','up');
 bindDpad('dpadDown','down');
@@ -2091,7 +2348,9 @@ function drawSparkleBurst(cx, cy, spread, alpha){
 
 // 找到寶藏後，在棋盤正中央（不管寶藏實際在哪一格）快速播放幾格「閃光→小狗吐舌頭+寶藏」
 // 的慶祝畫面，播完再呼叫 onDone 顯示結算彈窗
-function playTreasureCelebration(speechText, onDone){
+// 找到寶藏後，在棋盤正中央（不管寶藏實際在哪一格）快速播放幾格「閃光→小狗吐舌頭+寶藏」
+// 的慶祝畫面，語音唸完再呼叫 onDone 顯示結算畫面。gid：這一局的編號，重新開始後舊的慶祝會自己停掉
+function playTreasureCelebration(speechText, gid, onDone){
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
   const boxSize = Math.min(canvas.width, canvas.height) / 3; // 佔棋盤 9 宮格正中間那一格
@@ -2112,6 +2371,7 @@ function playTreasureCelebration(speechText, onDone){
   }
   function renderFrame(){
     if(finished) return;
+    if(gid !== state.gameId){ finished = true; clearInterval(timer); return; }
     draw(); // 棋盤本身維持顯示在背景
     const f = frameAt(step);
     if(f.chars){
@@ -2129,55 +2389,38 @@ function playTreasureCelebration(speechText, onDone){
     if(finished) return;
     finished = true;
     clearInterval(timer);
-    onDone();
+    if(gid === state.gameId) onDone();
   }
-
-  // 判斷語音是否已經講完，講完才會顯示結算彈窗；不管語速多慢都不會被切掉
-  speak(speechText, finish);
-  // 保險：萬一語音合成沒有正常觸發結束事件（例如被瀏覽器封鎖），最多等 8 秒還是會繼續
-  setTimeout(finish, 8000);
+  speakSeq([speechText], finish);
+  setTimeout(finish, 12000);   // 保險：語音沒有正常結束時，最多等 12 秒
 }
 
+// GA4 事件（不送玩家名字）
 function trackEvent(name, params = {}) {
-  if (typeof gtag !== 'undefined') {
-    gtag('event', name, params);
-  }
+  if (typeof gtag !== 'undefined') gtag('event', name, params);
 }
-  
-// 棋盤尺寸只依「視窗大小」計算，完全不受右側資訊欄（結果／錯誤訊息等）高度變化影響，
-// 這樣不管右側欄位內容如何增減，左側棋盤與整體版面都不會跟著跳動或放大。
-// 棋盤大小改用 #gameArea 實際渲染高度來算（#gameArea 現在是 height:100%，
-// 會撐滿扣除 body padding 後的可視區域），這樣棋盤與右側說明欄才會確實同高，
-// 且整頁不需要捲動。手機版（<=700px）改成直式堆疊＋整頁可捲動，棋盤大小
-// 改成主要依螢幕「寬度」來決定。
+
+// 棋盤尺寸只依「視窗大小」計算，完全不受右側資訊欄（結果／錯誤訊息等）高度變化影響。
+// 手機版（<=700px）改成直式堆疊＋整頁可捲動，棋盤大小主要依螢幕「寬度」決定，再用高度夾一次。
 function computeBoardSize(){
   const isMobileLayout = window.matchMedia('(max-width: 700px)').matches;
   const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
 
   if(isMobileLayout){
-    const availableWidth = window.innerWidth - 28 - wrapChrome; // 扣掉 body 左右 padding
+    const availableWidth = window.innerWidth - 28 - wrapChrome;
     let size = Math.min(availableWidth, 420 - wrapChrome);
     size = Math.max(180, size);
-
-    // 再用「畫面高度」夾一次：量測棋盤上方（標題/狀態列/指令框等，遊戲進行中
-    // 這些會被收合）與下方方向鍵的實際高度，確保棋盤＋方向鍵能同時塞進畫面，
-    // 不用捲動就看得到——手機橫向（寬但矮）時這一步特別重要。
-    const aboveIds = ['playerGreeting','statRow','stageLabel','instructionBox','errorMsg'];
+    // 量測棋盤上下其他區塊的高度，確保棋盤＋方向鍵＋控制鍵能同時塞進畫面
+    const ids = ['playerGreeting','statRow','voiceWarnGame','stageLabel','instructionBox','errorMsg','ctlRow','dpad'];
     let chromeHeight = 0;
-    aboveIds.forEach(id=>{
+    ids.forEach(id => {
       const el = document.getElementById(id);
-      if(el && window.getComputedStyle(el).display !== 'none'){
-        chromeHeight += el.getBoundingClientRect().height;
-      }
+      if(el && window.getComputedStyle(el).display !== 'none') chromeHeight += el.getBoundingClientRect().height;
     });
-    const h1El = document.querySelector('#boardWrap > h1');
-    const sealEl = document.querySelector('#boardWrap > .seal');
-    if(h1El && window.getComputedStyle(h1El).display !== 'none') chromeHeight += h1El.getBoundingClientRect().height;
-    if(sealEl && window.getComputedStyle(sealEl).display !== 'none') chromeHeight += sealEl.getBoundingClientRect().height;
-    const dpadEl = document.getElementById('dpad');
-    if(dpadEl) chromeHeight += dpadEl.getBoundingClientRect().height;
-
-    const availableHeight = window.innerHeight - chromeHeight - wrapChrome - 40; // 40px 抓 margin/gap 餘裕
+    document.querySelectorAll('#boardWrap > h1, #boardWrap > .seal').forEach(el => {
+      if(window.getComputedStyle(el).display !== 'none') chromeHeight += el.getBoundingClientRect().height;
+    });
+    const availableHeight = window.innerHeight - chromeHeight - wrapChrome - 48;
     size = Math.min(size, Math.max(160, availableHeight));
     return Math.floor(size);
   }
@@ -2185,25 +2428,20 @@ function computeBoardSize(){
   const panel = document.getElementById('panel');
   const gameArea = document.getElementById('gameArea');
   const boardWrap = document.getElementById('boardWrap');
-  const gap = 14;          // #gameArea 的 gap
+  const gap = 14;
   const panelWidth = (panel && panel.getBoundingClientRect().width) || 280;
   const areaRect = gameArea ? gameArea.getBoundingClientRect() : null;
   const areaHeight = areaRect ? areaRect.height : (window.innerHeight - 28);
-
-  // #boardWrap 桌面版現在把標題／標語也放在棋盤上方，算可用高度時要扣掉
-  // 這兩個元素實際佔用的高度，不然棋盤會被撐出黑色相框外
   let headerHeight = 0;
   if(boardWrap){
     const h1El = boardWrap.querySelector('h1');
     const sealEl = boardWrap.querySelector('.seal');
     if(h1El) headerHeight += h1El.getBoundingClientRect().height;
     if(sealEl) headerHeight += sealEl.getBoundingClientRect().height;
-    if(h1El || sealEl) headerHeight += 14; // boardWrap 的 gap(6px) 累計近似值
+    if(h1El || sealEl) headerHeight += 14;
   }
-
   const availableWidth = window.innerWidth - panelWidth - gap - 28 - wrapChrome;
   const availableHeight = areaHeight - wrapChrome - headerHeight;
-
   let size = Math.min(availableWidth, availableHeight);
   size = Math.max(240, Math.min(size, 640));
   return Math.floor(size);
@@ -2217,8 +2455,7 @@ function syncBoardHeight(){
   draw();
 }
 
-// 手機版：遊戲進行中收合標題/問候語/關卡徽章等非必要資訊，把空間讓給棋盤＋方向鍵，
-// 避免玩家操作時還要捲動畫面。只透過 body class 切換，桌面版不受影響。
+// 手機版：遊戲進行中收合標題/問候語/關卡徽章等非必要資訊，把空間讓給棋盤＋方向鍵
 function setMobilePlayingCompact(isPlaying){
   document.body.classList.toggle('mobile-playing', !!isPlaying);
   requestAnimationFrame(syncBoardHeight);
@@ -2226,135 +2463,340 @@ function setMobilePlayingCompact(isPlaying){
 
 window.addEventListener('resize', syncBoardHeight);
 window.addEventListener('load', syncBoardHeight);
-window.addEventListener('orientationchange', ()=> requestAnimationFrame(syncBoardHeight));
+window.addEventListener('orientationchange', () => requestAnimationFrame(syncBoardHeight));
 
-draw();
-syncBoardHeight();
-
-// ---------- 玩家姓名輸入頁 ----------
-const NAME_STORAGE_KEY = 'perritoTesoroPlayerName';
-state.playerName = '';
-
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+// ===== 暫停／重新開始／主選單 =====
+const $ = id => document.getElementById(id);
+function show(id, on){ $(id).classList.toggle('hide', !on); }
+function hideOverlays(){
+  $('resultModal').style.display = 'none';
+  $('leaderboardModal').style.display = 'none';
+  show('pauseov', false);
+  show('confirmov', false);
 }
+function updateCtlButtons(){
+  $('replayBtn').disabled = !state.playing;
+  $('pauseBtn').disabled = !state.playing;
+}
+function pauseGame(showOverlay){
+  if(!state.playing || state.paused) return false;
+  clockTick();
+  stopSpeech();
+  state.paused = true;
+  if(showOverlay !== false) show('pauseov', true);
+  updateTimer();
+  return true;
+}
+function resumeGame(){
+  if(!state.paused) return;
+  clockTick();
+  state.paused = false;
+  show('pauseov', false);
+  if(state.awaitingKeyAnnouncement){ state.keyAnnounceId = 0; state.awaitingKeyAnnouncement = false; }
+  sayCurrentChunk();   // 回來時把目前的指令再唸一次
+}
+let confirmYes = null, confirmPausedByMe = false;
+function askConfirm(k, onYes){
+  confirmPausedByMe = pauseGame(false);
+  confirmYes = onYes;
+  $('confirmMsg').innerHTML = L(k);
+  show('confirmov', true);
+}
+$('confirmNo').addEventListener('click', () => {
+  show('confirmov', false);
+  confirmYes = null;
+  if(confirmPausedByMe){ confirmPausedByMe = false; resumeGame(); }
+});
+$('confirmYes').addEventListener('click', () => {
+  show('confirmov', false);
+  const f = confirmYes; confirmYes = null; confirmPausedByMe = false;
+  if(f) f();
+});
+$('pauseBtn').addEventListener('click', () => pauseGame());
+$('resumeBtn').addEventListener('click', resumeGame);
+$('replayBtn').addEventListener('click', () => {
+  if(!state.playing || state.paused || state.awaitingKeyAnnouncement) return;
+  state.replays++;
+  sayCurrentChunk();
+  trackEvent('replay', { level: state.difficulty });
+});
+$('restartBtn').addEventListener('click', () => {
+  if(state.playing) askConfirm('confirmRestart', startGame);
+  else startGame();
+});
+$('menuBtn').addEventListener('click', () => {
+  if(state.playing) askConfirm('confirmMenu', reopenNameGate);
+  else reopenNameGate();
+});
+
+// ===== ⚙️ 設定視窗（三款共用的設定） =====
+let setPausedByMe = false;
+function openSet(){
+  setPausedByMe = pauseGame(true);
+  drawSet();
+  show('setov', true);
+}
+function closeSet(){
+  show('setov', false);
+  if(setPausedByMe){ setPausedByMe = false; resumeGame(); }
+}
+function opt(label, on, k, v){ return `<button type="button" class="opt ${on ? 'on' : ''}" data-k="${k}" data-v="${v}">${label}</button>`; }
+function drawSet(){
+  const o = $('setov');
+  o.innerHTML = `<div class="ovCard setcard">
+    <h2>⚙️ ${L('settings')}</h2>
+    <div class="setGroup"><h3>${L('script')}</h3><div class="opts">
+      ${opt('繁體', SETTINGS.script==='trad', 'script', 'trad')}${opt('简体', SETTINGS.script==='simp', 'script', 'simp')}</div></div>
+    <div class="setGroup"><h3>${L('langLbl')}</h3><div class="opts">
+      ${opt('中文＋<small>Español</small>', SETTINGS.lang==='es', 'lang', 'es')}${opt('中文＋<small>English</small>', SETTINGS.lang==='en', 'lang', 'en')}${opt(esc(tr('zhOnly')), SETTINGS.lang==='zh', 'lang', 'zh')}</div></div>
+    <div class="setGroup"><h3>${L('phon')}</h3><div class="opts two">
+      ${opt(L('pinyin'), SETTINGS.phon==='pinyin', 'phon', 'pinyin')}${opt(L('zhuyin'), SETTINGS.phon==='zhuyin', 'phon', 'zhuyin')}${opt(L('both'), SETTINGS.phon==='both', 'phon', 'both')}${opt(L('phOff'), SETTINGS.phon==='off', 'phon', 'off')}</div></div>
+    <div class="setGroup"><h3>${L('rate')}</h3><div class="opts">
+      ${opt(L('slow'), SETTINGS.rate==='slow', 'rate', 'slow')}${opt(L('normal'), SETTINGS.rate==='normal', 'rate', 'normal')}${opt(L('fast'), SETTINGS.rate==='fast', 'rate', 'fast')}</div></div>
+    <button type="button" id="setDone">${L('done')}</button></div>`;
+  o.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => setS(b.dataset.k, b.dataset.v)));
+  $('setDone').addEventListener('click', closeSet);
+}
+function setS(k, v){
+  SETTINGS[k] = v;
+  writeSettings(SETTINGS);
+  drawSet();
+  rerenderAll();
+  if(k === 'rate') speakSeq(['向左轉']);   // 試聽一下速度
+}
+$('gateGear').addEventListener('click', openSet);
+$('gameGear').addEventListener('click', openSet);
+$('setov').addEventListener('click', e => { if(e.target.id === 'setov') closeSet(); });
+// 另一個分頁（例如色數）改了共用設定 → 這裡跟著更新
+window.addEventListener('storage', e => {
+  if(e.key !== SETTINGS_KEY) return;
+  Object.assign(SETTINGS, readSettings());
+  rerenderAll();
+});
+
+// 語言／字形／拼音改了之後，畫面上的字全部重畫
+function rerenderAll(){
+  document.documentElement.lang = SETTINGS.lang === 'en' ? 'en' : (SETTINGS.lang === 'es' ? 'es' : (simp() ? 'zh-CN' : 'zh-TW'));
+  applyTexts();
+  document.querySelectorAll('.gateDiffBtn').forEach(btn => {
+    const n = levelNum(btn.dataset.level);
+    btn.querySelector('.diffName').innerHTML = L('level' + n);
+    btn.querySelector('.diffDesc').innerHTML = L('desc' + n);
+  });
+  const ph = tr('namePh') + (fo('namePh') ? ' / ' + fo('namePh') : '');
+  $('playerNameInput').placeholder = ph;
+  setGreeting(state.playerName);
+  updateCurrentLevelBadge();
+  if(state.playing || state.treasureFound) updateStageLabel();
+  renderBox();
+  refreshVoiceNote();
+  if($('leaderboardModal').style.display === 'flex') renderLbModal();
+  requestAnimationFrame(syncBoardHeight);
+}
+
+// ===== 玩家姓名頁 =====
+const NAME_STORAGE_KEY = 'perritoTesoroPlayerName';
+const NAME_MAX = 12;
+const clampName = s => [...String(s || '')].slice(0, NAME_MAX).join('');
 
 function setGreeting(name){
-  const g = document.getElementById('playerGreeting');
-  g.innerHTML = name ? `<span>¡Hola, ${escapeHtml(name)}! 🐾</span>` : '';
+  const g = $('playerGreeting');
+  if(!name){ g.innerHTML = ''; return; }
+  const f = fo('hello');
+  g.innerHTML = `<span>${esc(tr('hello')).replace('{n}', esc(name))}${f ? `<small>${esc(f).replace('{n}', esc(name))}</small>` : ''}</span>`;
 }
-
-// 難度說明文字，姓名頁的按鈕跟遊戲面板的徽章共用同一份資料，避免兩處文字不一致
-const DIFF_INFO = {
-  level1: { name:'NIVEL 1', desc:'7–15 obstáculos' },
-  level2: { name:'NIVEL 2', desc:'15–25 obstáculos, busca la llave primero' },
-  level3: { name:'NIVEL 3', desc:'20–30 obstáculos, llave primero, solo voz' },
-  level4: { name:'NIVEL 4', desc:'20–30 obstáculos, llave primero, solo voz, instrucciones combinadas' }
-};
-
-const LEVEL_ORDER = ['level1','level2','level3','level4'];
-
-function goToNextLevel(){
-  const idx = LEVEL_ORDER.indexOf(state.difficulty);
-  if(idx === -1 || idx >= LEVEL_ORDER.length - 1) return;
-  document.getElementById('resultModal').style.display = 'none';
-  state.difficulty = LEVEL_ORDER[idx + 1];
-  startGame();
+function updateCurrentLevelBadge(){
+  const n = levelNum(state.difficulty) || 1;
+  $('currentLevelName').innerHTML = L('level' + n);
+  $('currentLevelDesc').innerHTML = L('desc' + n);
 }
-
 function selectGateDifficulty(level){
   state.selectedLevel = level;
-  document.querySelectorAll('.gateDiffBtn').forEach(btn=>{
-    btn.classList.toggle('selected', btn.dataset.level === level);
-  });
+  document.querySelectorAll('.gateDiffBtn').forEach(btn => btn.classList.toggle('selected', btn.dataset.level === level));
 }
-
-function updateCurrentLevelBadge(){
-  const info = DIFF_INFO[state.difficulty] || DIFF_INFO.level1;
-  document.getElementById('currentLevelName').textContent = `${info.name} · ${info.desc}`;
-}
-
 function openGame(name){
   state.playerName = name;
   state.difficulty = state.selectedLevel || 'level1';
   try{ localStorage.setItem(NAME_STORAGE_KEY, name); }catch(e){}
   setGreeting(name);
   document.body.classList.remove('gate-open');
-  document.getElementById('nameGate').style.display = 'none';
+  $('nameGate').style.display = 'none';
   syncBoardHeight();
-  trackEvent('player_named', { has_name: true, level: state.difficulty });
-  const input = document.getElementById('playerNameInput');
-  if(input) input.blur();
+  trackEvent('player_named', { level: state.difficulty });
+  $('playerNameInput').blur();
   startGame();
 }
-
 function reopenNameGate(){
-  if(state.timerId) clearInterval(state.timerId);
+  state.gameId++;            // 讓這一局所有還沒跑完的計時器失效
+  stopSpeech();
+  stopClock();
+  clearHint();
   state.playing = false;
+  state.paused = false;
+  state.treasureFound = false;
+  state.box = 'idle';
+  updateCtlButtons();
+  hideOverlays();
   setMobilePlayingCompact(false);
   document.body.classList.add('gate-open');
-  document.getElementById('nameGate').style.display = 'flex';
+  $('nameGate').style.display = 'flex';
   window.scrollTo(0, 0);
   selectGateDifficulty(state.difficulty || 'level1');
-  const input = document.getElementById('playerNameInput');
-  if(input){ input.value = state.playerName || input.value; setTimeout(()=> input.focus(), 50); }
+  const input = $('playerNameInput');
+  input.value = state.playerName || input.value;
 }
-
 function submitPlayerName(){
-  const input = document.getElementById('playerNameInput');
-  const errEl = document.getElementById('nameGateError');
-  const name = (input.value || '').trim();
+  const input = $('playerNameInput');
+  const name = clampName((input.value || '').trim());
   if(!name){
-    errEl.textContent = 'Escribe tu nombre para continuar / 請輸入名字';
+    $('nameGateError').innerHTML = L('nameErr');
     input.focus();
     return;
   }
-  errEl.textContent = '';
-  openGame(name.slice(0, 20));
+  $('nameGateError').textContent = '';
+  openGame(name);
+}
+function goToNextLevel(){
+  const idx = LEVEL_ORDER.indexOf(state.difficulty);
+  if(idx === -1 || idx >= LEVEL_ORDER.length - 1) return;
+  state.difficulty = LEVEL_ORDER[idx + 1];
+  startGame();
 }
 
-(function initNameGate(){
-  const input = document.getElementById('playerNameInput');
-  let saved = '';
-  try{ saved = localStorage.getItem(NAME_STORAGE_KEY) || ''; }catch(e){}
-  if(saved) input.value = saved;
-  selectGateDifficulty('level1');
-  document.querySelectorAll('.gateDiffBtn').forEach(btn=>{
-    btn.addEventListener('click', ()=> selectGateDifficulty(btn.dataset.level));
-  });
-  document.getElementById('nameGateBtn').addEventListener('click', submitPlayerName);
-  document.getElementById('changeLevelLink').addEventListener('click', reopenNameGate);
-  document.getElementById('changeLevelBtn').addEventListener('click', reopenNameGate);
-  input.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){ e.preventDefault(); submitPlayerName(); }
-  });
-  setTimeout(()=> input.focus(), 50);
-})();
-
-// 讓所有 GA4 事件都自動帶上玩家名稱，方便之後在 Analytics 依名字分析（不含個資風險，僅暱稱）
-const _trackEvent = trackEvent;
-trackEvent = function(name, params = {}){
-  _trackEvent(name, Object.assign({}, params, state.playerName ? { player_name: state.playerName } : {}));
-};
-
-// ---------- 分數計算 ----------
-// 設計理念：地圖（障礙物、路徑長度）每局隨機，單比「總時間」對玩家不公平，
-// 所以分數以「正確率」為主分，「每步平均反應時間」只作小幅加減分
-// 避免玩家用亂按方向鍵的方式衝快，違背練習聽力／方向指令的初衷
+// ===== 分數 =====
+// 分數以「正確率」為主分，「每步平均思考時間」只作小幅扣分；思考時間不含語音播放與暫停，
+// 所以選慢速語音、多按幾次 🔊 都不會被扣分。避免玩家用亂按方向鍵的方式衝快。
 function computeScore(){
-  const sec = Math.max(0, Math.floor((Date.now() - state.startTime) / 1000));
+  const sec = Math.floor(state.activeMs / 1000);
   const totalPresses = state.totalPresses || 0;
   const errors = state.errorCount || 0;
   const accuracy = totalPresses > 0 ? totalPresses / (totalPresses + errors) : 0;
-  const avgTimePerStep = totalPresses > 0 ? sec / totalPresses : sec;
-  let score = Math.round(accuracy * 1000 - avgTimePerStep * 50);
-  if(score < 0) score = 0;
-  return { sec, totalPresses, errors, accuracy, avgTimePerStep, score };
+  const thinkSec = state.thinkMs / 1000;
+  const avgThink = totalPresses > 0 ? thinkSec / totalPresses : thinkSec;
+  let score = Math.round(accuracy * 1000 - avgThink * 50);
+  score = Math.max(0, Math.min(1000, score));
+  return { sec, thinkSec, totalPresses, errors, accuracy, avgThink, score, replays: state.replays || 0 };
+}
+// 評語：依正確率分五級（一次都沒錯 → 完美）
+function commentKey(r){
+  if(r.errors === 0) return 'k4';
+  return r.accuracy >= 0.9 ? 'k3' : r.accuracy >= 0.75 ? 'k2' : r.accuracy >= 0.5 ? 'k1' : 'k0';
 }
 
-// ---------- 排行榜（Firebase Firestore） ----------
-// TODO：請把下面 firebaseConfig 換成你自己 Firebase 專案的設定（可以沿用其他遊戲已在用的專案）。
-// 在還沒填入正確設定之前，排行榜會顯示「尚未設定」，不會影響遊戲本身其他功能。
+// 結果畫面順序（與色數、比比看統一）：分數 → 評語 → 排行榜 → 再玩一次／下一關 → 主選單
+function showResult(r){
+  const n = levelNum(state.difficulty);
+  const practice = state.difficulty === 'level1';
+  const row = (k, v) => `<tr><td>${L(k)}</td><td>${v}</td></tr>`;
+  $('resultCard').innerHTML = `
+    <div id="resultSeal">🎉</div>
+    <h2>${L('found')}</h2>
+    <div class="resLevel">${L('level' + n)}</div>
+    <div class="resScoreLbl">${L('score')}</div>
+    <div class="resScore" id="resScore">${r.score}</div>
+    <table class="resTable">
+      ${row('accuracy', Math.round(r.accuracy * 100) + '%')}
+      ${row('think', r.avgThink.toFixed(1) + ' s')}
+      ${row('time', fmtMMSS(r.sec))}
+      ${row('errors', r.errors)}
+      ${row('replays', r.replays)}
+    </table>
+    <div class="comment" id="commentLine">${L(commentKey(r))}</div>
+    ${practice ? `<p id="practiceHint">${L('practiceHint')}</p>` : '<div id="lbArea"></div>'}
+    <button type="button" id="againBtn">${L('again')}</button>
+    ${n < LEVEL_ORDER.length ? `<button type="button" id="nextLevelBtn">${L('next')}</button>` : ''}
+    <button type="button" id="resMenuBtn" class="secBtn">${L('menu')}</button>`;
+  $('againBtn').addEventListener('click', startGame);
+  if($('nextLevelBtn')) $('nextLevelBtn').addEventListener('click', goToNextLevel);
+  $('resMenuBtn').addEventListener('click', reopenNameGate);
+  $('resultModal').style.display = 'flex';
+  $('resultModal').scrollTop = 0;
+  if(!practice) lbAfterGame(state.difficulty, r, state.gameId);
+}
+
+// ===== 排行榜（Firebase，下面的 module 提供 window.LB） =====
+// 每台裝置（匿名登入）每一關只留一筆最高分；只顯示前 10 名
+async function waitLB(){
+  for(let i = 0; i < 50 && !window.LB; i++) await new Promise(r => setTimeout(r, 100));
+  return window.LB || null;
+}
+function lbTable(list, myUid){
+  if(!list.length) return `<p class="lbStatus">${L('lbEmpty')}</p>`;
+  const medals = ['🥇','🥈','🥉'];
+  return '<div class="lbList">' + list.map((e, i) => `<div class="lbRow${e.uid === myUid ? ' lbRowMe' : ''}">
+      <div class="lbRowTop"><span class="lbRank">${medals[i] || (i + 1)}</span><span class="lbName">${esc(e.name || '???')}</span><span class="lbScore">${Number(e.score) || 0}</span></div>
+      <div class="lbRowMeta">🎯 ${Number(e.acc) || 0}% · ❌ ${Number(e.errors) || 0} · ⏱ ${fmtMMSS(e.secs)}</div>
+    </div>`).join('') + '</div>';
+}
+async function lbAfterGame(level, r, gid){
+  const area = $('lbArea');
+  if(!area) return;
+  area.innerHTML = `<p class="lbStatus">${L('loading')}</p>`;
+  const lb = await waitLB();
+  const stillHere = () => gid === state.gameId && $('lbArea') === area;
+  if(!lb){ if(stillHere()) area.innerHTML = `<p class="lbStatus">${L('lbError')}</p>`; return; }
+  try{
+    const res = await lb.submitBest(level, {
+      name: state.playerName, score: r.score, think: Math.round(r.thinkSec * 10) / 10, secs: r.sec,
+      errors: r.errors, presses: r.totalPresses, acc: Math.round(r.accuracy * 100), replays: r.replays
+    });
+    const top = await lb.top(level);
+    if(!stillHere()) return;
+    area.innerHTML = `<p class="lbStatus"><b>${L(res.saved ? 'lbNew' : 'lbNotBetter')}</b></p>` + lbTable(top.list, top.uid);
+  }catch(e){
+    console.error(e);
+    if(stillHere()) area.innerHTML = `<p class="lbStatus">${L('lbError')}</p>`;
+  }
+}
+let lbModalLevel = 'level2';
+async function renderLbModal(){
+  const tabs = $('lbTabs'), body = $('lbBody');
+  tabs.innerHTML = ['level2','level3','level4'].map(lv =>
+    `<button type="button" class="opt ${lv === lbModalLevel ? 'on' : ''}" data-lv="${lv}">${L('level' + levelNum(lv))}</button>`).join('');
+  tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { lbModalLevel = b.dataset.lv; renderLbModal(); }));
+  body.innerHTML = `<p class="lbStatus">${L('loading')}</p>`;
+  const want = lbModalLevel;
+  const lb = await waitLB();
+  if(want !== lbModalLevel) return;
+  if(!lb){ body.innerHTML = `<p class="lbStatus">${L('lbError')}</p>`; return; }
+  try{
+    const top = await lb.top(want);
+    if(want !== lbModalLevel) return;
+    body.innerHTML = `<p class="lbNote">${L('lbNote')}</p>` + lbTable(top.list, top.uid);
+  }catch(e){ console.error(e); body.innerHTML = `<p class="lbStatus">${L('lbError')}</p>`; }
+}
+$('gateLbBtn').addEventListener('click', () => {
+  lbModalLevel = state.selectedLevel && state.selectedLevel !== 'level1' ? state.selectedLevel : 'level2';
+  $('leaderboardModal').style.display = 'flex';
+  renderLbModal();
+  trackEvent('leaderboard_view', { level: lbModalLevel });
+});
+$('lbBackBtn').addEventListener('click', () => { $('leaderboardModal').style.display = 'none'; });
+
+// ===== 開始 =====
+(function init(){
+  const input = $('playerNameInput');
+  let saved = '';
+  try{ saved = localStorage.getItem(NAME_STORAGE_KEY) || ''; }catch(e){}
+  if(saved) input.value = clampName(saved);
+  input.addEventListener('input', () => { const c = clampName(input.value); if(c !== input.value) input.value = c; });
+  input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitPlayerName(); } });
+  selectGateDifficulty('level1');
+  document.querySelectorAll('.gateDiffBtn').forEach(btn => btn.addEventListener('click', () => selectGateDifficulty(btn.dataset.level)));
+  $('nameGateBtn').addEventListener('click', submitPlayerName);
+  updateCtlButtons();
+  rerenderAll();
+  draw();
+  syncBoardHeight();
+})();
+</script>
+<script type="module">
+// 排行榜：Firebase 專案 perrito-busca-el-tesoro（匿名登入）
+// 資料放在 perrito_boards/{level2|level3|level4}/entries/{匿名登入的 uid}，一台裝置一關一筆，只留最高分。
+// 安全規則見 firestore.rules.txt（請貼到 Firebase 後台）。
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAa58xLAL4dLphvdPEvWYAUfHrjM1kcnoo",
   authDomain: "perrito-busca-el-tesoro.firebaseapp.com",
@@ -2365,142 +2807,41 @@ const firebaseConfig = {
   appId: "1:352935350375:web:c50678d1e8bce967ae44c2",
   measurementId: "G-Z13037TCSW"
 };
-
-const LEVEL_LABELS = { level1:'NIVEL 1', level2:'NIVEL 2', level3:'NIVEL 3', level4:'NIVEL 4' };
-
-let db = null;
-let firebaseReady = false;
 try{
-  if(typeof firebase !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey){
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    firebaseReady = true;
-
-    // 執行 Firebase 匿名登入
-    firebase.auth().signInAnonymously()
-      .then(() => {
-        console.log("Firebase 匿名登入成功！");
-      })
-      .catch((error) => {
-        console.error("Firebase 匿名登入失敗:", error);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  async function ensureUid(){
+    await auth.authStateReady();
+    if(auth.currentUser) return auth.currentUser.uid;
+    const c = await signInAnonymously(auth);
+    return c.user.uid;
+  }
+  const BOARDS = ['level2','level3','level4'];
+  // 排名用的數字：分數高的在前；同分時「思考時間」短的在前
+  const rankOf = e => e.score * 100000 + (99999 - Math.min(99999, Math.round(e.think * 10)));
+  window.LB = {
+    async top(level){
+      const uid = await ensureUid();
+      const snap = await getDocs(query(collection(db, 'perrito_boards', level, 'entries'), orderBy('rank', 'desc'), limit(10)));
+      return { uid, list: snap.docs.map(d => ({ uid: d.id, ...d.data() })) };
+    },
+    async submitBest(level, e){
+      if(!BOARDS.includes(level)) return { saved:false };
+      const uid = await ensureUid();
+      const ref = doc(db, 'perrito_boards', level, 'entries', uid);
+      const rank = rankOf(e);
+      const old = await getDoc(ref);
+      if(old.exists() && (Number(old.data().rank) || 0) >= rank) return { saved:false };
+      await setDoc(ref, {
+        name: [...String(e.name || '???')].slice(0, 12).join(''),
+        score: e.score, think: e.think, secs: e.secs, errors: e.errors, presses: e.presses,
+        acc: e.acc, replays: e.replays, rank, updatedAt: serverTimestamp()
       });
-  }
+      return { saved:true };
+    }
+  };
 }catch(e){ console.error('Firebase 初始化失敗', e); }
-
-function leaderboardCollectionName(level){
-  return 'perritoTesoro_leaderboard_' + level;
-}
-
-async function saveScoreToLeaderboard(level, result){
-  if(!firebaseReady || level === 'level1') return null;
-  try{
-    const ref = await db.collection(leaderboardCollectionName(level)).add({
-      name: state.playerName || '???',
-      score: result.score,
-      accuracy: Math.round(result.accuracy * 100),
-      avgTimePerStep: Math.round(result.avgTimePerStep * 100) / 100,
-      timeSeconds: result.sec,
-      errorCount: result.errors,
-      totalPresses: result.totalPresses,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    return ref.id;
-  }catch(e){
-    console.error('saveScoreToLeaderboard 失敗', e);
-    return null;
-  }
-}
-
-async function fetchLeaderboard(level){
-  if(!firebaseReady) return [];
-  try{
-    const snap = await db.collection(leaderboardCollectionName(level))
-      .orderBy('score', 'desc')
-      .limit(10)
-      .get();
-    return snap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-  }catch(e){
-    console.error('fetchLeaderboard 失敗', e);
-    return [];
-  }
-}
-
-function openLeaderboard(level){
-  const modal = document.getElementById('leaderboardModal');
-  const listEl = document.getElementById('lbList');
-  const statusEl = document.getElementById('lbStatus');
-  document.getElementById('lbSubtitle').textContent = LEVEL_LABELS[level] || level;
-  listEl.innerHTML = '';
-  statusEl.textContent = 'Cargando...';
-  modal.style.display = 'flex';
-  trackEvent('leaderboard_view', { level });
-
-  if(!firebaseReady){
-    statusEl.textContent = 'La clasificación aún no está disponible / 排行榜尚未設定';
-    return;
-  }
-  fetchLeaderboard(level).then(list => renderLeaderboard(list, level));
-}
-
-function renderLeaderboard(list, level){
-  const listEl = document.getElementById('lbList');
-  const statusEl = document.getElementById('lbStatus');
-  if(!list.length){
-    statusEl.textContent = 'Todavía no hay puntuaciones. ¡Sé el primero/a! 🐾';
-    listEl.innerHTML = '';
-    return;
-  }
-  statusEl.textContent = '';
-  const medals = ['🥇','🥈','🥉'];
-  listEl.innerHTML = list.map((row, i) => {
-    const isMe = state.lastScoreDocId && row.id === state.lastScoreDocId && level === state.lastPlayedLevel;
-    const rankLabel = medals[i] || String(i + 1);
-    const timeStr = formatMMSS(row.timeSeconds || 0);
-    const errStr = (row.errorCount != null) ? row.errorCount : 0;
-    const stepsStr = (row.totalPresses != null) ? row.totalPresses : '—';
-    const accStr = (row.accuracy != null) ? row.accuracy + '%' : '—';
-    const dateStr = formatDate(row.createdAt);
-    const meta = `⏱ ${timeStr} · ❌ ${errStr} · 👣 ${stepsStr} · 🎯 ${accStr}` + (dateStr ? ` · 📅 ${dateStr}` : '');
-    return `<div class="lbRow${isMe ? ' lbRowMe' : ''}">`
-      + `<div class="lbRowTop">`
-      + `<span class="lbRank">${rankLabel}</span>`
-      + `<span class="lbName">${escapeHtml(row.name || '???')}</span>`
-      + `<span class="lbScore">${row.score}</span>`
-      + `</div>`
-      + `<div class="lbRowMeta">${meta}</div>`
-      + `</div>`;
-  }).join('');
-}
-
-function formatMMSS(sec){
-  sec = Math.max(0, Math.floor(sec || 0));
-  const m = String(Math.floor(sec / 60)).padStart(2, '0');
-  const s = String(sec % 60).padStart(2, '0');
-  return `${m}:${s}`;
-}
-
-function formatDate(ts){
-  if(!ts) return '';
-  try{
-    const d = typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts);
-    if(isNaN(d.getTime())) return '';
-    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  }catch(e){ return ''; }
-}
-
-function closeLeaderboard(){
-  document.getElementById('leaderboardModal').style.display = 'none';
-}
-
-document.getElementById('leaderboardCloseBtn').addEventListener('click', closeLeaderboard);
-document.getElementById('lbBackBtn').addEventListener('click', closeLeaderboard);
-
-document.getElementById('playAgainBtn').addEventListener('click', () => {
-  document.getElementById('resultModal').style.display = 'none';
-  startGame();
-});
-document.getElementById('nextLevelBtn').addEventListener('click', goToNextLevel);
-
 </script>
 </body>
 </html>

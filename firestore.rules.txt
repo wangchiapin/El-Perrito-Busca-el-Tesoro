@@ -1,0 +1,25 @@
+rules_version = '2';
+// 小狗找寶藏 v2 排行榜規則（Firebase 專案 perrito-busca-el-tesoro → Firestore Database → 規則）
+// 整份貼上會取代舊規則；舊的 perritoTesoro_leaderboard_* 不再開放，可到「資料」頁籤手動刪掉。
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 一台裝置（匿名登入的 uid）在每一關只有一筆，只能改自己的那一筆，而且只能換成更好的成績
+    match /perrito_boards/{board}/entries/{uid} {
+      allow read: if board in ['level2', 'level3', 'level4'];
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && board in ['level2', 'level3', 'level4']
+        && request.resource.data.keys().hasOnly(['name', 'score', 'think', 'secs', 'errors', 'presses', 'acc', 'replays', 'rank', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 36
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0 && request.resource.data.score <= 1000
+        && request.resource.data.rank is int
+        && request.resource.data.rank >= request.resource.data.score * 100000
+        && request.resource.data.rank < (request.resource.data.score + 1) * 100000
+        && request.resource.data.updatedAt == request.time
+        && (resource == null || request.resource.data.rank > resource.data.rank);
+      allow delete: if false;
+    }
+  }
+}
