@@ -476,8 +476,9 @@ async function solveAndWaitResult(page){
     await enter(page, 'level1');
     ok(await page.evaluate(() => USE_HTML_AUDIO === true), 'iPhone Chrome 會啟用備用播放');
     ok(await page.evaluate(() => !!(htmlSfx && htmlSfx.beep.length === 7 && htmlSfx.err && htmlSfx.err.pool.length === 3)), '7 種按鍵音＋錯誤音都已做成播放器');
-    const r = await page.evaluate(() => { const g = state.instructions[state.curIndex].dir; const before = window.__plays; let c = 0; const o = audioCtx && audioCtx.createBufferSource; if(audioCtx) audioCtx.createBufferSource = () => { c++; return o.call(audioCtx); };
-      pressDirection(g); const afterOk = window.__plays; pressDirection(DIRS.find(d => d !== state.instructions[state.curIndex].dir)); return { ok: afterOk - before, err: window.__plays - afterOk, ws: c }; });
+    const r = await page.evaluate(() => { const g = state.instructions[state.curIndex].dir; const b0 = window.__plays; let c = 0; const o = audioCtx && audioCtx.createBufferSource; if(audioCtx) audioCtx.createBufferSource = () => { c++; return o.call(audioCtx); };
+      pressDirection(DIRS.find(d => d !== g)); const afterErr = window.__plays;   // 先按錯（按對後可能進入停頓，會忽略按鍵）
+      pressDirection(g); return { err: afterErr - b0, ok: window.__plays - afterErr, ws: c }; });
     ok(r.ok === 1, '按對一次 → 一般播放器播一聲', r);
     ok(r.err === 1, '按錯 → 一般播放器播錯誤音', r);
     ok(r.ws === 0, '不再走 Web Audio', r);
@@ -487,9 +488,23 @@ async function solveAndWaitResult(page){
     await ctx.close();
   }
   {
+    const CHROME_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0.0.0 Mobile/15E148 Safari/604.1';
+    const { page, ctx, errors } = await open(browser, { ua: CHROME_IOS });
+    await page.goto(BASE + '/index.html?audio=web'); await page.waitForTimeout(300);
+    await enter(page, 'level1');
+    ok(await page.evaluate(() => USE_HTML_AUDIO === false && htmlSfx === null), '網址 ?audio=web：Chrome 也用 Web Audio');
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(async () => { const first = audioCtx; await new Promise(r => setTimeout(r, 400)); return { stale: audioStale, same: audioCtx === first }; });
+    ok(r.stale === true, '語音唸完後標記為需要重建', r);
+    const r2 = await page.evaluate(() => { const first = audioCtx; pressDirection(state.instructions[state.curIndex].dir); return { changed: audioCtx !== first, buf: !!(sfxBuf && sfxBuf.beep.length === 7), stale: audioStale }; });
+    ok(r2.changed && r2.buf && !r2.stale, '下一次按鍵時重建音效通道並重新做好音效', r2);
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+  {
     const { page, ctx, errors } = await open(browser);
     await enter(page, 'level1');
-    ok(await page.evaluate(() => USE_HTML_AUDIO === false && htmlSfx === null), '其他瀏覽器（Safari 等）維持原本的 Web Audio', await page.evaluate(() => USE_HTML_AUDIO));
+    ok(await page.evaluate(() => USE_HTML_AUDIO === false && htmlSfx === null && audioStale === false), '其他瀏覽器（Safari 等）維持原本的 Web Audio', await page.evaluate(() => USE_HTML_AUDIO));
     ok(errors.length === 0, '沒有錯誤', errors);
     await ctx.close();
   }

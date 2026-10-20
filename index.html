@@ -1450,7 +1450,7 @@ function speakSeq(texts, onEnd){
   let i = 0;
   const next = () => {
     if(my !== speechTok) return;
-    if(i >= texts.length){ setSpeaking(false); if(onEnd) onEnd(); return; }
+    if(i >= texts.length){ if(IS_CRIOS && !USE_HTML_AUDIO) audioStale = true; setSpeaking(false); if(onEnd) onEnd(); return; }
     let u;
     try{
       u = new SpeechSynthesisUtterance(texts[i++]);
@@ -1747,6 +1747,11 @@ function advanceInstruction(){
 let audioCtx = null;
 let sfxBuf = null;          // 事先做好的短音效（按鍵音 7 種音高＋錯誤音），按的時候直接播放，不用即時生成
 function ensureAudio(){
+  if(audioStale){
+    audioStale = false;
+    try{ if(audioCtx) audioCtx.close(); }catch(e){}
+    audioCtx = null; sfxBuf = null;
+  }
   try{
     if(!audioCtx){
       const AC = window.AudioContext || window.webkitAudioContext;
@@ -1774,7 +1779,10 @@ function renderTone(freq, dur, type, gain){
 }
 // ===== 備用播放方式：用一般的 <audio> 播放（iPhone 的 Chrome 上 Web Audio 會變成沒聲音）=====
 // 只在 iPhone 的 Chrome 啟用（或網址加 ?audio=html 強制測試）；Safari 和其他瀏覽器維持原本的 Web Audio
-const USE_HTML_AUDIO = /CriOS/.test(navigator.userAgent) || /[?&]audio=html\b/.test(location.search);
+const IS_CRIOS = /CriOS/.test(navigator.userAgent);
+const AUDIO_PARAM = (location.search.match(/[?&]audio=(web|html)\b/) || [])[1] || null;   // 網址 ?audio=web / ?audio=html 可強制切換，方便比較
+const USE_HTML_AUDIO = AUDIO_PARAM ? AUDIO_PARAM === 'html' : IS_CRIOS;
+let audioStale = false;   // iPhone Chrome：語音唸完後 Web Audio 通道可能被系統關掉，下一次按鍵時重建
 let htmlSfx = null;
 function makeWavUrl(samples, sr){
   const n = samples.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
@@ -1879,7 +1887,7 @@ if(DBG){
   setInterval(() => {
     const frameAvg = dbg.fps.length ? dbg.fps.reduce((x,y)=>x+y,0)/dbg.fps.length : 0;
     const ua = /CriOS/.test(navigator.userAgent) ? 'Chrome(iOS)' : (/Safari/.test(navigator.userAgent) ? 'Safari/其他' : '?');
-    const ac = (USE_HTML_AUDIO ? '音效方式=一般播放器(<audio>) ' : '音效方式=Web Audio ') + (audioCtx ? (audioCtx.state + ' base=' + ((audioCtx.baseLatency || 0)*1000).toFixed(0) + 'ms out=' + ((audioCtx.outputLatency || 0)*1000).toFixed(0) + 'ms ' + audioCtx.sampleRate + 'Hz') : '(音訊尚未啟動)');
+    const ac = (USE_HTML_AUDIO ? '音效方式=一般播放器(<audio>) ' : '音效方式=Web Audio' + (IS_CRIOS ? '(語音後重建) ' : ' ')) + (audioCtx ? (audioCtx.state + ' base=' + ((audioCtx.baseLatency || 0)*1000).toFixed(0) + 'ms out=' + ((audioCtx.outputLatency || 0)*1000).toFixed(0) + 'ms ' + audioCtx.sampleRate + 'Hz') : '(音訊尚未啟動)');
     box.textContent = 'DEBUG ' + ua + '  按鍵 ' + dbg.presses + ' 次\n'
       + '音訊 ' + ac + '\n'
       + '輸入延遲(碰螢幕→收到) ms 最近/平均/最大: ' + dbgStat(dbg.inp) + '\n'
