@@ -3,7 +3,7 @@
 > 聽中文方向指令（前進、後退、向左轉、向右轉、向後轉），帶小狗找鑰匙、找寶藏
 
 - **網址：** https://wangchiapin.github.io/El-Perrito-Busca-el-Tesoro/
-- **Firebase 專案：** perrito-busca-el-tesoro（排行榜，匿名登入）
+- **Firebase 專案：** memorma-24dab（排行榜，匿名登入；2026-10-21 由舊的 perrito-busca-el-tesoro 專案併進來，舊專案不再使用）
 - **狀態：** 使用中（v2-0，開始頁最下面的小字是版本號）
 
 ## 關卡
@@ -32,7 +32,7 @@
 
 ## 排行榜
 
-`perrito_boards/{level2|level3|level4}/entries/{uid}`：每台裝置每關只留最高分，顯示前 10 名；同分比思考時間。規則在 `firestore.rules.txt`。
+`perrito_boards/{level2|level3|level4}/entries/{uid}`：每台裝置每關只留最高分，顯示前 10 名；同分比思考時間。規則在 Memorama repo 的 `firestore-rules-full.txt`（整份貼到 memorma-24dab）。
 
 ## 測試
 

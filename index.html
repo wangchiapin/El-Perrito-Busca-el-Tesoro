@@ -2807,21 +2807,20 @@ $('lbBackBtn').addEventListener('click', () => { $('leaderboardModal').style.dis
 })();
 </script>
 <script type="module">
-// 排行榜：Firebase 專案 perrito-busca-el-tesoro（匿名登入）
+// 排行榜：Firebase 專案 memorma-24dab（匿名登入；2026-10-21 由 perrito-busca-el-tesoro 併進來）
 // 資料放在 perrito_boards/{level2|level3|level4}/entries/{匿名登入的 uid}，一台裝置一關一筆，只留最高分。
-// 安全規則見 firestore.rules.txt（請貼到 Firebase 後台）。
+// 安全規則在 Memorama repo 的 firestore-rules-full.txt（整份貼到 memorma 的 Firebase 後台）。
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
-  apiKey: "AIzaSyAa58xLAL4dLphvdPEvWYAUfHrjM1kcnoo",
-  authDomain: "perrito-busca-el-tesoro.firebaseapp.com",
-  databaseURL: "https://perrito-busca-el-tesoro-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "perrito-busca-el-tesoro",
-  storageBucket: "perrito-busca-el-tesoro.firebasestorage.app",
-  messagingSenderId: "352935350375",
-  appId: "1:352935350375:web:c50678d1e8bce967ae44c2",
-  measurementId: "G-Z13037TCSW"
+  apiKey: "AIzaSyC_YSDn2OH6_GKKwCq0d8QFNl3fYXzTC60",
+  authDomain: "memorma-24dab.firebaseapp.com",
+  projectId: "memorma-24dab",
+  storageBucket: "memorma-24dab.firebasestorage.app",
+  messagingSenderId: "806709458465",
+  appId: "1:806709458465:web:f0d12acb2f911f2f165560",
+  measurementId: "G-RS1DJ7DH50"
 };
 try{
   const app = initializeApp(firebaseConfig);
