@@ -283,6 +283,31 @@ async function solveAndWaitResult(page){
     await ctx.close();
   }
 
+  console.log('開始頁：沒有標語、窗口矮時可以捲動');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 420 } }); const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.goto(BASE + '/index.html');
+    await page.waitForTimeout(300);
+    ok(await page.$('[data-t="tagline"]') === null, '開始頁與遊戲畫面都沒有標語');
+    const r = await page.evaluate(async () => {
+      const g = document.getElementById('nameGate'), c = document.getElementById('nameCard');
+      const tooTall = g.scrollHeight > g.clientHeight;
+      const topBefore = c.getBoundingClientRect().top;
+      g.scrollTop = g.scrollHeight;
+      await new Promise(r => setTimeout(r, 50));
+      const btn = document.getElementById('nameGateBtn').getBoundingClientRect();
+      return { tooTall, topBefore, scrolled: g.scrollTop, btnBottom: btn.bottom, vh: window.innerHeight };
+    });
+    ok(r.tooTall, '（前提）矮視窗下卡片比視窗高', r);
+    ok(r.topBefore >= 0, '卡片頂端沒有被切掉', r);
+    ok(r.scrolled > 0, '外框可以往下捲', r);
+    ok(r.btnBottom <= r.vh, '捲到底後看得到最下面的按鈕', r);
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
   await browser.close();
   console.log(`\n通過 ${pass}，失敗 ${fail}`);
   process.exit(fail ? 1 : 0);

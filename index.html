@@ -313,9 +313,11 @@
     inset:0;
     z-index:1000;
     display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
+    /* 卡片用 margin:auto 置中：放得下就置中，語言一多、卡片比視窗高時就從頂端排起，
+       外框自己可以上下捲動（原本 align-items:center 會把上下切掉又捲不動） */
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:44px 20px 40px;
     background:
       radial-gradient(circle at 20% 15%, rgba(255,210,63,.18), transparent 45%),
       radial-gradient(circle at 85% 85%, rgba(232,83,47,.22), transparent 50%),
@@ -325,6 +327,8 @@
     position:relative;
     width:100%;
     max-width:380px;
+    margin:auto;
+    flex-shrink:0;
     background:var(--card);
     border:3px solid var(--outline);
     border-radius:20px;
@@ -906,7 +910,6 @@
     <button type="button" class="gear" id="gateGear" aria-label="⚙️">⚙️</button>
     <div id="nameGateIcons">🐶 🪨 🔑 💰</div>
     <h1 class="gameTitle" data-t="title"></h1>
-    <div class="seal" data-t="tagline"></div>
     <div id="voiceWarnGate" class="warn hide"></div>
     <p id="namePrompt" data-t="namePrompt"></p>
     <input id="playerNameInput" type="text" maxlength="12" autocomplete="off">
@@ -961,7 +964,6 @@
 <div id="gameArea">
   <div id="boardWrap">
     <h1 class="gameTitle" data-t="title"></h1>
-    <div class="seal" data-t="tagline"></div>
     <canvas id="board" width="480" height="480"></canvas>
   </div>
   <div id="panel">
@@ -1046,7 +1048,6 @@ const simp = () => SETTINGS.script === 'simp';
 // ===== 介面文字：[繁, 簡, 西, 英]。畫面上中文在上、西文或英文小字在下；「只有中文」就只有中文 =====
 const T = {
   title:['小狗找寶藏','小狗找宝藏','El Perrito Busca el Tesoro','El Perrito Busca el Tesoro'],
-  tagline:['每天一分鐘・方向練習','每天一分钟・方向练习','Cada día unos minutos · Práctica de direcciones','A few minutes a day · Directions practice'],
   namePrompt:['你叫什麼名字？','你叫什么名字？','¿Cómo te llamas, explorador?','What\'s your name, explorer?'],
   namePh:['你的名字','你的名字','Tu nombre','Your name'],
   nameErr:['請輸入名字','请输入名字','Escribe tu nombre para continuar','Type your name to continue'],
