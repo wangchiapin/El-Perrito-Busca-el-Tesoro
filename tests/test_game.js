@@ -329,6 +329,65 @@ async function solveAndWaitResult(page){
     await ctx.close();
   }
 
+  console.log('開始頁：沒有錯誤訊息時不佔位置；手機版遊戲畫面：中文靠左、外語靠右同一行');
+  for(const [tag, vp, mobile] of [['手機', { width: 390, height: 760 }, true], ['電腦', { width: 1280, height: 800 }, false]]){
+    const ctx = await browser.newContext({ viewport: vp, isMobile: mobile, hasTouch: mobile }); const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.addInitScript(SPEECH(10));
+    await page.addInitScript('try{localStorage.setItem(' + JSON.stringify(KEY) + ',' + JSON.stringify(JSON.stringify({ v:1, script:'trad', lang:'es', phon:'pinyin', rate:'normal' })) + ');}catch(e){}');
+    await page.goto(BASE + '/index.html');
+    await page.waitForTimeout(300);
+    ok(await page.$eval('#nameGateError', e => getComputedStyle(e).display === 'none'), tag + '：沒有錯誤訊息時，錯誤那行不佔位置');
+    const gap = await page.evaluate(() => document.getElementById('gateDifficultyLabel').getBoundingClientRect().top - document.getElementById('playerNameInput').getBoundingClientRect().bottom);
+    ok(gap < 16, tag + '：名字框到「選擇難度」之間的空白收緊了', gap);
+    await page.click('#nameGateBtn');   // 沒填名字 → 出現錯誤訊息
+    await page.waitForTimeout(100);
+    ok(await page.$eval('#nameGateError', e => getComputedStyle(e).display !== 'none' && e.textContent.trim().length > 0), tag + '：沒填名字時錯誤訊息會出現');
+    if(mobile){
+      await enter(page, 'level2');
+      await page.waitForTimeout(300);
+      const r = await page.evaluate(() => {
+        const pair = sel => { const el = document.querySelector(sel), sm = el.querySelector('small'); if(!sm) return null;
+          const a = el.getBoundingClientRect(), b = sm.getBoundingClientRect(); return { zhTop: Math.round(el.firstChild.nodeType === 3 ? (()=>{const rg=document.createRange();rg.selectNodeContents(el.firstChild);return rg.getBoundingClientRect().top;})() : a.top), smTop: Math.round(b.top), smRight: Math.round(b.right), boxRight: Math.round(a.right), h: Math.round(a.height) }; };
+        return { stage: pair('#stageLabel'), time: pair('#statRow .statLbl') };
+      });
+      ok(r.stage && Math.abs(r.stage.zhTop - r.stage.smTop) <= 6, '手機：第幾步的中文與外語在同一行', r.stage);
+      ok(r.stage && r.stage.boxRight - r.stage.smRight <= 2, '手機：外語靠右', r.stage);
+      ok(r.time && Math.abs(r.time.zhTop - r.time.smTop) <= 6, '手機：「時間」的中文與外語在同一行', r.time);
+      ok(r.stage && r.stage.h < 24, '手機：第幾步那一行只有一行高', r.stage);
+      ok(await page.$eval('#ctlRow #replayBtn small', e => getComputedStyle(e).display === 'block'), '手機：下方四顆按鈕維持兩行（中文上、外語下）');
+    }
+    ok(errors.length === 0, tag + '：沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('手機版：棋盤大小整局固定，不會因為工具列收合或提示出現而忽大忽小');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true }); const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.addInitScript(SPEECH(10));
+    await page.goto(BASE + '/index.html');
+    await page.waitForTimeout(300);
+    await enter(page, 'level2');
+    await page.waitForTimeout(400);
+    const cv = () => page.$eval('#board', e => e.width);
+    const first = await cv();
+    ok(first >= 180, '（前提）棋盤有大小', first);
+    await page.setViewportSize({ width: 390, height: 600 }); await page.waitForTimeout(200);
+    ok(await cv() === first, '工具列跳出（高度變矮）時棋盤大小不變', await cv());
+    await page.setViewportSize({ width: 390, height: 664 }); await page.waitForTimeout(200);
+    ok(await cv() === first, '工具列收起（高度變高）時棋盤大小不變', await cv());
+    await page.evaluate(() => { document.getElementById('errorMsg').innerHTML = '<span>錯了</span><small>Incorrecto, vuelve a intentar con otra respuesta más larga</small>'; });
+    await page.evaluate(() => window.dispatchEvent(new Event('resize'))); await page.waitForTimeout(100);
+    ok(await cv() === first, '答錯提示出現時棋盤大小不變', await cv());
+    await page.setViewportSize({ width: 340, height: 664 }); await page.waitForTimeout(200);
+    ok(await cv() < first, '寬度改變（轉向／換螢幕）時才重新計算', await cv());
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
   await browser.close();
   console.log(`\n通過 ${pass}，失敗 ${fail}`);
   process.exit(fail ? 1 : 0);

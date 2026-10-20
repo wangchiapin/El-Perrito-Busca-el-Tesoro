@@ -332,7 +332,7 @@
     background:var(--card);
     border:3px solid var(--outline);
     border-radius:20px;
-    padding:28px 26px 24px;
+    padding:22px 26px 18px;
     text-align:center;
     box-shadow:7px 7px 0 rgba(0,0,0,.3);
     overflow:visible;
@@ -366,7 +366,7 @@
   #nameGateIcons{
     font-size:30px;
     letter-spacing:10px;
-    margin:4px 0 10px;
+    margin:0 0 6px;
   }
   #nameCard h1{
     font-size:19px;
@@ -412,21 +412,21 @@
     color:#c0392b;
     font-weight:bold;
     font-size:13px;
-    min-height:18px;
     margin-top:6px;
   }
+  #nameGateError:empty{ display:none; }   /* 沒有錯誤訊息時不佔位置 */
   #nameGateBtn{
-    margin-top:14px;
+    margin-top:10px;
   }
   #gateDifficultyRow{
-    margin:16px 0 4px;
+    margin:8px 0 4px;
     text-align:left;
   }
   #gateDifficultyLabel{
     font-size:13px;
     font-weight:bold;
     color:var(--primary-dark);
-    margin:0 0 8px;
+    margin:0 0 6px;
     text-align:center;
   }
   #gateDifficultyButtons{
@@ -751,12 +751,12 @@
     /* 縮減姓名/難度選擇畫面各區塊間的留白，讓整欄盡量在一屏內顯示完，
        減少需要捲動的機會；下面這句提示語手機版直接拿掉騰空間 */
     #nameCard{
-      padding:18px 18px 16px;
+      padding:14px 18px 14px;
     }
     #nameGateIcons{
       font-size:26px;
       letter-spacing:8px;
-      margin:2px 0 6px;
+      margin:0 0 4px;
     }
     #nameCard h1{
       font-size:17px;
@@ -768,11 +768,10 @@
       padding:10px 12px;
     }
     #nameGateError{
-      min-height:12px;
       margin-top:4px;
     }
     #gateDifficultyRow{
-      margin:10px 0 2px;
+      margin:4px 0 2px;
     }
     #gateDifficultyLabel{
       margin:0 0 6px;
@@ -902,6 +901,25 @@
     #ctlRow button{ font-size:12px; padding:6px 2px; }
     #ctlRow button small{ font-size:9px; }
     #nameCard .gear{ top:10px; right:10px; }
+
+    /* 選「中文＋外語」時，時間／錯誤、第幾步、答錯提示：中文靠左、外語靠右，放同一行，省下一行高度。
+       放不下時外語會自動掉到下一行（仍靠右），不會被切掉。下方四顆控制鍵不動。 */
+    #statRow .statLbl,
+    #stageLabel,
+    #errorMsg{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;      /* 只有中文時維持置中；有外語小字時，小字用 margin-left:auto 推到最右邊 */
+      align-items:baseline;
+      column-gap:8px;
+    }
+    #statRow .statLbl small,
+    #stageLabel small,
+    #errorMsg small{
+      display:block;
+      margin-left:auto;
+      text-align:right;
+    }
   }
 </style>
 </head>
@@ -2405,27 +2423,49 @@ function trackEvent(name, params = {}) {
 
 // 棋盤尺寸只依「視窗大小」計算，完全不受右側資訊欄（結果／錯誤訊息等）高度變化影響。
 // 手機版（<=700px）改成直式堆疊＋整頁可捲動，棋盤大小主要依螢幕「寬度」決定，再用高度夾一次。
+let boardSizeCache = null;
+// 100svh = 手機瀏覽器網址列、工具列都顯示時的可視高度，不會因為滑動頁面而跳動
+function stableViewportHeight(){
+  let h = 0;
+  try{
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100svh;visibility:hidden;pointer-events:none;';
+    document.body.appendChild(probe);
+    h = probe.offsetHeight;
+    probe.remove();
+  }catch(e){}
+  return h > 0 ? h : window.innerHeight;
+}
 function computeBoardSize(){
   const isMobileLayout = window.matchMedia('(max-width: 700px)').matches;
   const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
 
   if(isMobileLayout){
+    // 手機版：棋盤大小要「整局固定」，不能跟著網址列／工具列收合而忽大忽小。
+    // 1) 高度用 100svh（工具列都顯示時的高度）這個固定值，不用會跳動的 innerHeight。
+    // 2) 指令框、答錯提示、第幾步的高度會隨內容變，改用預留的固定高度（實際比預留高才用實際值）。
+    // 3) 算過一次就記起來；只有寬度（轉向）、語言／拼音／繁簡設定、進出遊戲狀態改變時才重算。
+    const key = [window.innerWidth, SETTINGS.lang, SETTINGS.phon, SETTINGS.script, document.body.classList.contains('mobile-playing')].join('|');
+    if(boardSizeCache && boardSizeCache.key === key) return boardSizeCache.size;
     const availableWidth = window.innerWidth - 28 - wrapChrome;
     let size = Math.min(availableWidth, 420 - wrapChrome);
     size = Math.max(180, size);
     // 量測棋盤上下其他區塊的高度，確保棋盤＋方向鍵＋控制鍵能同時塞進畫面
+    const RESERVE = { instructionBox:84, errorMsg:18, stageLabel:30 };
     const ids = ['playerGreeting','statRow','voiceWarnGame','stageLabel','instructionBox','errorMsg','ctlRow','dpad'];
     let chromeHeight = 0;
     ids.forEach(id => {
       const el = document.getElementById(id);
-      if(el && window.getComputedStyle(el).display !== 'none') chromeHeight += el.getBoundingClientRect().height;
+      if(el && window.getComputedStyle(el).display !== 'none') chromeHeight += Math.max(el.getBoundingClientRect().height, RESERVE[id] || 0);
     });
     document.querySelectorAll('#boardWrap > h1, #boardWrap > .seal').forEach(el => {
       if(window.getComputedStyle(el).display !== 'none') chromeHeight += el.getBoundingClientRect().height;
     });
-    const availableHeight = window.innerHeight - chromeHeight - wrapChrome - 48;
+    const availableHeight = stableViewportHeight() - chromeHeight - wrapChrome - 48;
     size = Math.min(size, Math.max(160, availableHeight));
-    return Math.floor(size);
+    size = Math.floor(size);
+    boardSizeCache = { key, size };
+    return size;
   }
 
   const panel = document.getElementById('panel');
