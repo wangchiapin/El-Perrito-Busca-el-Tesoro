@@ -1782,6 +1782,10 @@ function renderTone(freq, dur, type, gain){
 const IS_CRIOS = /CriOS/.test(navigator.userAgent);
 const AUDIO_PARAM = (location.search.match(/[?&]audio=(web|html)\b/) || [])[1] || null;   // 網址 ?audio=web / ?audio=html 可強制切換，方便比較
 const USE_HTML_AUDIO = AUDIO_PARAM ? AUDIO_PARAM === 'html' : IS_CRIOS;
+// 音效大小倍數：iPhone 的 Chrome 輸出比 Safari 小聲，所以放大；網址 ?vol=3 可自行調整（0.5～4）
+const _vp = parseFloat((location.search.match(/[?&]vol=([0-9.]+)/) || [])[1]);
+const SFX_VOL = isFinite(_vp) ? Math.min(4, Math.max(0.5, _vp)) : (IS_CRIOS ? 2.5 : 1);
+const sfxGain = g => Math.min(0.9, g * SFX_VOL);
 let audioStale = false;   // iPhone Chrome：語音唸完後 Web Audio 通道可能被系統關掉，下一次按鍵時重建
 let htmlSfx = null;
 function makeWavUrl(samples, sr){
@@ -1803,8 +1807,8 @@ function makeHtmlEntry(freq, dur, type, gain){
 function buildHtmlSfx(){
   if(htmlSfx) return;
   try{
-    htmlSfx = { beep: [], err: makeHtmlEntry(220, 0.22, 'square', 0.18) };
-    for(let k = 0; k <= 6; k++) htmlSfx.beep.push(makeHtmlEntry(900 + k * 90, 0.12, 'sine', 0.22));
+    htmlSfx = { beep: [], err: makeHtmlEntry(220, 0.22, 'square', sfxGain(0.18)) };
+    for(let k = 0; k <= 6; k++) htmlSfx.beep.push(makeHtmlEntry(900 + k * 90, 0.12, 'sine', sfxGain(0.22)));
   }catch(e){ htmlSfx = null; }
 }
 function playHtmlEntry(entry){
@@ -1817,8 +1821,8 @@ function playHtmlEntry(entry){
   }catch(e){}
 }
 function buildSfx(){
-  sfxBuf = { beep: [], err: renderTone(220, 0.22, 'square', 0.18) };
-  for(let k = 0; k <= 6; k++) sfxBuf.beep.push(renderTone(900 + k * 90, 0.12, 'sine', 0.22));
+  sfxBuf = { beep: [], err: renderTone(220, 0.22, 'square', sfxGain(0.18)) };
+  for(let k = 0; k <= 6; k++) sfxBuf.beep.push(renderTone(900 + k * 90, 0.12, 'sine', sfxGain(0.22)));
 }
 function playBuf(buf){
   try{

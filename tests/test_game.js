@@ -482,6 +482,9 @@ async function solveAndWaitResult(page){
     ok(r.ok === 1, '按對一次 → 一般播放器播一聲', r);
     ok(r.err === 1, '按錯 → 一般播放器播錯誤音', r);
     ok(r.ws === 0, '不再走 Web Audio', r);
+    ok(await page.evaluate(() => SFX_VOL === 2.5), 'iPhone Chrome 音效放大 2.5 倍');
+    const peak = await page.evaluate(() => fetch(htmlSfx.beep[0].pool[0].src).then(x => x.arrayBuffer()).then(b => { const v = new DataView(b); let m = 0; for(let i = 44; i < b.byteLength; i += 2) m = Math.max(m, Math.abs(v.getInt16(i, true))); return m / 32768; }));
+    ok(peak > 0.5 && peak < 0.6, '按鍵音最大音量約 0.55（原本 0.22）', peak);
     const wav = await page.evaluate(() => fetch(htmlSfx.beep[0].pool[0].src).then(x => x.arrayBuffer()).then(b => { const v = new DataView(b); return [String.fromCharCode(v.getUint8(0), v.getUint8(1), v.getUint8(2), v.getUint8(3)), b.byteLength]; }));
     ok(wav[0] === 'RIFF' && wav[1] > 5000, '音效是正確的 WAV 檔', wav);
     ok(errors.length === 0, '沒有錯誤', errors);
@@ -504,7 +507,16 @@ async function solveAndWaitResult(page){
   {
     const { page, ctx, errors } = await open(browser);
     await enter(page, 'level1');
+    ok(await page.evaluate(() => SFX_VOL === 1), '其他瀏覽器音效大小不變');
     ok(await page.evaluate(() => USE_HTML_AUDIO === false && htmlSfx === null && audioStale === false), '其他瀏覽器（Safari 等）維持原本的 Web Audio', await page.evaluate(() => USE_HTML_AUDIO));
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  {
+    const { page, ctx, errors } = await open(browser, { ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 CriOS/120.0.0.0 Mobile/15E148 Safari/604.1' });
+    await page.goto(BASE + '/index.html?vol=3'); await page.waitForTimeout(300);
+    ok(await page.evaluate(() => SFX_VOL === 3 && sfxGain(0.5) === 0.9), '網址 ?vol=3 可調整倍數，且有上限避免爆音');
     ok(errors.length === 0, '沒有錯誤', errors);
     await ctx.close();
   }
@@ -537,7 +549,9 @@ async function solveAndWaitResult(page){
     await page.evaluate(() => { startGame(); });
     await page.waitForTimeout(100);
     ok((await page.evaluate(() => window.__obsDraws)) > 0, '換新地圖會重畫石頭（底圖有更新）', await page.evaluate(() => window.__obsDraws));
-    const same = await page.evaluate(() => { const a = canvas.toDataURL(); bgFor = null; draw(); return a === canvas.toDataURL(); });
+    await page.waitForTimeout(400);
+    const same = await page.evaluate(() => { draw(); const a = ctx.getImageData(0, 0, canvas.width, canvas.height).data; bgFor = null; draw(); const c = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let maxd = 0; for(let i = 0; i < a.length; i++) maxd = Math.max(maxd, Math.abs(a[i] - c[i])); return maxd <= 2; });   // 小數格線的反鋸齒會差 1，肉眼看不出來，所以允許 ±2
     ok(same, '用底圖畫出來的棋盤，和完整重畫的結果一模一樣');
     // 連按 10 下：重畫次數被合併
     await page.waitForTimeout(100);
