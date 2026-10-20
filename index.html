@@ -1683,6 +1683,7 @@ function startGame(){
   const gid = ++state.gameId;
   const difficulty = state.difficulty || 'level1';
   const settings = difficultySettings(difficulty);
+  try{ window.HGPlays && HGPlays.start(difficulty, state.playerName); }catch(e){}
 
   const dogStart = randCell();
   let treasure = randCell();
@@ -2699,6 +2700,7 @@ function commentKey(r){
 
 // 結果畫面順序（與色數、比比看統一）：分數 → 評語 → 排行榜 → 再玩一次／下一關 → 主選單
 function showResult(r){
+  try{ window.HGPlays && HGPlays.end({score: r.score, secs: r.sec, name: state.playerName}); }catch(e){}
   const n = levelNum(state.difficulty);
   const practice = state.difficulty === 'level1';
   const row = (k, v) => `<tr><td>${L(k)}</td><td>${v}</td></tr>`;
@@ -2872,6 +2874,97 @@ try{
   if(document.body)mk(); else document.addEventListener('DOMContentLoaded',mk);
 })();
 /* ===== /版權說明 ===== */
+</script>
+<script>
+/* ===== 遊玩紀錄（hgPlays）— 每個遊戲共用，貼在 </body> 前 =====
+   用法：
+     HGPlays.visit();                       // 頁面打開時（本檔會自動呼叫一次）
+     HGPlays.start('easy', '小明');         // 真的開始玩一局（關卡／難度、暱稱都可省略）
+     HGPlays.end({score: 120, name: '小明'}); // 這一局正常結算（score、name 可省略）
+   沒呼叫 end 的那一局，後台就會顯示「沒玩完」。
+   寫到 memorma 專案：plays（每局）、visits（每台裝置每天每遊戲一筆）。
+   任何錯誤都靜默，不影響遊戲。 */
+(function () {
+  var GAME = 'perrito';          // ← 每個遊戲改成自己的代號（英文小寫、底線）
+  var NAME_GETTER = null;                // ← 可選：function(){ return 目前暱稱或'' }
+  var CFG = { apiKey: 'AIzaSyC_YSDn2OH6_GKKwCq0d8QFNl3fYXzTC60', authDomain: 'memorma-24dab.firebaseapp.com',
+              projectId: 'memorma-24dab', appId: '1:806709458465:web:f0d12acb2f911f2f165560' };
+  var V = '10.12.2', CDN = 'https://www.gstatic.com/firebasejs/' + V + '/';
+  var cur = null, readyP = null, lib = null;
+
+  function gid() { try { return (HG.gameFn ? HG.gameFn() : GAME) || GAME; } catch (e) { return GAME; } } // taiwan-life 這類共用引擎的遊戲可改寫 HGPlays.gameFn
+  function day() { // 以台灣時間（UTC+8）算「哪一天」，方便老師對帳
+    var d = new Date(Date.now() + 8 * 3600e3);
+    return d.toISOString().slice(0, 10);
+  }
+  function ls(k, v) {
+    try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {}
+    return null;
+  }
+  function ready() {
+    if (readyP) return readyP;
+    readyP = (async function () {
+      var A = await import(CDN + 'firebase-app.js');
+      var Au = await import(CDN + 'firebase-auth.js');
+      var F = await import(CDN + 'firebase-firestore.js');
+      var app = A.initializeApp(CFG, 'hgplays');
+      var auth = Au.getAuth(app);
+      if (!auth.currentUser) await Au.signInAnonymously(auth);
+      else await auth.authStateReady();
+      lib = { F: F, db: F.getFirestore(app), uid: auth.currentUser.uid };
+      return lib;
+    })().catch(function () { readyP = null; return null; });
+    return readyP;
+  }
+  function getName(n) {
+    if (n) return String(n).slice(0, 36);
+    try { if (NAME_GETTER) return String(NAME_GETTER() || '').slice(0, 36); } catch (e) {}
+    return '';
+  }
+
+  var HG = window.HGPlays = {
+    /* 每台裝置每天、每個遊戲只算一次訪客 */
+    visit: function () {
+      var g = gid(), d = day(), key = 'hg.visit.' + g;
+      if (ls(key) === d) return;
+      ready().then(function (L) {
+        if (!L) return;
+        var id = d + '_' + g + '_' + L.uid;
+        return L.F.setDoc(L.F.doc(L.db, 'visits', id), { game: g, day: d, uid: L.uid, at: L.F.serverTimestamp() })
+          .then(function () { ls(key, d); });
+      }).catch(function () {});
+    },
+    /* 真的開始玩一局 */
+    start: function (level, name) {
+      var mine = cur = { id: null, level: level == null ? '' : String(level).slice(0, 30) };
+      ready().then(function (L) {
+        if (!L) return;
+        var data = { game: gid(), level: mine.level, uid: L.uid, name: getName(name), day: day(),
+                     startedAt: L.F.serverTimestamp(), done: false };
+        return L.F.addDoc(L.F.collection(L.db, 'plays'), data).then(function (ref) {
+          mine.id = ref.id; if (mine.pendingEnd) HG._finish(mine, mine.pendingEnd);
+        });
+      }).catch(function () {});
+    },
+    /* 這一局正常結算 */
+    end: function (info) {
+      var mine = cur; if (!mine || mine.ended) return; mine.ended = true; info = info || {};
+      if (mine.id) HG._finish(mine, info); else mine.pendingEnd = info; // 開始的寫入還沒回來就先記著
+    },
+    _finish: function (mine, info) {
+      ready().then(function (L) {
+        if (!L || !mine.id) return;
+        var u = { done: true, endedAt: L.F.serverTimestamp(),
+                  secs: Math.max(0, Math.min(86400, Math.round(Number(info.secs != null ? info.secs : (Date.now() - (mine.t0 || Date.now())) / 1000) || 0))) };
+        var s = Number(info.score); if (isFinite(s) && info.score != null) u.score = Math.max(-1e9, Math.min(1e9, Math.round(s)));
+        var n = getName(info.name); if (n) u.name = n;
+        return L.F.updateDoc(L.F.doc(L.db, 'plays', mine.id), u);
+      }).catch(function () {});
+    }
+  };
+  var _s = HG.start; HG.start = function (l, n) { _s(l, n); if (cur) cur.t0 = Date.now(); };
+  setTimeout(function () { HG.visit(); }, 2500);   // 等遊戲載完再記訪客
+})();
 </script>
 </body>
 </html>
