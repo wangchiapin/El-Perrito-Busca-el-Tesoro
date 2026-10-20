@@ -482,9 +482,9 @@ async function solveAndWaitResult(page){
     ok(r.ok === 1, '按對一次 → 一般播放器播一聲', r);
     ok(r.err === 1, '按錯 → 一般播放器播錯誤音', r);
     ok(r.ws === 0, '不再走 Web Audio', r);
-    ok(await page.evaluate(() => SFX_VOL === 2.5), 'iPhone Chrome 音效放大 2.5 倍');
+    ok(await page.evaluate(() => SFX_VOL === 4), 'iPhone Chrome 音效放大 4 倍');
     const peak = await page.evaluate(() => fetch(htmlSfx.beep[0].pool[0].src).then(x => x.arrayBuffer()).then(b => { const v = new DataView(b); let m = 0; for(let i = 44; i < b.byteLength; i += 2) m = Math.max(m, Math.abs(v.getInt16(i, true))); return m / 32768; }));
-    ok(peak > 0.5 && peak < 0.6, '按鍵音最大音量約 0.55（原本 0.22）', peak);
+    ok(peak > 0.8 && peak < 0.9, '按鍵音最大音量約 0.88（原本 0.22）', peak);
     const wav = await page.evaluate(() => fetch(htmlSfx.beep[0].pool[0].src).then(x => x.arrayBuffer()).then(b => { const v = new DataView(b); return [String.fromCharCode(v.getUint8(0), v.getUint8(1), v.getUint8(2), v.getUint8(3)), b.byteLength]; }));
     ok(wav[0] === 'RIFF' && wav[1] > 5000, '音效是正確的 WAV 檔', wav);
     ok(errors.length === 0, '沒有錯誤', errors);

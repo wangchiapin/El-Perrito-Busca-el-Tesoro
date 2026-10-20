@@ -1784,7 +1784,7 @@ const AUDIO_PARAM = (location.search.match(/[?&]audio=(web|html)\b/) || [])[1] |
 const USE_HTML_AUDIO = AUDIO_PARAM ? AUDIO_PARAM === 'html' : IS_CRIOS;
 // 音效大小倍數：iPhone 的 Chrome 輸出比 Safari 小聲，所以放大；網址 ?vol=3 可自行調整（0.5～4）
 const _vp = parseFloat((location.search.match(/[?&]vol=([0-9.]+)/) || [])[1]);
-const SFX_VOL = isFinite(_vp) ? Math.min(4, Math.max(0.5, _vp)) : (IS_CRIOS ? 2.5 : 1);
+const SFX_VOL = isFinite(_vp) ? Math.min(4, Math.max(0.5, _vp)) : (IS_CRIOS ? 4 : 1);
 const sfxGain = g => Math.min(0.9, g * SFX_VOL);
 let audioStale = false;   // iPhone Chrome：語音唸完後 Web Audio 通道可能被系統關掉，下一次按鍵時重建
 let htmlSfx = null;
