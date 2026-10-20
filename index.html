@@ -922,6 +922,26 @@
       text-align:right;
     }
   }
+
+  /* ===== 美漫風格：只改顏色、陰影、圓角，不動任何尺寸（棋盤大小的計算不受影響）===== */
+  :root{ --outline:#1A1A1A; --sky:#BFE6F7; --sky-light:#E3F4FC; --secondary:#FFE45E; --primary-dark:#D93A2B; }
+  body{ background:
+      radial-gradient(rgba(26,26,26,.08) 1px, transparent 1.5px) 0 0/8px 8px,
+      linear-gradient(180deg, var(--sky) 0%, var(--sky-light) 100%); }
+  #statRow div{ border-width:3px; border-radius:6px; box-shadow:3px 3px 0 #1A1A1A; }
+  #statRow span{ color:#E63946; }
+  #instructionBox{
+    background-color:#FFE45E;
+    background-image:radial-gradient(rgba(230,57,70,.35) 1.3px, transparent 1.6px);
+    background-size:7px 7px;
+    border-color:#1A1A1A; border-radius:6px;
+    box-shadow:4px 4px 0 #1A1A1A;
+  }
+  canvas{ box-shadow:4px 4px 0 #1A1A1A; border-radius:3px; }
+  button{ box-shadow:3px 3px 0 #1A1A1A; }
+  button:active{ box-shadow:1px 1px 0 #1A1A1A; }
+  #dpad button{ color:#1A1A1A; font-weight:900; }
+  #errorMsg{ color:#E63946; }
 </style>
 </head>
 <body class="gate-open">
@@ -1958,23 +1978,34 @@ bindDpad('dpadRight','right');
 // 棋盤的格線和石頭不會動，只畫一次存成底圖；之後每次重畫只要貼上底圖，再畫小狗／鑰匙／寶藏
 let bgCanvas = null, bgFor = null;
 function drawStaticLayer(){
-  // 卡通風格棋盤底色：淺藍/白 棋盤格交錯
+  // 美漫風格棋盤：奶油色紙，隔格有淡紅網點
+  const dotR = Math.max(.6, CELL*.05);
+  ctx.fillStyle = CM.paper;   // 先整片鋪底：格子邊緣在小數位置時才不會露出半透明縫，而且重畫的結果每次都一樣
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   for(let r=0;r<GRID;r++){
     for(let c=0;c<GRID;c++){
-      ctx.fillStyle = ((r+c)%2===0) ? '#FFFFFF' : '#E8F7FF';
+      const alt = (r+c)%2 === 1;
+      ctx.fillStyle = alt ? CM.paperAlt : CM.paper;
       ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+      if(alt){
+        ctx.fillStyle = 'rgba(230,57,70,.16)';
+        ctx.beginPath();
+        for(let a=0;a<3;a++) for(let b=0;b<3;b++){
+          const x = c*CELL + CELL*(a+.5)/3, y = r*CELL + CELL*(b+.5)/3;
+          ctx.moveTo(x+dotR, y); ctx.arc(x, y, dotR, 0, Math.PI*2);
+        }
+        ctx.fill();
+      }
     }
   }
-  ctx.strokeStyle = '#2b2b2b';
-  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = CM.grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
   for(let i=0;i<=GRID;i++){
-    ctx.beginPath();
     ctx.moveTo(i*CELL,0); ctx.lineTo(i*CELL, GRID*CELL);
-    ctx.stroke();
-    ctx.beginPath();
     ctx.moveTo(0,i*CELL); ctx.lineTo(GRID*CELL, i*CELL);
-    ctx.stroke();
   }
+  ctx.stroke();
   state.obstacles.forEach(key=>{
     const [r,c] = key.split(',').map(Number);
     drawObstacle(c*CELL+CELL/2, r*CELL+CELL/2);
@@ -1984,6 +2015,7 @@ function drawBoardBase(){
   if(!bgCanvas) bgCanvas = document.createElement('canvas');
   const ok = bgFor && bgFor.obs === state.obstacles && bgFor.obsSize === state.obstacles.size && bgFor.w === canvas.width && bgFor.cell === CELL;
   if(ok){ ctx.drawImage(bgCanvas, 0, 0); return; }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);   // 先清乾淨，格線邊緣的半透明像素才不會一層層疊深
   drawStaticLayer();   // 先照原樣畫在棋盤上，再把這張圖存起來給之後用
   bgCanvas.width = canvas.width; bgCanvas.height = canvas.height;
   bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
@@ -2012,596 +2044,187 @@ function draw(){
   if(DBG) dbgPush(dbg.draw, lastDrawAt - t0);
 }
 
-function drawObstacle(cx,cy){
-  ctx.save();
-  ctx.translate(cx,cy);
-  const s = CELL*0.86;
-  const black = '#1a1208';
-  const gray1 = '#B9C2CC';
-  const gray2 = '#8C97A3';
-  const white = '#fff';
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-
-  // 主體：不規則圓角石頭
-  ctx.beginPath();
-  ctx.moveTo(-s*0.42, s*0.06);
-  ctx.quadraticCurveTo(-s*0.46, -s*0.22, -s*0.18, -s*0.34);
-  ctx.quadraticCurveTo(s*0.04, -s*0.46, s*0.30, -s*0.28);
-  ctx.quadraticCurveTo(s*0.48, -s*0.14, s*0.42, s*0.10);
-  ctx.quadraticCurveTo(s*0.36, s*0.34, s*0.06, s*0.38);
-  ctx.quadraticCurveTo(-s*0.28, s*0.40, -s*0.42, s*0.06);
-  ctx.closePath();
-  ctx.fillStyle = gray1;
-  ctx.fill();
-  ctx.lineWidth = Math.max(2, s*0.07);
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 陰影面（做出立體感）
-  ctx.save();
-  ctx.clip();
-  ctx.beginPath();
-  ctx.ellipse(s*0.14, s*0.14, s*0.34, s*0.26, 0.3, 0, Math.PI*2);
-  ctx.fillStyle = gray2;
-  ctx.fill();
-  ctx.restore();
-
-  // 裂紋線條
-  ctx.beginPath();
-  ctx.moveTo(-s*0.10,-s*0.20);
-  ctx.quadraticCurveTo(-s*0.02,-s*0.06, -s*0.14, s*0.08);
-  ctx.lineWidth = Math.max(1.4, s*0.035);
-  ctx.strokeStyle = black;
-  ctx.globalAlpha = 0.55;
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  // 高光
-  ctx.beginPath();
-  ctx.ellipse(-s*0.18,-s*0.16,s*0.09,s*0.05,-0.4,0,Math.PI*2);
-  ctx.fillStyle = white;
-  ctx.globalAlpha = 0.85;
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  ctx.restore();
+// ===== 美漫風格繪圖：粗黑外框、鮮明平塗色、網點。所有尺寸都以「一格」為單位，s = 格子大小 =====
+const CM = {
+  line:'#1A1A1A', paper:'#FFF3C4', paperAlt:'#FFE9A0', grid:'rgba(26,26,26,.28)',
+  body:'#8A5A33', ear:'#4E2F18', muzzle:'#F3D2A2', nose:'#1A1A1A', tongue:'#FF6B8B', collar:'#E63946',
+  stone:'#A9B3BE', stoneDark:'#6F7A86', gold:'#FFC62B', goldDark:'#E08E0B', wood:'#B8671F', woodDark:'#7C3F10'
+};
+function cmFill(c, col, lw){ c.fillStyle = col; c.fill(); c.lineWidth = lw; c.strokeStyle = CM.line; c.stroke(); }
+function cmEll(c, s, x, y, rx, ry, rot, col, lw){ c.beginPath(); c.ellipse(x*s, y*s, rx*s, ry*s, rot, 0, Math.PI*2); cmFill(c, col, lw); }
+function cmEye(c, s, x, y, r){
+  c.beginPath(); c.arc(x*s, y*s, r*s*1.15, 0, Math.PI*2); c.fillStyle = '#fff'; c.fill();
+  c.lineWidth = Math.max(1, s*.045); c.strokeStyle = CM.line; c.stroke();
+  c.beginPath(); c.arc((x + r*.18)*s, y*s, r*s*.62, 0, Math.PI*2); c.fillStyle = CM.line; c.fill();
+  c.beginPath(); c.arc((x + r*.3)*s, (y - r*.3)*s, r*s*.22, 0, Math.PI*2); c.fillStyle = '#fff'; c.fill();
 }
 
-function drawKey(cx,cy){
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(-0.55);
-  const s = CELL*0.8;
-  const black = '#1a1208';
-  const gold = '#FFD23F';
-  const white = '#fff';
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  const lw = Math.max(2, s*0.07);
-
-  // 鑰匙桿
-  ctx.beginPath();
-  ctx.moveTo(-s*0.02, -s*0.05);
-  ctx.lineTo(s*0.38, -s*0.05);
-  ctx.lineTo(s*0.38, s*0.05);
-  ctx.lineTo(-s*0.02, s*0.05);
-  ctx.closePath();
-  ctx.fillStyle = gold;
-  ctx.fill();
-  ctx.lineWidth = lw;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 鑰匙齒
-  ctx.beginPath();
-  ctx.rect(s*0.24, s*0.05, s*0.06, s*0.12);
-  ctx.rect(s*0.36, s*0.05, s*0.06, s*0.16);
-  ctx.fillStyle = gold;
-  ctx.fill();
-  ctx.lineWidth = lw*0.85;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 鑰匙頭（圓環）
-  ctx.beginPath();
-  ctx.arc(-s*0.24, 0, s*0.26, 0, Math.PI*2);
-  ctx.fillStyle = gold;
-  ctx.fill();
-  ctx.lineWidth = lw;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(-s*0.24, 0, s*0.11, 0, Math.PI*2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.lineWidth = lw*0.8;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 高光
-  ctx.beginPath();
-  ctx.ellipse(-s*0.33,-s*0.10,s*0.07,s*0.035,-0.5,0,Math.PI*2);
-  ctx.fillStyle = white;
-  ctx.globalAlpha = 0.8;
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  ctx.restore();
-}
-
-function drawTreasure(cx,cy,sizeOverride){
-  ctx.save();
-  ctx.translate(cx,cy);
-  const s = sizeOverride || CELL*0.42;
-  const black = '#1a1208';
-  const gold = '#FFD23F';
-  const goldDark = '#E8A317';
-  ctx.lineJoin='round'; ctx.lineCap='round';
-  const lw = Math.max(2.2, s*0.11);
-
-  ctx.beginPath();
-  ctx.arc(0,0,s,0,Math.PI*2);
-  ctx.fillStyle = gold;
-  ctx.fill();
-  ctx.lineWidth = lw;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 內圈做硬幣質感
-  ctx.beginPath();
-  ctx.arc(0,0,s*0.72,0,Math.PI*2);
-  ctx.lineWidth = lw*0.5;
-  ctx.strokeStyle = goldDark;
-  ctx.stroke();
-
-  ctx.fillStyle = black;
-  ctx.font = 'bold '+(s*0.95)+'px "Noto Sans TC",sans-serif';
-  ctx.textAlign='center';
-  ctx.textBaseline='middle';
-  ctx.fillText('寶',0,1);
-
-  // 高光
-  ctx.beginPath();
-  ctx.ellipse(-s*0.35,-s*0.35,s*0.22,s*0.12,-0.5,0,Math.PI*2);
-  ctx.fillStyle = '#fff';
-  ctx.globalAlpha = 0.55;
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  ctx.restore();
-}
-
-function drawDog(cx,cy,facing){
-  ctx.save();
-  ctx.translate(cx,cy);
-  const s = CELL*0.95;
-  const black = '#1a1208';
-  const brown = '#5C3A21';
-  const brownDark = '#4a2e19';
-  const tan = '#E8B268';
-  const white = '#fff';
-  const collar = '#B23A2E';
-  const lw = Math.max(2, s*0.06);
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-
-  function roundRectPath(x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
+// 小狗：圓臉小狗，上／下／左／右四個面向
+function cmDog(c, x, y, s, f){
+  c.save(); c.translate(x, y); c.lineJoin = 'round'; c.lineCap = 'round';
+  const lw = Math.max(1.3, s*.07);
+  if(f === 'left' || f === 'right'){
+    if(f === 'left') c.scale(-1, 1);
+    cmEll(c, s, -.42, -.06, .075, .17, -.55, CM.body, lw);                 // 尾巴
+    cmEll(c, s, -.30, .34, .075, .10, 0, CM.ear, lw); cmEll(c, s, .06, .34, .075, .10, 0, CM.ear, lw);   // 腳
+    cmEll(c, s, -.10, .14, .34, .20, 0, CM.body, lw);                      // 身體
+    cmEll(c, s, .16, -.08, .27, .26, 0, CM.body, lw);                      // 頭
+    cmEll(c, s, .41, .0, .16, .115, 0, CM.muzzle, lw);                     // 口鼻
+    cmEll(c, s, .55, -.03, .05, .04, 0, CM.nose, lw*.6);                   // 鼻子
+    cmEll(c, s, .40, .11, .05, .06, 0, CM.tongue, lw*.7);                  // 舌頭
+    cmEll(c, s, .07, -.07, .09, .19, .25, CM.ear, lw);                     // 耳朵
+    cmEll(c, s, .0, .12, .05, .13, -.15, CM.collar, lw*.7);                // 項圈
+    cmEye(c, s, .24, -.15, .075);
+  }else if(f === 'down'){
+    cmEll(c, s, 0, .33, .24, .17, 0, CM.body, lw);
+    cmEll(c, s, -.12, .47, .08, .05, 0, CM.muzzle, lw*.8); cmEll(c, s, .12, .47, .08, .05, 0, CM.muzzle, lw*.8);
+    cmEll(c, s, -.31, -.08, .13, .25, .35, CM.ear, lw); cmEll(c, s, .31, -.08, .13, .25, -.35, CM.ear, lw);
+    cmEll(c, s, 0, -.04, .34, .31, 0, CM.body, lw);
+    cmEll(c, s, 0, .31, .17, .05, 0, CM.collar, lw*.7);
+    cmEll(c, s, 0, .12, .17, .125, 0, CM.muzzle, lw);
+    cmEll(c, s, 0, .23, .05, .065, 0, CM.tongue, lw*.7);
+    cmEll(c, s, 0, .07, .065, .045, 0, CM.nose, lw*.6);
+    cmEye(c, s, -.15, -.09, .08); cmEye(c, s, .15, -.09, .08);
+  }else{ // up：背面
+    cmEll(c, s, 0, .34, .075, .09, 0, CM.body, lw);
+    cmEll(c, s, 0, .28, .24, .17, 0, CM.body, lw);
+    cmEll(c, s, -.31, -.06, .13, .25, .35, CM.ear, lw); cmEll(c, s, .31, -.06, .13, .25, -.35, CM.ear, lw);
+    cmEll(c, s, 0, -.04, .34, .31, 0, CM.body, lw);
+    cmEll(c, s, .10, -.10, .10, .08, .3, CM.muzzle, lw*.8);
+    cmEll(c, s, 0, .29, .17, .05, 0, CM.collar, lw*.7);
   }
-
-  if(facing==='left' || facing==='right'){
-    const dir = facing==='right' ? 1 : -1;
-    ctx.save();
-    ctx.scale(dir,1);
-
-    // 尾巴（往上捲，像逗號）
-    ctx.beginPath();
-    ctx.moveTo(-s*0.38, s*0.12);
-    ctx.quadraticCurveTo(-s*0.64, s*0.06, -s*0.58, -s*0.24);
-    ctx.quadraticCurveTo(-s*0.55, -s*0.44, -s*0.38, -s*0.38);
-    ctx.quadraticCurveTo(-s*0.46, -s*0.22, -s*0.44, -s*0.02);
-    ctx.quadraticCurveTo(-s*0.42, s*0.06, -s*0.28, s*0.08);
-    ctx.closePath();
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 四隻腳（淺棕色）
-    ctx.fillStyle = tan;
-    [-s*0.30, -s*0.02, s*0.16].forEach(lx=>{
-      roundRectPath(lx, s*0.14, s*0.09, s*0.20, s*0.03);
-      ctx.fill();
-      ctx.lineWidth = lw*0.85;
-      ctx.strokeStyle = black;
-      ctx.stroke();
-    });
-
-    // 身體（深棕色，長橢圓）
-    ctx.beginPath();
-    ctx.ellipse(-s*0.02, s*0.00, s*0.46, s*0.22, 0, 0, Math.PI*2);
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 肚子（淺棕色貼片）
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(-s*0.02, s*0.00, s*0.46, s*0.22, 0, 0, Math.PI*2);
-    ctx.clip();
-    ctx.beginPath();
-    ctx.ellipse(-s*0.02, s*0.14, s*0.36, s*0.12, 0, 0, Math.PI*2);
-    ctx.fillStyle = tan;
-    ctx.fill();
-    ctx.restore();
-
-    // 耳朵（直立）
-    ctx.beginPath();
-    ctx.ellipse(s*0.20,-s*0.28,s*0.09,s*0.18,0.4,0,Math.PI*2);
-    ctx.fillStyle = brownDark;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 頭
-    ctx.beginPath();
-    ctx.arc(s*0.32,-s*0.06,s*0.23,0,Math.PI*2);
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 口鼻（臘腸狗特色：長長的口鼻）
-    ctx.beginPath();
-    ctx.ellipse(s*0.60,0,s*0.20,s*0.10,0,0,Math.PI*2);
-    ctx.fillStyle = tan;
-    ctx.fill();
-    ctx.lineWidth = lw*0.9;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 鼻子
-    ctx.beginPath();
-    ctx.ellipse(s*0.76,-s*0.01,s*0.055,s*0.045,0,0,Math.PI*2);
-    ctx.fillStyle = black;
-    ctx.fill();
-
-    // 項圈
-    ctx.fillStyle = collar;
-    ctx.fillRect(s*0.12,s*0.08,s*0.16,s*0.07);
-
-    // 眼睛
-    ctx.fillStyle = white;
-    ctx.beginPath(); ctx.arc(s*0.34,-s*0.13,3.6,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = black;
-    ctx.beginPath(); ctx.arc(s*0.355,-s*0.13,1.8,0,Math.PI*2); ctx.fill();
-
-    ctx.restore();
-  } else if(facing==='down'){
-    // 耳朵
-    ctx.fillStyle = brownDark;
-    ctx.beginPath();
-    ctx.ellipse(-s*0.19,-s*0.30,s*0.09,s*0.17,-0.3,0,Math.PI*2);
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(s*0.19,-s*0.30,s*0.09,s*0.17,0.3,0,Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
-
-    // 腳
-    ctx.fillStyle = tan;
-    [-s*0.24, s*0.15].forEach(lx=>{
-      roundRectPath(lx, s*0.24, s*0.10, s*0.14, s*0.03);
-      ctx.fill();
-      ctx.lineWidth = lw*0.85;
-      ctx.strokeStyle = black;
-      ctx.stroke();
-    });
-
-    // 身體
-    ctx.beginPath();
-    ctx.ellipse(0, s*0.20, s*0.30, s*0.20, 0, 0, Math.PI*2);
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 頭
-    ctx.beginPath();
-    ctx.arc(0,-s*0.06,s*0.25,0,Math.PI*2);
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 口鼻貼片
-    ctx.beginPath();
-    ctx.ellipse(0, s*0.06, s*0.14, s*0.10, 0, 0, Math.PI*2);
-    ctx.fillStyle = tan;
-    ctx.fill();
-    ctx.lineWidth = lw*0.85;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 鼻子
-    ctx.beginPath();
-    ctx.ellipse(0, s*0.04, s*0.045, s*0.035, 0, 0, Math.PI*2);
-    ctx.fillStyle = black;
-    ctx.fill();
-
-    // 項圈
-    ctx.fillStyle = collar;
-    ctx.fillRect(-s*0.16, s*0.115, s*0.32, s*0.065);
-
-    // 眼睛
-    ctx.fillStyle = white;
-    ctx.beginPath(); ctx.arc(-s*0.10,-s*0.08,3.4,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(s*0.10,-s*0.08,3.4,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = black;
-    ctx.beginPath(); ctx.arc(-s*0.10,-s*0.08,1.7,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(s*0.10,-s*0.08,1.7,0,Math.PI*2); ctx.fill();
-
-  } else {
-    // 尾巴
-    ctx.beginPath();
-    ctx.moveTo(0, s*0.32);
-    ctx.quadraticCurveTo(s*0.20, s*0.40, s*0.14, s*0.20);
-    ctx.quadraticCurveTo(s*0.10, s*0.10, s*0.02, s*0.20);
-    ctx.closePath();
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 腳
-    ctx.fillStyle = tan;
-    [-s*0.24, s*0.15].forEach(lx=>{
-      roundRectPath(lx, s*0.24, s*0.10, s*0.14, s*0.03);
-      ctx.fill();
-      ctx.lineWidth = lw*0.85;
-      ctx.strokeStyle = black;
-      ctx.stroke();
-    });
-
-    // 身體
-    ctx.beginPath();
-    ctx.ellipse(0, s*0.14, s*0.28, s*0.22, 0, 0, Math.PI*2);
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 頭（背面）
-    ctx.beginPath();
-    ctx.arc(0, -s*0.14, s*0.23, 0, Math.PI*2);
-    ctx.fillStyle = brown;
-    ctx.fill();
-    ctx.lineWidth = lw;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-
-    // 耳朵（背面看到的直立耳）
-    ctx.fillStyle = brownDark;
-    ctx.beginPath();
-    ctx.ellipse(-s*0.15,-s*0.30,s*0.075,s*0.14,-0.15,0,Math.PI*2);
-    ctx.fill();
-    ctx.lineWidth = lw*0.9;
-    ctx.strokeStyle = black;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(s*0.15,-s*0.30,s*0.075,s*0.14,0.15,0,Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
-  }
-  ctx.restore();
+  c.restore();
 }
 
-// ---------- 找到寶藏的慶祝動畫（吐舌頭小狗 + 寶藏 + 閃光，疊在棋盤正中央） ----------
-function drawHappyDog(cx, cy, s){
-  ctx.save();
-  ctx.translate(cx, cy);
-  const black = '#1a1208';
-  const brown = '#5C3A21';
-  const brownDark = '#4a2e19';
-  const tan = '#E8B268';
-  const white = '#fff';
-  const collar = '#B23A2E';
-  const tongue = '#FF6F91';
-  const tongueDark = '#D94F72';
-  const lw = Math.max(2, s*0.06);
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
+function cmStone(c, x, y, s){
+  c.save(); c.translate(x, y); c.lineJoin = 'round';
+  const lw = Math.max(1.3, s*.07);
+  const pts = [[-.36,.06],[-.28,-.2],[-.04,-.34],[.24,-.26],[.38,.0],[.3,.26],[.0,.34],[-.26,.28]];
+  const path = () => { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0]*s, p[1]*s) : c.moveTo(p[0]*s, p[1]*s)); c.closePath(); };
+  path(); c.fillStyle = CM.stone; c.fill();
+  c.save(); c.clip();
+  c.fillStyle = CM.stoneDark; c.beginPath(); c.moveTo(.4*s, -.1*s); c.lineTo(.4*s, .4*s); c.lineTo(-.4*s, .4*s); c.lineTo(-.1*s, .1*s); c.closePath(); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.moveTo(-.26*s, -.1*s); c.lineTo(-.1*s, -.24*s); c.lineTo(.02*s, -.2*s); c.lineTo(-.14*s, -.06*s); c.closePath(); c.fill();
+  c.restore();
+  path(); c.lineWidth = lw; c.strokeStyle = CM.line; c.stroke();
+  c.restore();
+}
 
-  function roundRectPath(x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
-  }
+function cmKey(c, x, y, s){
+  c.save(); c.translate(x, y); c.rotate(-Math.PI/4); c.lineJoin = 'round';
+  const lw = Math.max(1.3, s*.07);
+  c.beginPath(); c.rect(-.1*s, -.06*s, .52*s, .12*s); cmFill(c, CM.gold, lw);
+  c.beginPath(); c.rect(.24*s, .04*s, .09*s, .16*s); cmFill(c, CM.gold, lw);
+  c.beginPath(); c.rect(.36*s, .04*s, .09*s, .12*s); cmFill(c, CM.gold, lw);
+  c.beginPath(); c.arc(-.22*s, 0, .17*s, 0, Math.PI*2); cmFill(c, CM.gold, lw);
+  c.beginPath(); c.arc(-.22*s, 0, .07*s, 0, Math.PI*2); c.fillStyle = CM.paper; c.fill(); c.lineWidth = lw*.8; c.strokeStyle = CM.line; c.stroke();
+  c.beginPath(); c.moveTo(-.33*s, -.1*s); c.lineTo(-.26*s, -.15*s); c.strokeStyle = '#fff'; c.lineWidth = lw*.9; c.stroke();
+  c.restore();
+}
 
-  // 耳朵（開心地往外翹）
-  ctx.fillStyle = brownDark;
-  ctx.beginPath();
-  ctx.ellipse(-s*0.20,-s*0.32,s*0.09,s*0.17,-0.5,0,Math.PI*2);
-  ctx.fill();
-  ctx.lineWidth = lw;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(s*0.20,-s*0.32,s*0.09,s*0.17,0.5,0,Math.PI*2);
-  ctx.fill();
-  ctx.stroke();
+function cmChest(c, x, y, s){
+  c.save(); c.translate(x, y); c.lineJoin = 'round';
+  const lw = Math.max(1.3, s*.07);
+  c.beginPath(); c.roundRect(-.36*s, -.02*s, .72*s, .36*s, .04*s); cmFill(c, CM.wood, lw);
+  c.beginPath(); c.moveTo(-.36*s, -.02*s); c.quadraticCurveTo(-.36*s, -.34*s, 0, -.34*s); c.quadraticCurveTo(.36*s, -.34*s, .36*s, -.02*s); c.closePath(); cmFill(c, CM.woodDark, lw);
+  c.beginPath(); c.rect(-.26*s, -.3*s, .08*s, .62*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.rect(.18*s, -.3*s, .08*s, .62*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.roundRect(-.07*s, -.08*s, .14*s, .16*s, .03*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.arc(0, 0, .02*s, 0, Math.PI*2); c.fillStyle = CM.line; c.fill();
+  c.restore();
+}
 
-  // 腳
-  ctx.fillStyle = tan;
-  [-s*0.24, s*0.15].forEach(lx=>{
-    roundRectPath(lx, s*0.24, s*0.10, s*0.14, s*0.03);
-    ctx.fill();
-    ctx.lineWidth = lw*0.85;
-    ctx.strokeStyle = black;
-    ctx.stroke();
+function cmCoin(c, x, y, r){
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fillStyle = CM.gold; c.fill(); c.lineWidth = Math.max(1.3, r*.28); c.strokeStyle = CM.line; c.stroke();
+  c.beginPath(); c.arc(x, y, r*.55, 0, Math.PI*2); c.lineWidth = Math.max(1, r*.15); c.strokeStyle = CM.goldDark; c.stroke();
+}
+function cmChestOpen(c, x, y, s){
+  c.save(); c.translate(x, y); c.lineJoin = 'round';
+  const lw = Math.max(1.3, s*.06);
+  c.beginPath(); c.moveTo(-.36*s, -.1*s); c.lineTo(-.30*s, -.52*s); c.quadraticCurveTo(0, -.64*s, .30*s, -.52*s); c.lineTo(.36*s, -.1*s); c.closePath(); cmFill(c, CM.woodDark, lw);
+  c.beginPath(); c.rect(-.26*s, -.56*s, .08*s, .44*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.rect(.18*s, -.56*s, .08*s, .44*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.ellipse(0, -.08*s, .36*s, .10*s, 0, 0, Math.PI*2); c.fillStyle = '#FFF7B0'; c.fill(); c.lineWidth = lw; c.strokeStyle = CM.line; c.stroke();
+  [[-.22,-.14],[-.08,-.2],[.08,-.16],[.22,-.12],[0,-.1],[-.14,-.08],[.14,-.06]].forEach(p => cmCoin(c, p[0]*s, p[1]*s, .1*s));
+  c.beginPath(); c.roundRect(-.36*s, -.02*s, .72*s, .38*s, .04*s); cmFill(c, CM.wood, lw);
+  c.beginPath(); c.rect(-.26*s, -.02*s, .08*s, .38*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.rect(.18*s, -.02*s, .08*s, .38*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.roundRect(-.07*s, .02*s, .14*s, .16*s, .03*s); cmFill(c, CM.gold, lw*.8);
+  c.beginPath(); c.arc(0, .1*s, .02*s, 0, Math.PI*2); c.fillStyle = CM.line; c.fill();
+  c.restore();
+}
+function cmDogHappy(c, x, y, s){
+  const lw = Math.max(1.3, s*.07);
+  c.save(); c.translate(x, y); c.lineJoin = 'round'; c.lineCap = 'round';
+  cmEll(c, s, -.40, 0, .075, .14, .35, CM.body, lw); cmEll(c, s, .40, 0, .075, .14, -.35, CM.body, lw);   // 舉高的前腳
+  c.restore();
+  cmDog(c, x, y, s, 'down');
+  c.save(); c.translate(x, y); c.lineCap = 'round';
+  [-.15, .15].forEach(ex => {   // 把眼睛蓋掉，畫成笑瞇瞇的 ^ ^
+    c.beginPath(); c.arc(ex*s, -.09*s, .12*s, 0, Math.PI*2); c.fillStyle = CM.body; c.fill();
+    c.beginPath(); c.arc(ex*s, -.07*s, .075*s, Math.PI*1.1, Math.PI*1.9); c.lineWidth = Math.max(1.5, s*.05); c.strokeStyle = CM.line; c.stroke();
   });
-
-  // 身體
-  ctx.beginPath();
-  ctx.ellipse(0, s*0.20, s*0.30, s*0.20, 0, 0, Math.PI*2);
-  ctx.fillStyle = brown;
-  ctx.fill();
-  ctx.lineWidth = lw;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 頭
-  ctx.beginPath();
-  ctx.arc(0,-s*0.06,s*0.25,0,Math.PI*2);
-  ctx.fillStyle = brown;
-  ctx.fill();
-  ctx.lineWidth = lw;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 口鼻貼片
-  ctx.beginPath();
-  ctx.ellipse(0, s*0.06, s*0.14, s*0.10, 0, 0, Math.PI*2);
-  ctx.fillStyle = tan;
-  ctx.fill();
-  ctx.lineWidth = lw*0.85;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-
-  // 吐出來的舌頭
-  ctx.beginPath();
-  ctx.moveTo(-s*0.06, s*0.10);
-  ctx.quadraticCurveTo(-s*0.07, s*0.26, 0, s*0.30);
-  ctx.quadraticCurveTo(s*0.07, s*0.26, s*0.06, s*0.10);
-  ctx.closePath();
-  ctx.fillStyle = tongue;
-  ctx.fill();
-  ctx.lineWidth = lw*0.7;
-  ctx.strokeStyle = black;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(0, s*0.12);
-  ctx.lineTo(0, s*0.25);
-  ctx.lineWidth = lw*0.4;
-  ctx.strokeStyle = tongueDark;
-  ctx.stroke();
-
-  // 鼻子
-  ctx.beginPath();
-  ctx.ellipse(0, s*0.02, s*0.045, s*0.035, 0, 0, Math.PI*2);
-  ctx.fillStyle = black;
-  ctx.fill();
-
-  // 項圈
-  ctx.fillStyle = collar;
-  ctx.fillRect(-s*0.16, s*0.115, s*0.32, s*0.065);
-
-  // 開心瞇眼（往上彎的弧線）
-  ctx.lineWidth = lw*0.9;
-  ctx.strokeStyle = black;
-  ctx.beginPath();
-  ctx.arc(-s*0.10, -s*0.09, s*0.05, Math.PI*0.15, Math.PI*0.85);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(s*0.10, -s*0.09, s*0.05, Math.PI*0.15, Math.PI*0.85);
-  ctx.stroke();
-
-  ctx.restore();
+  c.beginPath(); c.ellipse(0, .165*s, .095*s, .06*s, 0, 0, Math.PI); c.fillStyle = '#7A1F2B'; c.fill(); c.lineWidth = Math.max(1.2, s*.04); c.strokeStyle = CM.line; c.stroke();
+  c.beginPath(); c.ellipse(0, .2*s, .05*s, .028*s, 0, 0, Math.PI); c.fillStyle = CM.tongue; c.fill();
+  c.restore();
 }
-
-function drawStar(cx, cy, r, rotation){
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation || 0);
-  ctx.beginPath();
-  for(let i=0;i<4;i++){
-    const a1 = (Math.PI/2)*i;
-    ctx.lineTo(Math.cos(a1)*r, Math.sin(a1)*r);
-    const a2 = a1 + Math.PI/4;
-    ctx.lineTo(Math.cos(a2)*r*0.35, Math.sin(a2)*r*0.35);
+function cmSparkle(c, x, y, r){
+  c.beginPath();
+  for(let i = 0; i < 8; i++){ const a = i*Math.PI/4, rr = i % 2 ? r*.38 : r; c.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); }
+  c.closePath(); c.fillStyle = '#FFE45E'; c.fill(); c.lineWidth = 1.3; c.strokeStyle = CM.line; c.stroke();
+}
+function cmBurst(c, x, y, r, col, txt){
+  c.save(); c.translate(x, y); c.rotate(-.12);
+  c.beginPath();
+  for(let i = 0; i < 24; i++){ const a = i*Math.PI/12, rr = i % 2 ? r*.72 : r; c.lineTo(Math.cos(a)*rr*1.25, Math.sin(a)*rr*.9); }
+  c.closePath(); c.fillStyle = col; c.fill(); c.lineWidth = 3; c.strokeStyle = CM.line; c.stroke();
+  c.fillStyle = CM.line; c.font = '900 ' + Math.round(r*.55) + 'px "Baloo 2","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineWidth = 4; c.strokeStyle = '#fff'; c.strokeText(txt, 0, 2); c.fillText(txt, 0, 2);
+  c.restore();
+}
+// 找到寶藏的慶祝畫面（兩格輪流）：以 370 為基準大小，再依棋盤實際大小縮放，疊在棋盤上
+function cmFoundScene(t){
+  const W = 370, k = canvas.width / W, cx = W/2, cy = W/2 + 8, c = ctx;
+  c.save(); c.scale(k, k);
+  c.save(); c.beginPath(); c.rect(0, 0, W, W); c.clip();
+  for(let i = 0; i < 20; i++){
+    const a = i*Math.PI/10;
+    c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, W, a, a + Math.PI/20); c.closePath();
+    c.fillStyle = ((i + t) % 2) ? 'rgba(255,214,64,.55)' : 'rgba(255,255,255,0)'; c.fill();
   }
-  ctx.closePath();
-  ctx.fillStyle = '#FFF3B0';
-  ctx.fill();
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = '#E8A317';
-  ctx.stroke();
-  ctx.restore();
+  c.restore();
+  c.fillStyle = 'rgba(255,243,196,.55)'; c.fillRect(W*.14, W*.2, W*.72, W*.62);
+  const up = t ? -9 : 0;
+  if(t){ [[cx+22,cy-64,9],[cx+66,cy-96,8],[cx+98,cy-58,9],[cx+44,cy-122,7]].forEach(p => cmCoin(c, p[0], p[1], p[2])); }   // 飛出來的金幣
+  cmChestOpen(c, cx + 52, cy + 22, 150);
+  cmDogHappy(c, cx - 62, cy + 34 + up, 118);
+  const sp = t
+    ? [[cx-120,cy-30,18],[cx+132,cy-20,14],[cx-40,cy-112,12],[cx+8,cy+112,16],[cx-146,cy+80,12]]
+    : [[cx-130,cy-80,16],[cx+120,cy-90,20],[cx+10,cy-120,14],[cx-20,cy+104,12],[cx+140,cy+60,12]];
+  sp.forEach(p => cmSparkle(c, p[0], p[1], p[2]));
+  cmBurst(c, cx - 6, cy - 138, t ? 54 : 48, t ? '#FFB400' : '#FF6B57', '找到了！');
+  c.restore();
 }
 
-function drawSparkleBurst(cx, cy, spread, alpha){
-  ctx.save();
-  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-  const positions = [
-    { dx:-spread, dy:-spread*0.6, r:spread*0.22, rot:0.3 },
-    { dx: spread, dy:-spread*0.75, r:spread*0.16, rot:-0.2 },
-    { dx:-spread*0.85, dy: spread*0.7, r:spread*0.15, rot:0.6 },
-    { dx: spread*0.9, dy: spread*0.65, r:spread*0.20, rot:-0.5 }
-  ];
-  positions.forEach(p => drawStar(cx+p.dx, cy+p.dy, p.r, p.rot));
-  ctx.restore();
-}
+// 下面四個維持原本的名字，讓 draw() 和底圖快取不用改
+function drawObstacle(cx, cy){ cmStone(ctx, cx, cy, CELL); }
+function drawKey(cx, cy){ cmKey(ctx, cx, cy, CELL*1.1); }
+function drawTreasure(cx, cy){ cmChest(ctx, cx, cy, CELL*1.1); }
+function drawDog(cx, cy, facing){ cmDog(ctx, cx, cy, CELL*1.2, facing); }
 
-// 找到寶藏後，在棋盤正中央（不管寶藏實際在哪一格）快速播放幾格「閃光→小狗吐舌頭+寶藏」
-// 的慶祝畫面，播完再呼叫 onDone 顯示結算彈窗
-// 找到寶藏後，在棋盤正中央（不管寶藏實際在哪一格）快速播放幾格「閃光→小狗吐舌頭+寶藏」
-// 的慶祝畫面，語音唸完再呼叫 onDone 顯示結算畫面。gid：這一局的編號，重新開始後舊的慶祝會自己停掉
+// 找到寶藏後，在棋盤上輪流播放兩格慶祝畫面（每 0.375 秒換一格），語音唸完再呼叫 onDone 顯示結算畫面。
+// gid：這一局的編號，重新開始後舊的慶祝會自己停掉
 function playTreasureCelebration(speechText, gid, onDone){
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const boxSize = Math.min(canvas.width, canvas.height) / 3; // 佔棋盤 9 宮格正中間那一格
-  const introFrames = [
-    { sparkle:0.9, spread:0.30, chars:false, scale:0 },
-    { sparkle:0.7, spread:0.38, chars:true,  scale:0.7 }
-  ];
-  // 語音還沒講完之前，畫面會一直停在這兩格輕微閃爍的「定格」狀態循環
-  const loopFrames = [
-    { sparkle:0.9,  spread:0.46, chars:true, scale:1 },
-    { sparkle:0.55, spread:0.40, chars:true, scale:1 }
-  ];
   let step = 0;
   let finished = false;
-
-  function frameAt(n){
-    return n < introFrames.length ? introFrames[n] : loopFrames[(n - introFrames.length) % loopFrames.length];
-  }
   function renderFrame(){
     if(finished) return;
     if(gid !== state.gameId){ finished = true; clearInterval(timer); return; }
-    draw(); // 棋盤本身維持顯示在背景
-    const f = frameAt(step);
-    if(f.chars){
-      drawTreasure(cx + boxSize*0.16, cy + boxSize*0.06, boxSize*0.30 * f.scale);
-      drawHappyDog(cx - boxSize*0.14, cy + boxSize*0.02, boxSize*0.62 * f.scale);
-    }
-    drawSparkleBurst(cx, cy, boxSize * f.spread, f.sparkle);
+    drawBoardBase();              // 只畫棋盤底圖（石頭、格子），原本的小狗、鑰匙、寶藏不畫，免得隱約透出來
+    cmFoundScene(step % 2);
     step++;
   }
-
   renderFrame();
   const timer = setInterval(renderFrame, 375);
 
