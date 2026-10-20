@@ -1502,7 +1502,7 @@ function loadVoice(){
   const vs = speechSynthesis.getVoices();
   const norm = v => v.lang.replace('_','-').toLowerCase();
   voice = vs.find(v => norm(v) === 'zh-tw') || null;
-  voiceFallback = vs.find(v => norm(v).startsWith('zh')) || null;
+  voiceFallback = vs.find(v => norm(v).startsWith('zh') && !/^(yue|zh-hk)/.test(norm(v))) || null;   // 排除廣東話
 }
 let voicesSeen = false;
 function refreshVoiceNote(){
