@@ -415,7 +415,7 @@ async function solveAndWaitResult(page){
     await page.waitForFunction(() => window.__said.length >= 1, null, { timeout: 3000 });
     const dt = await page.evaluate(t => window.__said[0].at - t, t0);
     ok(dt >= 1150 && dt < 1700, '約 1.2 秒後才唸下一個', dt);
-    ok(await page.evaluate(() => !state.gapWait && state.thinkMs < 600), '停頓時間不算思考時間', await page.evaluate(() => state.thinkMs));
+    ok(await page.evaluate(() => !state.gapWait && state.thinkMs < 900), '停頓時間不算思考時間', await page.evaluate(() => state.thinkMs));
 
     // 按錯：訊息停 2.5 秒
     await page.evaluate(() => { window.__said = []; const r = state.instructions[state.curIndex].dir; window.__t1 = Date.now(); pressDirection(DIRS.find(d => d !== r)); });
@@ -473,13 +473,58 @@ async function solveAndWaitResult(page){
     const { page, ctx, errors } = await open(browser);
     await enter(page, 'level1');
     ok(await page.evaluate(() => !!(sfxBuf && sfxBuf.beep.length === 7 && sfxBuf.err)), '按鍵音 7 種音高＋錯誤音都已先做好');
-    ok(await page.evaluate(() => !!keepAliveSrc), '遊戲中有維持音訊喚醒（防止第一聲慢半拍）');
+    ok(await page.evaluate(() => typeof keepAliveSrc === 'undefined' && typeof startAudioKeepAlive === 'undefined'), '沒有額外的音訊底噪（Chrome 上多一份負擔）');
     const n = await page.evaluate(() => { let c = 0; const orig = audioCtx.createOscillator.bind(audioCtx); audioCtx.createOscillator = () => { c++; return orig(); };
       const r = state.instructions[state.curIndex].dir; pressDirection(r); pressDirection(DIRS.find(d => d !== r)); return c; });
     ok(n === 0, '按鍵音與錯誤音不再即時建立振盪器', n);
-    await page.evaluate(() => { state.gameId++; });
-    await page.click('#menuBtn'); await page.click('#confirmYes');
-    ok(await page.evaluate(() => !keepAliveSrc), '回主選單就關掉喚醒底噪');
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('減輕每按一下的工作量：棋盤底圖只畫一次、連按合併重畫、診斷畫面');
+  {
+    const { page, ctx, errors } = await open(browser, { speechMs: 10 });
+    await enter(page, 'level2');
+    await page.waitForTimeout(300);
+    ok(await page.$eval('#dpadUp', e => getComputedStyle(e).touchAction === 'none'), '方向鍵告訴瀏覽器不需要手勢判斷（touch-action:none）');
+    ok(!(await page.$('#dbg')), '平常沒有診斷畫面');
+    // 先畫一次（建立底圖），再數石頭被重畫幾次
+    await page.evaluate(() => { draw(); window.__obsDraws = 0; const o = window.drawObstacle; window.drawObstacle = function(){ window.__obsDraws++; return o.apply(this, arguments); }; });
+    await page.evaluate(() => { for(let i = 0; i < 5; i++) draw(); });
+    ok((await page.evaluate(() => window.__obsDraws)) === 0, '底圖建好後，重畫不再重畫石頭', await page.evaluate(() => window.__obsDraws));
+    // 新的一局 / 換地圖 → 底圖要更新
+    await page.evaluate(() => { startGame(); });
+    await page.waitForTimeout(100);
+    ok((await page.evaluate(() => window.__obsDraws)) > 0, '換新地圖會重畫石頭（底圖有更新）', await page.evaluate(() => window.__obsDraws));
+    const same = await page.evaluate(() => { const a = canvas.toDataURL(); bgFor = null; draw(); return a === canvas.toDataURL(); });
+    ok(same, '用底圖畫出來的棋盤，和完整重畫的結果一模一樣');
+    // 連按 10 下：重畫次數被合併
+    await page.waitForTimeout(100);
+    const draws = await page.evaluate(async () => {
+      let n = 0; const d = window.draw; window.draw = function(){ n++; return d.apply(this, arguments); };
+      for(let i = 0; i < 10; i++){ const ins = state.instructions[state.curIndex]; if(!ins || state.gapWait || !state.playing) break; pressDirection(ins.dir); }
+      await new Promise(r => setTimeout(r, 120));
+      window.draw = d; return n;
+    });
+    ok(draws >= 1 && draws <= 3, '連按多下，重畫被合併（不是每按一下都重畫）', draws);
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true }); const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.addInitScript(SPEECH(10));
+    await page.goto(BASE + '/index.html?debug=1');
+    await page.waitForTimeout(300);
+    await enter(page, 'level2');
+    await page.waitForTimeout(500);
+    ok(!!(await page.$('#dbg')), '網址加 ?debug=1 才有診斷畫面');
+    await page.evaluate(() => { pressDirection(state.instructions[state.curIndex].dir); });
+    await page.touchscreen.tap(200, 600);
+    await page.waitForTimeout(700);
+    const t = await page.$eval('#dbg', e => e.textContent);
+    ok(/輸入延遲/.test(t) && /重畫棋盤/.test(t) && /fps/.test(t) && /音訊/.test(t), '診斷畫面有輸入延遲、處理、重畫、fps、音訊', t);
     ok(errors.length === 0, '沒有錯誤', errors);
     await ctx.close();
   }

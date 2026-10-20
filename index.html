@@ -793,6 +793,8 @@
   .hide{ display:none !important; }
   small{ display:block; font-size:.72em; font-weight:500; opacity:.85; line-height:1.2; letter-spacing:0; }
   button{ touch-action:manipulation; }
+  /* 方向鍵：不需要捲動／縮放手勢，直接告訴瀏覽器，Chrome 就不用先判斷這是什麼手勢才把觸控交給網頁 */
+  #dpad button{ touch-action:none; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
   button:disabled{ opacity:.45; cursor:default; filter:none; }
   .secBtn{ background:#fff; color:var(--ink); }
   #nextLevelBtn{ background:var(--teal); }
@@ -1541,7 +1543,7 @@ function snapshotInstruction(){
 }
 
 function startGame(){
-  startAudioKeepAlive();
+  ensureAudio();
   stopSpeech();
   clearGapWait();
   clearErrWait();
@@ -1714,7 +1716,7 @@ function handleWrongKey(){
     sayCurrentChunk();
     if(state.difficulty === 'level1' && state.sameErr >= 3) showHint();
   }, ERR_WAIT);
-  trackEvent('error_made', { level: state.difficulty, stage: state.stage });
+  setTimeout(() => trackEvent('error_made', { level: state.difficulty, stage: state.stage }), 0);   // 記錄資料不趕時間，晚一點點再做
 }
 
 function advanceInstruction(){
@@ -1744,7 +1746,6 @@ function advanceInstruction(){
 
 let audioCtx = null;
 let sfxBuf = null;          // 事先做好的短音效（按鍵音 7 種音高＋錯誤音），按的時候直接播放，不用即時生成
-let keepAliveSrc = null;    // 極小聲的循環底噪：讓 iPhone 的音訊硬體不要休眠，第一聲才不會慢半拍
 function ensureAudio(){
   try{
     if(!audioCtx){
@@ -1768,23 +1769,6 @@ function renderTone(freq, dur, type, gain){
 function buildSfx(){
   sfxBuf = { beep: [], err: renderTone(220, 0.22, 'square', 0.18) };
   for(let k = 0; k <= 6; k++) sfxBuf.beep.push(renderTone(900 + k * 90, 0.12, 'sine', 0.22));
-}
-function startAudioKeepAlive(){
-  try{
-    ensureAudio();
-    if(!audioCtx || keepAliveSrc) return;
-    const sr = audioCtx.sampleRate, buf = audioCtx.createBuffer(1, sr, sr), d = buf.getChannelData(0);
-    for(let i = 0; i < sr; i++) d[i] = (Math.random() * 2 - 1) * 0.0002;
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf; src.loop = true;
-    src.connect(audioCtx.destination);
-    src.start();
-    keepAliveSrc = src;
-  }catch(e){}
-}
-function stopAudioKeepAlive(){
-  try{ if(keepAliveSrc){ keepAliveSrc.stop(); keepAliveSrc.disconnect(); } }catch(e){}
-  keepAliveSrc = null;
 }
 function playBuf(buf){
   try{
@@ -1821,6 +1805,47 @@ function playErrorTone(){
   else playTone(220, 0.22, 'square', 0.18);
 }
 
+// ===== 診斷畫面：網址後面加 ?debug=1 才出現，平常完全不執行 =====
+const DBG = /[?&]debug=1\b/.test(location.search);
+const dbg = { inp:[], hand:[], draw:[], next:[], fps:[], presses:0, worstFrame:0 };
+function dbgPush(a, v){ a.push(v); if(a.length > 40) a.shift(); }
+function dbgStat(a){ if(!a.length) return '-'; const last = a[a.length-1], avg = a.reduce((x,y)=>x+y,0)/a.length, max = Math.max.apply(null, a); return last.toFixed(0) + ' / ' + avg.toFixed(0) + ' / ' + max.toFixed(0); }
+function dbgBefore(e){
+  if(!DBG) return 0;
+  const now = performance.now();
+  const ts = e && e.timeStamp ? e.timeStamp : now;
+  dbgPush(dbg.inp, Math.max(0, (ts > 1e12 ? Date.now() : now) - ts));   // 手指碰到螢幕 → 程式開始處理，隔了多久
+  return now;
+}
+function dbgAfter(t0){
+  if(!DBG || !t0) return;
+  const t1 = performance.now();
+  dbg.presses++;
+  dbgPush(dbg.hand, t1 - t0);                                            // 程式處理這一下花多久
+  requestAnimationFrame(() => dbgPush(dbg.next, performance.now() - t0)); // 按下 → 下一幀畫面更新，隔了多久
+}
+if(DBG){
+  const box = document.createElement('div');
+  box.id = 'dbg';
+  box.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:5000;background:rgba(0,0,0,.78);color:#9fffb0;font:10px/1.35 monospace;padding:5px 7px;border-radius:6px;pointer-events:none;white-space:pre;max-width:96vw';
+  document.body.appendChild(box);
+  let last = performance.now();
+  const loop = t => { const d = t - last; last = t; if(d < 1000){ dbgPush(dbg.fps, d); if(d > dbg.worstFrame) dbg.worstFrame = d; } requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+  setInterval(() => {
+    const frameAvg = dbg.fps.length ? dbg.fps.reduce((x,y)=>x+y,0)/dbg.fps.length : 0;
+    const ua = /CriOS/.test(navigator.userAgent) ? 'Chrome(iOS)' : (/Safari/.test(navigator.userAgent) ? 'Safari/其他' : '?');
+    const ac = audioCtx ? (audioCtx.state + ' base=' + ((audioCtx.baseLatency || 0)*1000).toFixed(0) + 'ms out=' + ((audioCtx.outputLatency || 0)*1000).toFixed(0) + 'ms ' + audioCtx.sampleRate + 'Hz') : '(音訊尚未啟動)';
+    box.textContent = 'DEBUG ' + ua + '  按鍵 ' + dbg.presses + ' 次\n'
+      + '音訊 ' + ac + '\n'
+      + '輸入延遲(碰螢幕→收到) ms 最近/平均/最大: ' + dbgStat(dbg.inp) + '\n'
+      + '處理(含音效+移動+重畫): ' + dbgStat(dbg.hand) + '\n'
+      + '重畫棋盤: ' + dbgStat(dbg.draw) + '\n'
+      + '按下→下一幀畫面: ' + dbgStat(dbg.next) + '\n'
+      + '每幀間隔 平均 ' + frameAvg.toFixed(0) + 'ms(≈' + (frameAvg ? (1000/frameAvg).toFixed(0) : '-') + 'fps) 最慢 ' + dbg.worstFrame.toFixed(0) + 'ms';
+  }, 400);
+}
+
 function pressDirection(dir){
   if(!state.playing){ playBeep(0); return; }
   if(state.paused) return;
@@ -1839,7 +1864,7 @@ function pressDirection(dir){
   if(ins.kind === 'turn'){
     playBeep(0);
     state.facing = dir;
-    draw();
+    requestDraw();
     advanceInstruction();
   } else {
     playBeep(state.stepsDone);
@@ -1847,7 +1872,7 @@ function pressDirection(dir){
     state.dogRow += d.dr;
     state.dogCol += d.dc;
     state.stepsDone++;
-    draw();
+    requestDraw();
     if(checkGoal()) return;
     if(state.stepsDone >= ins.steps) advanceInstruction();
   }
@@ -1865,8 +1890,8 @@ document.addEventListener('keydown', handleKey);
 
 function bindDpad(id, dir){
   const el = document.getElementById(id);
-  el.addEventListener('click', () => pressDirection(dir));
-  el.addEventListener('touchstart', e => { e.preventDefault(); pressDirection(dir); }, {passive:false});
+  el.addEventListener('click', e => { const t0 = dbgBefore(e); pressDirection(dir); dbgAfter(t0); });
+  el.addEventListener('touchstart', e => { e.preventDefault(); const t0 = dbgBefore(e); pressDirection(dir); dbgAfter(t0); }, {passive:false});
 }
 bindDpad('dpadUp','up');
 bindDpad('dpadDown','down');
@@ -1874,7 +1899,9 @@ bindDpad('dpadLeft','left');
 bindDpad('dpadRight','right');
 
 // ---------- Drawing ----------
-function draw(){
+// 棋盤的格線和石頭不會動，只畫一次存成底圖；之後每次重畫只要貼上底圖，再畫小狗／鑰匙／寶藏
+let bgCanvas = null, bgFor = null;
+function drawStaticLayer(){
   // 卡通風格棋盤底色：淺藍/白 棋盤格交錯
   for(let r=0;r<GRID;r++){
     for(let c=0;c<GRID;c++){
@@ -1896,6 +1923,28 @@ function draw(){
     const [r,c] = key.split(',').map(Number);
     drawObstacle(c*CELL+CELL/2, r*CELL+CELL/2);
   });
+}
+function drawBoardBase(){
+  if(!bgCanvas) bgCanvas = document.createElement('canvas');
+  const ok = bgFor && bgFor.obs === state.obstacles && bgFor.obsSize === state.obstacles.size && bgFor.w === canvas.width && bgFor.cell === CELL;
+  if(ok){ ctx.drawImage(bgCanvas, 0, 0); return; }
+  drawStaticLayer();   // 先照原樣畫在棋盤上，再把這張圖存起來給之後用
+  bgCanvas.width = canvas.width; bgCanvas.height = canvas.height;
+  bgCanvas.getContext('2d').drawImage(canvas, 0, 0);
+  bgFor = { obs:state.obstacles, obsSize:state.obstacles.size, w:canvas.width, cell:CELL };
+}
+// 連續快按時，多次移動合併成「約每一幀只重畫一次」，不會越排越長
+let lastDrawAt = 0, drawQueued = false;
+function requestDraw(){
+  const now = performance.now();
+  if(now - lastDrawAt > 16){ draw(); return; }
+  if(drawQueued) return;
+  drawQueued = true;
+  requestAnimationFrame(() => { drawQueued = false; draw(); });
+}
+function draw(){
+  const t0 = DBG ? performance.now() : 0;
+  drawBoardBase();
   if(state.requiresKey && state.keyFound){
     drawKey(state.keyCol*CELL+CELL/2, state.keyRow*CELL+CELL/2);
   }
@@ -1903,6 +1952,8 @@ function draw(){
     drawTreasure(state.treasureCol*CELL+CELL/2, state.treasureRow*CELL+CELL/2);
   }
   drawDog(state.dogCol*CELL+CELL/2, state.dogRow*CELL+CELL/2, state.facing);
+  lastDrawAt = performance.now();
+  if(DBG) dbgPush(dbg.draw, lastDrawAt - t0);
 }
 
 function drawObstacle(cx,cy){
@@ -2785,7 +2836,6 @@ function reopenNameGate(){
   stopSpeech();
   clearGapWait();
   clearErrWait();
-  stopAudioKeepAlive();
   stopClock();
   clearHint();
   state.playing = false;
@@ -2842,7 +2892,6 @@ function commentKey(r){
 
 // 結果畫面順序（與色數、比比看統一）：分數 → 評語 → 排行榜 → 再玩一次／下一關 → 主選單
 function showResult(r){
-  stopAudioKeepAlive();
   const n = levelNum(state.difficulty);
   const practice = state.difficulty === 'level1';
   const row = (k, v) => `<tr><td>${L(k)}</td><td>${v}</td></tr>`;
