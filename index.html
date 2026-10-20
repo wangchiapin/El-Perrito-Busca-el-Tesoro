@@ -10,7 +10,51 @@
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-M9GNL79T0G"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
+  
+/* ===== 一鍵靜音（只關音樂和音效，不影響念字的語音）— 每天一分鐘遊戲統一做法 ===== */
+(function(){
+  var KEY='hg.mute.perrito', MOUNT='', muted=false, masters=[];
+  try{ muted = localStorage.getItem(KEY)==='1'; }catch(e){}
+  /* 讓這個遊戲建立的所有 Web Audio 聲音，都先經過一個總音量；靜音＝總音量 0 */
+  try{
+    var BP = window.BaseAudioContext ? window.BaseAudioContext.prototype : (window.AudioContext||window.webkitAudioContext).prototype;
+    var desc = Object.getOwnPropertyDescriptor(BP,'destination');
+    if(desc && desc.get){
+      Object.defineProperty(BP,'destination',{configurable:true,get:function(){
+        var real = desc.get.call(this);
+        if(!this.__hgMaster){
+          try{ var g=this.createGain(); g.gain.value = muted?0:1; g.connect(real); this.__hgMaster=g; masters.push(g); }
+          catch(e){ return real; }
+        }
+        return this.__hgMaster;
+      }});
+    }
+  }catch(e){}
+  /* 備用的 <audio> 播放（例如 iPhone 的 Chrome）也一起靜音 */
+  try{
+    var op = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function(){ this.muted = muted; return op.apply(this, arguments); };
+  }catch(e){}
+  function apply(){ masters.forEach(function(g){ try{ g.gain.setValueAtTime(muted?0:1, g.context.currentTime); }catch(e){ g.gain.value = muted?0:1; } }); }
+  function build(){
+    if(document.getElementById('hgMute')) return;
+    var st=document.createElement('style');
+    st.textContent='#hgMute{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2147483000;width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.28);background:rgba(255,255,255,.88);color:#222;font-size:19px;line-height:1;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25);touch-action:manipulation;-webkit-tap-highlight-color:transparent}#hgMute:active{transform:scale(.94)}#hgMute.st{position:static;flex:0 0 40px;margin:0 0 0 8px}';
+    document.head.appendChild(st);
+    var b=document.createElement('button'); b.type='button'; b.id='hgMute';
+    function paint(){ b.textContent = muted?'🔇':'🔊'; b.setAttribute('aria-pressed', muted?'true':'false');
+      b.title = b.ariaLabel = muted ? '開啟音樂和音效 · Activar música y efectos' : '靜音（音樂和音效）· Silenciar música y efectos'; apply(); }
+    b.addEventListener('click',function(e){ e.stopPropagation(); muted=!muted; try{ localStorage.setItem(KEY, muted?'1':'0'); }catch(err){} paint(); });
+    b.addEventListener('pointerdown',function(e){ e.stopPropagation(); });
+    paint();
+    var anchor = MOUNT && document.querySelector(MOUNT);
+    if(anchor && anchor.parentNode){ b.className='st'; anchor.parentNode.insertBefore(b, anchor.nextSibling); } else document.body.appendChild(b);
+  }
+  if(document.body) build(); else document.addEventListener('DOMContentLoaded', build);
+})();
+/* ===== /一鍵靜音 ===== */
+
+window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
