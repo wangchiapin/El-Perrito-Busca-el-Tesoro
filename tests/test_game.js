@@ -84,7 +84,7 @@ async function solveAndWaitResult(page){
     const s2 = await settings(page);
     ok(s2.lang === 'es' && s2.script === 'trad' && s2.rate === 'normal' && s2.other === 'keep', '寫回共用設定且保留別款的欄位', s2);
     const said = await page.evaluate(() => window.__said);
-    ok(said.length && said[said.length - 1].text === '向左轉' && said[said.length - 1].rate === 0.65, '改語速會試聽「向左轉」，正常 = 0.65', said);
+    ok(said.length === 0, '改語速不會唸任何聲音', said);
     await page.click('#setDone');
     ok((await txt(page, '#nameCard h1')).includes('小狗找寶藏'), '關掉後畫面變繁體');
     ok((await page.$eval('#playerNameInput', e => e.maxLength)) === 12, '名字最多 12 字');
@@ -304,6 +304,27 @@ async function solveAndWaitResult(page){
     ok(r.topBefore >= 0, '卡片頂端沒有被切掉', r);
     ok(r.scrolled > 0, '外框可以往下捲', r);
     ok(r.btnBottom <= r.vh, '捲到底後看得到最下面的按鈕', r);
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('手機版：進遊戲後頁面回到最上面（鍵盤把頁面推偏的情況）');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 560 }, isMobile: true, hasTouch: true }); const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.addInitScript(SPEECH(10));
+    await page.goto(BASE + '/index.html');
+    await page.waitForTimeout(300);
+    await page.fill('#playerNameInput', 'Ana');
+    await page.click('.gateDiffBtn[data-level="level2"]');
+    await page.evaluate(() => window.scrollTo(0, 300));   // 模擬鍵盤把頁面推偏
+    await page.click('#nameGateBtn');
+    await page.waitForTimeout(400);
+    const r = await page.evaluate(() => ({ y: window.scrollY, statTop: document.getElementById('statRow').getBoundingClientRect().top }));
+    ok(r.y === 0 && r.statTop >= 0, '進遊戲後頁面在最上面，「時間／錯誤」那列看得到', r);
+    await page.evaluate(() => window.scrollTo(0, 5));
+    ok(await page.evaluate(() => window.scrollY) >= 0, '仍然可以自己捲動');
     ok(errors.length === 0, '沒有錯誤', errors);
     await ctx.close();
   }

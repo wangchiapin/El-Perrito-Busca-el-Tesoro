@@ -627,9 +627,11 @@
   }
 
   @media (max-width: 700px){
+    html{ height:auto; }
     body{
       height:auto;
       min-height:100vh;
+      min-height:100svh;   /* iPhone 的 100vh 把網址列、工具列也算進去，頁面會比螢幕高出一截 */
       overflow-x:hidden;
       overflow-y:auto;
       /* 底部手勢列安全區域，避免方向鍵/開始鍵貼著螢幕邊緣 */
@@ -2563,7 +2565,6 @@ function setS(k, v){
   writeSettings(SETTINGS);
   drawSet();
   rerenderAll();
-  if(k === 'rate') speakSeq(['向左轉']);   // 試聽一下速度
 }
 $('gateGear').addEventListener('click', openSet);
 $('gameGear').addEventListener('click', openSet);
@@ -2626,6 +2627,20 @@ function openGame(name){
   trackEvent('player_named', { level: state.difficulty });
   $('playerNameInput').blur();
   startGame();
+  resetPageScroll();
+}
+// iPhone：輸入名字時鍵盤把頁面推偏，鍵盤收起後頁面會卡在偏掉的位置，上面一截被切掉捲不回去。
+// 進遊戲後把頁面拉回最上面；鍵盤收起的那一刻（視窗大小改變）再拉一次。
+function resetPageScroll(){
+  const go = () => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; };
+  go();
+  requestAnimationFrame(go);
+  [60, 250, 600].forEach(ms => setTimeout(() => { if(document.body.classList.contains('mobile-playing')) go(); }, ms));
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize', () => {
+    if(document.body.classList.contains('mobile-playing') && window.scrollY > 0 && document.activeElement && document.activeElement.tagName !== 'INPUT') resetPageScroll();
+  });
 }
 function reopenNameGate(){
   state.gameId++;            // 讓這一局所有還沒跑完的計時器失效
