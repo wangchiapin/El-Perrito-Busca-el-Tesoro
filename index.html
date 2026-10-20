@@ -942,14 +942,82 @@
   button:active{ box-shadow:1px 1px 0 #1A1A1A; }
   #dpad button{ color:#1A1A1A; font-weight:900; }
   #errorMsg{ color:#E63946; }
+
+  /* ===== 美漫風格：開始頁、結算／排行榜／設定／暫停／確認視窗 ===== */
+  #nameGate{ background:
+      radial-gradient(rgba(26,26,26,.10) 1px, transparent 1.5px) 0 0/8px 8px,
+      repeating-conic-gradient(from 0deg at 50% 18%, #BFE6F7 0 7.5deg, #D9F1FB 7.5deg 15deg); }
+  #nameCard{ border:4px solid #1A1A1A; border-radius:8px; box-shadow:6px 6px 0 #1A1A1A; padding-top:40px; }
+  #nameCard::before{ display:none; }
+  #nameCard h1.gameTitle{
+    position:absolute; left:50%; top:-26px; transform:translateX(-50%) rotate(-2deg);
+    width:max-content; max-width:75%; margin:0; padding:4px 12px 5px;
+    background:#E63946; color:#fff; border:4px solid #1A1A1A; box-shadow:4px 4px 0 #1A1A1A;
+    font-size:26px; letter-spacing:2px; line-height:1.15; text-shadow:2px 2px 0 #1A1A1A;
+  }
+  #nameCard h1.gameTitle small{ font-size:11px; color:#FFE45E; text-shadow:1px 1px 0 #1A1A1A; letter-spacing:.2px; opacity:1; }
+  #nameGateIcons{ margin:0 0 8px; font-size:0; letter-spacing:0; }
+  #gateSprites, #pauseDog, #resSprites{ box-shadow:none; background-color:transparent; border-radius:0; }
+  #gateSprites, #pauseDog{ display:block; margin:0 auto; max-width:100%; height:auto; }
+  #gateSprites{ width:100%; border:3px solid #1A1A1A; border-radius:6px !important; background-color:#FFE45E !important;
+    background-image:radial-gradient(rgba(230,57,70,.35) 1.3px, transparent 1.6px); background-size:7px 7px; }
+  #pauseDog{ width:120px; }
+  #namePrompt{ color:#1A1A1A; }
+  #playerNameInput{ border:3px solid #1A1A1A; border-radius:6px; box-shadow:3px 3px 0 #1A1A1A; }
+  #playerNameInput:focus{ border-color:#E63946; box-shadow:3px 3px 0 #E63946; }
+  #gateDifficultyLabel{ color:#E63946; }
+  .gateDiffBtn{ border:3px solid #1A1A1A; border-radius:6px; box-shadow:3px 3px 0 #1A1A1A; padding:6px 10px; }
+  .gateDiffBtn .diffName{ color:#E63946; }
+  .gateDiffBtn .diffDesc{ font-size:11.5px; font-weight:600; color:#444; }
+  .gateDiffBtn .diffDesc small{ font-size:9.5px; font-weight:600; color:#777; opacity:1; }
+  .gateDiffBtn.selected{ background-color:#FFE45E; background-image:radial-gradient(rgba(230,57,70,.35) 1.3px, transparent 1.6px);
+    background-size:7px 7px; border-color:#1A1A1A; transform:translate(1px,1px); box-shadow:2px 2px 0 #1A1A1A; }
+  .gateDiffBtn.selected .diffName{ color:#1A1A1A; }
+  .gateDiffBtn.selected .diffDesc{ color:#1A1A1A; opacity:1; }
+  #nameGateBtn{ background:#E63946; color:#fff; font-size:20px; text-shadow:2px 2px 0 #1A1A1A; box-shadow:4px 4px 0 #1A1A1A; }
+  #nameGateBtn small{ color:#FFE45E; text-shadow:1px 1px 0 #1A1A1A; opacity:1; }
+  @media (max-width:380px){
+    .gateDiffBtn .diffDesc{ font-size:10.5px; }
+    .gateDiffBtn .diffDesc small{ font-size:9px; }
+  }
+
+  /* 視窗共通：標題牌、粗黑外框、硬陰影 */
+  #resultModal, #leaderboardModal{ background:
+      radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.5px) 0 0/8px 8px, #3B4752; }
+  .ov{ background:rgba(26,26,26,.62); }
+  #resultCard, #leaderboardCard, .ovCard{ border:4px solid #1A1A1A; border-radius:8px; box-shadow:6px 6px 0 #1A1A1A; }
+  #resultCard, .ovCard{ padding-top:36px; }
+  #leaderboardCard{ padding-top:44px; }
+  #resultCard h2, #leaderboardCard h2, .ovCard h2{
+    display:inline-block; background:#E63946; color:#fff; border:4px solid #1A1A1A; box-shadow:4px 4px 0 #1A1A1A;
+    padding:3px 16px 4px; transform:rotate(-2deg); margin:-58px auto 12px; font-size:22px; letter-spacing:1px;
+    text-shadow:2px 2px 0 #1A1A1A; line-height:1.2;
+  }
+  #resultCard h2 small, #leaderboardCard h2 small, .ovCard h2 small{ color:#FFE45E; text-shadow:1px 1px 0 #1A1A1A; opacity:1; }
+  #leaderboardCard h2::before{ content:"🏆 "; }
+  #lbSeal{ display:none; }
+  #resSprites{ display:block; margin:0 auto 4px; width:260px; max-width:100%; height:auto; }
+  .resLevel{ color:#555; }
+  .resScore{ color:#E63946; -webkit-text-stroke:2px #1A1A1A; paint-order:stroke fill; text-shadow:3px 3px 0 #1A1A1A; padding:0 14px; }
+  .resTable td{ border-bottom:2px solid rgba(26,26,26,.13); }
+  .comment{ background-color:#FFE45E; background-image:radial-gradient(rgba(230,57,70,.35) 1.3px, transparent 1.6px);
+    background-size:7px 7px; border:3px solid #1A1A1A; border-radius:6px; }
+  .lbList, #lbList{ border:3px solid #1A1A1A; border-radius:6px; box-shadow:3px 3px 0 #1A1A1A; }
+  .lbRow{ border-bottom:2px solid rgba(26,26,26,.13); }
+  .lbRowMe{ background:#FFE45E; }
+  .lbRank, .lbScore{ color:#E63946; }
+  .opt{ border:3px solid #1A1A1A; border-radius:999px; box-shadow:2px 2px 0 #1A1A1A; }
+  .opt.on{ background:#E63946; color:#fff; text-shadow:1px 1px 0 #1A1A1A; }
+  .setGroup h3, .ovCard h2 + .setGroup h3{ color:#E63946; }
+  #againBtn, #setDone, #resumeBtn, #confirmYes{ background:#E63946; color:#fff; text-shadow:1px 1px 0 #1A1A1A; }
+  #againBtn small, #setDone small, #resumeBtn small, #confirmYes small{ color:#FFE45E; opacity:1; }
 </style>
 </head>
 <body class="gate-open">
 <div id="nameGate">
   <div id="nameCard">
-    <div id="nameSeal">寶</div>
     <button type="button" class="gear" id="gateGear" aria-label="⚙️">⚙️</button>
-    <div id="nameGateIcons">🐶 🪨 🔑 💰</div>
+    <div id="nameGateIcons"><canvas id="gateSprites" aria-hidden="true"></canvas></div>
     <h1 class="gameTitle" data-t="title"></h1>
     <div id="voiceWarnGate" class="warn hide"></div>
     <p id="namePrompt" data-t="namePrompt"></p>
@@ -987,8 +1055,8 @@
 <div id="setov" class="ov hide"></div>
 <div id="pauseov" class="ov hide">
   <div class="ovCard">
-    <div class="ovIcon">⏸</div>
     <h2 data-t="paused"></h2>
+    <div class="ovIcon"><canvas id="pauseDog" aria-hidden="true"></canvas></div>
     <button id="resumeBtn" data-t="resume"></button>
   </div>
 </div>
@@ -1099,10 +1167,10 @@ const T = {
   level2:['第 2 關','第 2 关','Nivel 2','Level 2'],
   level3:['第 3 關','第 3 关','Nivel 3','Level 3'],
   level4:['第 4 關','第 4 关','Nivel 4','Level 4'],
-  desc1:['7–15 個障礙物・練習關','7–15 个障碍物・练习关','7–15 obstáculos · práctica','7–15 obstacles · practice'],
-  desc2:['15–25 個障礙物・先找鑰匙再找寶藏','15–25 个障碍物・先找钥匙再找宝藏','15–25 obstáculos · primero la llave, luego el tesoro','15–25 obstacles · key first, then the treasure'],
-  desc3:['20–30 個障礙物・先找鑰匙・只有聲音','20–30 个障碍物・先找钥匙・只有声音','20–30 obstáculos · primero la llave · solo voz','20–30 obstacles · key first · audio only'],
-  desc4:['20–30 個障礙物・先找鑰匙・只有聲音・連續指令','20–30 个障碍物・先找钥匙・只有声音・连续指令','20–30 obstáculos · primero la llave · solo voz · instrucciones seguidas','20–30 obstacles · key first · audio only · chained instructions'],
+  desc1:['障礙物7–15・練習關','障碍物7–15・练习关','7–15 obstáculos · práctica','7–15 obstacles · practice'],
+  desc2:['障礙物15–25・鑰匙→寶藏','障碍物15–25・钥匙→宝藏','15–25 obstáculos · llave → tesoro','15–25 obstacles · key → treasure'],
+  desc3:['障礙物20–30・鑰匙→寶藏・只有聲音','障碍物20–30・钥匙→宝藏・只有声音','20–30 obstáculos · llave → tesoro · solo voz','20–30 obstacles · key → treasure · audio only'],
+  desc4:['障礙物20–30・鑰匙→寶藏・只有聲音・連續指令','障碍物20–30・钥匙→宝藏・只有声音・连续指令','20–30 obstáculos · llave · solo voz · en serie','20–30 obstacles · key · audio only · chained'],
   go:['出發找寶藏！🐾','出发找宝藏！🐾','¡Vamos a buscar el tesoro! 🐾','Let\'s find the treasure! 🐾'],
   hello:['你好，{n}！🐾','你好，{n}！🐾','¡Hola, {n}!','Hi, {n}!'],
   time:['時間','时间','Tiempo','Time'],
@@ -2207,6 +2275,22 @@ function cmFoundScene(t){
   c.restore();
 }
 
+// 把一小張美漫圖畫在 <canvas> 上（開始頁圖案列、結算畫面、暫停視窗用）
+function cmSprite(cv, w, h, fn){
+  if(!cv) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+  cv.style.aspectRatio = w + ' / ' + h;
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  fn(c);
+}
+function drawStaticSprites(){
+  cmSprite(document.getElementById('gateSprites'), 300, 72, c => {
+    cmDog(c, 50, 38, 58, 'down'); cmStone(c, 124, 38, 50); cmKey(c, 184, 38, 54); cmChest(c, 250, 42, 60);
+    cmSparkle(c, 92, 14, 7); cmSparkle(c, 284, 18, 8); cmSparkle(c, 218, 60, 6);
+  });
+  cmSprite(document.getElementById('pauseDog'), 120, 60, c => cmDog(c, 60, 32, 52, 'down'));
+}
 // 下面四個維持原本的名字，讓 draw() 和底圖快取不用改
 function drawObstacle(cx, cy){ cmStone(ctx, cx, cy, CELL); }
 function drawKey(cx, cy){ cmKey(ctx, cx, cy, CELL*1.1); }
@@ -2575,8 +2659,8 @@ function showResult(r){
   const practice = state.difficulty === 'level1';
   const row = (k, v) => `<tr><td>${L(k)}</td><td>${v}</td></tr>`;
   $('resultCard').innerHTML = `
-    <div id="resultSeal">🎉</div>
-    <h2>${L('found')}</h2>
+<h2>${L('found')}</h2>
+    <canvas id="resSprites" aria-hidden="true"></canvas>
     <div class="resLevel">${L('level' + n)}</div>
     <div class="resScoreLbl">${L('score')}</div>
     <div class="resScore" id="resScore">${r.score}</div>
@@ -2595,6 +2679,7 @@ function showResult(r){
   $('againBtn').addEventListener('click', startGame);
   if($('nextLevelBtn')) $('nextLevelBtn').addEventListener('click', goToNextLevel);
   $('resMenuBtn').addEventListener('click', reopenNameGate);
+  cmSprite($('resSprites'), 260, 92, c => { cmDogHappy(c, 86, 52, 70); cmChestOpen(c, 170, 66, 76); cmSparkle(c, 40, 20, 9); cmSparkle(c, 226, 24, 10); cmSparkle(c, 130, 12, 7); });
   $('resultModal').style.display = 'flex';
   $('resultModal').scrollTop = 0;
   if(!practice) lbAfterGame(state.difficulty, r, state.gameId);
@@ -2667,6 +2752,7 @@ $('lbBackBtn').addEventListener('click', () => { $('leaderboardModal').style.dis
   if(saved) input.value = clampName(saved);
   input.addEventListener('input', () => { const c = clampName(input.value); if(c !== input.value) input.value = c; });
   input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitPlayerName(); } });
+  drawStaticSprites();
   selectGateDifficulty('level1');
   document.querySelectorAll('.gateDiffBtn').forEach(btn => btn.addEventListener('click', () => selectGateDifficulty(btn.dataset.level)));
   $('nameGateBtn').addEventListener('click', submitPlayerName);

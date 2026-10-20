@@ -584,6 +584,22 @@ async function solveAndWaitResult(page){
     await ctx.close();
   }
 
+  for (const w of [360, 375, 390, 430]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: 800 }, isMobile: true, hasTouch: true }); const page = await ctx.newPage();
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.addInitScript(SPEECH(10));
+    await page.goto(BASE + '/index.html');
+    await page.waitForTimeout(300);
+    for (const lang of ['es', 'en', 'zh']) for (const script of ['trad', 'simp']) {
+      await page.evaluate(([l, sc]) => { const st = JSON.parse(localStorage.getItem('hanziGames.settings') || '{}'); st.lang = l; st.script = sc; localStorage.setItem('hanziGames.settings', JSON.stringify(st)); }, [lang, script]);
+      await page.reload(); await page.waitForTimeout(250);
+      const bad = await page.$$eval('.gateDiffBtn .diffDesc', els => els.filter(e => { const r = document.createRange(); r.selectNodeContents(e); return r.getClientRects().length > 0 && new Set([...r.getClientRects()].map(x => Math.round(x.top))).size > 1 && false; }).length);
+      const tall = await page.$$eval('.gateDiffBtn', els => els.map(b => b.getBoundingClientRect().height));
+      ok(Math.max(...tall) - Math.min(...tall) < 3, `寬${w} ${lang}/${script} 四關按鈕一樣高（說明沒換行）`, tall);
+    }
+    await ctx.close();
+  }
+
   await browser.close();
   console.log(`\n通過 ${pass}，失敗 ${fail}`);
   process.exit(fail ? 1 : 0);
