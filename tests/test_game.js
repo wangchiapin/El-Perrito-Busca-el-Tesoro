@@ -28,8 +28,8 @@ const SPEECH = ms => `
   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[{lang:'zh-TW',name:'tw'}],cancel(){},
     speak(u){window.__said.push({text:u.text,rate:u.rate,at:Date.now()});setTimeout(()=>u.onend&&u.onend(),${ms});}}});`;
 
-async function open(browser, { ls = null, speechMs = 10, data = {} } = {}){
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } }); const page = await ctx.newPage();
+async function open(browser, { ls = null, speechMs = 10, data = {}, ua = null } = {}){
+  const ctx = await browser.newContext(Object.assign({ viewport: { width: 390, height: 844 } }, ua ? { userAgent: ua } : {})); const page = await ctx.newPage();
   const errors = []; page.on('pageerror', e => errors.push(String(e)));
   await page.route('**/*', r => {
     const u = r.request().url();
@@ -464,6 +464,32 @@ async function solveAndWaitResult(page){
     ok(await page.evaluate(() => document.body.classList.contains('mobile-playing')), '找到寶藏後仍維持精簡模式');
     await page.click('#resMenuBtn');
     ok(!(await page.evaluate(() => document.body.classList.contains('mobile-playing'))), '回主選單才還原');
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('音效：iPhone Chrome 改用一般播放器（Web Audio 在那裡沒聲音）');
+  {
+    const CHROME_IOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0.0.0 Mobile/15E148 Safari/604.1';
+    const { page, ctx, errors } = await open(browser, { ua: CHROME_IOS });
+    await page.evaluate(() => { window.__plays = 0; HTMLMediaElement.prototype.play = function(){ window.__plays++; return Promise.resolve(); }; });
+    await enter(page, 'level1');
+    ok(await page.evaluate(() => USE_HTML_AUDIO === true), 'iPhone Chrome 會啟用備用播放');
+    ok(await page.evaluate(() => !!(htmlSfx && htmlSfx.beep.length === 7 && htmlSfx.err && htmlSfx.err.pool.length === 3)), '7 種按鍵音＋錯誤音都已做成播放器');
+    const r = await page.evaluate(() => { const g = state.instructions[state.curIndex].dir; const before = window.__plays; let c = 0; const o = audioCtx && audioCtx.createBufferSource; if(audioCtx) audioCtx.createBufferSource = () => { c++; return o.call(audioCtx); };
+      pressDirection(g); const afterOk = window.__plays; pressDirection(DIRS.find(d => d !== state.instructions[state.curIndex].dir)); return { ok: afterOk - before, err: window.__plays - afterOk, ws: c }; });
+    ok(r.ok === 1, '按對一次 → 一般播放器播一聲', r);
+    ok(r.err === 1, '按錯 → 一般播放器播錯誤音', r);
+    ok(r.ws === 0, '不再走 Web Audio', r);
+    const wav = await page.evaluate(() => fetch(htmlSfx.beep[0].pool[0].src).then(x => x.arrayBuffer()).then(b => { const v = new DataView(b); return [String.fromCharCode(v.getUint8(0), v.getUint8(1), v.getUint8(2), v.getUint8(3)), b.byteLength]; }));
+    ok(wav[0] === 'RIFF' && wav[1] > 5000, '音效是正確的 WAV 檔', wav);
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+  {
+    const { page, ctx, errors } = await open(browser);
+    await enter(page, 'level1');
+    ok(await page.evaluate(() => USE_HTML_AUDIO === false && htmlSfx === null), '其他瀏覽器（Safari 等）維持原本的 Web Audio', await page.evaluate(() => USE_HTML_AUDIO));
     ok(errors.length === 0, '沒有錯誤', errors);
     await ctx.close();
   }

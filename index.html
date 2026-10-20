@@ -1755,16 +1755,58 @@ function ensureAudio(){
     if(audioCtx.state !== 'running' && audioCtx.resume) audioCtx.resume();
     if(!sfxBuf) buildSfx();
   }catch(e){}
+  if(USE_HTML_AUDIO) buildHtmlSfx();
 }
-function renderTone(freq, dur, type, gain){
-  const sr = audioCtx.sampleRate, n = Math.max(1, Math.floor(sr * dur));
-  const buf = audioCtx.createBuffer(1, n, sr), d = buf.getChannelData(0);
+function toneSamples(freq, dur, type, gain, sr){
+  const n = Math.max(1, Math.floor(sr * dur)), d = new Float32Array(n);
   for(let i = 0; i < n; i++){
     const t = i / sr, ph = (t * freq) % 1;
     const w = type === 'square' ? (ph < 0.5 ? 1 : -1) : Math.sin(2 * Math.PI * ph);
     d[i] = w * gain * Math.pow(0.001 / gain, t / dur);   // 和原本一樣：指數衰減到 0.001
   }
+  return d;
+}
+function renderTone(freq, dur, type, gain){
+  const sr = audioCtx.sampleRate, d = toneSamples(freq, dur, type, gain, sr);
+  const buf = audioCtx.createBuffer(1, d.length, sr);
+  buf.getChannelData(0).set(d);
   return buf;
+}
+// ===== 備用播放方式：用一般的 <audio> 播放（iPhone 的 Chrome 上 Web Audio 會變成沒聲音）=====
+// 只在 iPhone 的 Chrome 啟用（或網址加 ?audio=html 強制測試）；Safari 和其他瀏覽器維持原本的 Web Audio
+const USE_HTML_AUDIO = /CriOS/.test(navigator.userAgent) || /[?&]audio=html\b/.test(location.search);
+let htmlSfx = null;
+function makeWavUrl(samples, sr){
+  const n = samples.length, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for(let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  for(let i = 0; i < n; i++){ const s = Math.max(-1, Math.min(1, samples[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+  return URL.createObjectURL(new Blob([buf], { type:'audio/wav' }));
+}
+function makeHtmlEntry(freq, dur, type, gain){
+  const url = makeWavUrl(toneSamples(freq, dur, type, gain, 44100), 44100);
+  const pool = [];
+  for(let i = 0; i < 3; i++){ const a = new Audio(url); a.preload = 'auto'; pool.push(a); }   // 連按時輪流用，避免上一聲還沒播完被打斷
+  return { pool, i: 0 };
+}
+function buildHtmlSfx(){
+  if(htmlSfx) return;
+  try{
+    htmlSfx = { beep: [], err: makeHtmlEntry(220, 0.22, 'square', 0.18) };
+    for(let k = 0; k <= 6; k++) htmlSfx.beep.push(makeHtmlEntry(900 + k * 90, 0.12, 'sine', 0.22));
+  }catch(e){ htmlSfx = null; }
+}
+function playHtmlEntry(entry){
+  try{
+    buildHtmlSfx();
+    if(!entry) return;
+    const a = entry.pool[entry.i++ % entry.pool.length];
+    try{ a.currentTime = 0; }catch(e){}
+    const p = a.play(); if(p && p.catch) p.catch(() => {});
+  }catch(e){}
 }
 function buildSfx(){
   sfxBuf = { beep: [], err: renderTone(220, 0.22, 'square', 0.18) };
@@ -1797,10 +1839,12 @@ function playTone(freq, duration, type, gain){
   }catch(e){}
 }
 function playBeep(pressIndex){
+  if(USE_HTML_AUDIO){ buildHtmlSfx(); if(htmlSfx){ playHtmlEntry(htmlSfx.beep[Math.min(pressIndex || 0, 6)]); return; } }
   if(sfxBuf) playBuf(sfxBuf.beep[Math.min(pressIndex || 0, 6)]);
   else playTone(900 + Math.min(pressIndex || 0, 6)*90, 0.12, 'sine', 0.22);
 }
 function playErrorTone(){
+  if(USE_HTML_AUDIO){ buildHtmlSfx(); if(htmlSfx){ playHtmlEntry(htmlSfx.err); return; } }
   if(sfxBuf) playBuf(sfxBuf.err);
   else playTone(220, 0.22, 'square', 0.18);
 }
@@ -1835,7 +1879,7 @@ if(DBG){
   setInterval(() => {
     const frameAvg = dbg.fps.length ? dbg.fps.reduce((x,y)=>x+y,0)/dbg.fps.length : 0;
     const ua = /CriOS/.test(navigator.userAgent) ? 'Chrome(iOS)' : (/Safari/.test(navigator.userAgent) ? 'Safari/其他' : '?');
-    const ac = audioCtx ? (audioCtx.state + ' base=' + ((audioCtx.baseLatency || 0)*1000).toFixed(0) + 'ms out=' + ((audioCtx.outputLatency || 0)*1000).toFixed(0) + 'ms ' + audioCtx.sampleRate + 'Hz') : '(音訊尚未啟動)';
+    const ac = (USE_HTML_AUDIO ? '音效方式=一般播放器(<audio>) ' : '音效方式=Web Audio ') + (audioCtx ? (audioCtx.state + ' base=' + ((audioCtx.baseLatency || 0)*1000).toFixed(0) + 'ms out=' + ((audioCtx.outputLatency || 0)*1000).toFixed(0) + 'ms ' + audioCtx.sampleRate + 'Hz') : '(音訊尚未啟動)');
     box.textContent = 'DEBUG ' + ua + '  按鍵 ' + dbg.presses + ' 次\n'
       + '音訊 ' + ac + '\n'
       + '輸入延遲(碰螢幕→收到) ms 最近/平均/最大: ' + dbgStat(dbg.inp) + '\n'
