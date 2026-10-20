@@ -634,8 +634,7 @@
       min-height:100svh;   /* iPhone 的 100vh 把網址列、工具列也算進去，頁面會比螢幕高出一截 */
       overflow-x:hidden;
       overflow-y:auto;
-      /* 底部手勢列安全區域，避免方向鍵/開始鍵貼著螢幕邊緣 */
-      padding-bottom:calc(14px + env(safe-area-inset-bottom));
+      padding:10px 10px calc(10px + env(safe-area-inset-bottom));   /* 底部手勢列安全區域，避免方向鍵/開始鍵貼著螢幕邊緣 */
     }
     #gameArea{
       flex-direction:column;
@@ -674,16 +673,16 @@
     #boardWrap > canvas{
       order:80;
       align-self:center;    /* canvas 有內建尺寸，stretch 對它不生效，改用置中 */
-      margin:8px 0;
+      margin:6px 0;
       background:#000;      /* #boardWrap 解散後，黑色相框改由 canvas 自己承擔 */
-      padding:10px;
-      border:3px solid var(--outline);
-      border-radius:14px;
-      box-shadow:5px 5px 0 rgba(0,0,0,.25);
+      padding:6px;
+      border:2px solid var(--outline);
+      border-radius:12px;
+      box-shadow:4px 4px 0 rgba(0,0,0,.25);
       box-sizing:content-box;
     }
 
-    #panel > #dpad{ order:90; margin:6px 0 10px; }
+    #panel > #dpad{ order:90; margin:4px 0 6px; }
 
     #panel > #currentLevelBadge{ order:100; margin-bottom:8px; }
 
@@ -699,7 +698,7 @@
     }
     #dpad button{
       width:66px;
-      height:48px;         /* 原本 38px，低於建議的最小可觸控尺寸，容易點錯/點不到 */
+      height:44px;         /* 原本 38px，低於建議的最小可觸控尺寸，容易點錯/點不到 */
       border-radius:999px;
       box-shadow:none;
       font-size:17px;
@@ -897,7 +896,7 @@
 
   @media (max-width: 700px){
     #panel > #voiceWarnGame{ order:55; }
-    #panel > #ctlRow{ order:95; grid-template-columns:repeat(4,1fr); gap:5px; margin:0 0 8px; }
+    #panel > #ctlRow{ order:95; grid-template-columns:repeat(4,1fr); gap:5px; margin:0 0 4px; }
     #ctlRow button{ font-size:12px; padding:6px 2px; }
     #ctlRow button small{ font-size:9px; }
     #nameCard .gear{ top:10px; right:10px; }
@@ -1041,6 +1040,8 @@ function esc(str){
 //   「慢／正常／快」實際的語速每款遊戲各自決定，小狗找寶藏給外國學生聽指令，設得比色數慢。
 //   ★ 想調語速或句子間的停頓，只要改下面這兩行的數字。
 const RATE_VALUE = { slow:0.45, normal:0.65, fast:0.85 };   // Web Speech 的 rate，1 = 系統正常速度
+const NEXT_GAP = 1200;   // 完成一個指令後，等這麼久（毫秒）才顯示並唸下一個指令
+const ERR_WAIT = 2500;   // 按錯後，錯誤訊息停這麼久（毫秒），才重唸這一組指令
 const CHUNK_GAP  = { slow:1000, normal:600,  fast:350  };   // 第 4 關連續指令：句子和句子之間停幾毫秒
 const SETTINGS_KEY = 'hanziGames.settings';
 const SET_OPTS = { script:['trad','simp'], lang:['es','en','zh'], phon:['pinyin','zhuyin','both','off'], rate:['slow','normal','fast'] };
@@ -1223,7 +1224,7 @@ let state = {
   curIndex:0, stepsDone:0, snapIndex:0,
   snapshot:null,
   errorCount:0, totalPresses:0, replays:0, sameErr:0,
-  timerId:null, playing:false, paused:false, speaking:false,
+  timerId:null, playing:false, paused:false, speaking:false, gapWait:false, gapId:0, errWait:false, errTimer:null, speechOn:false,
   clockOn:false, clockLast:0, activeMs:0, thinkMs:0,
   gameId:0, keyAnnounceId:0, box:'idle',
   playerName:'', selectedLevel:'level1'
@@ -1431,7 +1432,9 @@ if('speechSynthesis' in window){
   setTimeout(() => { loadVoice(); refreshVoiceNote(); }, 800);
   setTimeout(() => { loadVoice(); voicesSeen = true; refreshVoiceNote(); }, 2500);
 }
-function setSpeaking(on){ clockTick(); state.speaking = on; }
+// 「不算思考時間」的三種情況：語音正在唸、完成指令後的停頓、按錯後等錯誤訊息。任何一種成立就不計思考時間
+function updateSpeaking(){ clockTick(); state.speaking = !!(state.speechOn || state.gapWait || state.errWait); }
+function setSpeaking(on){ state.speechOn = on; updateSpeaking(); }
 // 依序唸好幾句（第 4 關連續指令用），句子之間停一下；全部唸完才呼叫 onEnd
 function speakSeq(texts, onEnd){
   const my = ++speechTok;
@@ -1498,6 +1501,32 @@ function showCurrentInstruction(){
   if(c) speakSeq(c.texts);
 }
 // 重唸目前這一組（按錯、按 🔊、暫停回來時用）
+// 完成一個指令後，先停一下（NEXT_GAP）再顯示並唸下一個；這段時間不算思考時間
+function clearGapWait(){
+  state.gapId++;
+  if(state.gapWait){ state.gapWait = false; updateSpeaking(); }
+}
+function showNextInstructionAfterGap(){
+  const gid = state.gameId;
+  clearGapWait();
+  const myGap = state.gapId;
+  state.gapWait = true;
+  updateSpeaking();
+  state.box = 'idle';
+  renderBox();
+  setTimeout(() => {
+    if(gid !== state.gameId || myGap !== state.gapId || !state.gapWait) return;
+    state.gapWait = false;
+    updateSpeaking();
+    if(state.paused || !state.playing) return;   // 暫停中：按「繼續」時會自己把目前的指令再唸一次
+    showCurrentInstruction();
+  }, NEXT_GAP);
+}
+// 按錯後等待（ERR_WAIT）期間：可以繼續按鍵、按 🔊、暫停；一有動作就取消這次自動重唸
+function clearErrWait(){
+  if(state.errTimer){ clearTimeout(state.errTimer); state.errTimer = null; }
+  if(state.errWait){ state.errWait = false; updateSpeaking(); }
+}
 function sayCurrentChunk(){
   if(!state.playing || state.paused || state.awaitingKeyAnnouncement) return;
   state.box = 'ins';
@@ -1512,8 +1541,10 @@ function snapshotInstruction(){
 }
 
 function startGame(){
-  ensureAudio();
+  startAudioKeepAlive();
   stopSpeech();
+  clearGapWait();
+  clearErrWait();
   clearHint();
   const gid = ++state.gameId;
   const difficulty = state.difficulty || 'level1';
@@ -1621,8 +1652,7 @@ function checkGoal(){
     state.playing = false;
     stopClock();
     clearHint();
-    setMobilePlayingCompact(false);
-    updateCtlButtons();
+    updateCtlButtons();   // 手機版維持精簡模式（棋盤大小不變），回主選單時才還原
     const result = computeScore();
     state.box = 'treasure';
     renderBox();
@@ -1669,14 +1699,21 @@ function handleWrongKey(){
   state.curIndex = state.snapIndex;
   state.stepsDone = 0;
   draw();
+  clearErrWait();
+  clearGapWait();
+  state.errWait = true;
+  updateSpeaking();   // 等待期間不算思考時間
   const errNo = state.errorCount;
-  setTimeout(() => {
-    if(gid !== state.gameId || !state.playing || errNo !== state.errorCount) return;
+  state.errTimer = setTimeout(() => {
+    state.errTimer = null;
+    if(gid !== state.gameId || !state.playing || errNo !== state.errorCount || !state.errWait) return;
+    state.errWait = false;
+    updateSpeaking();
     document.getElementById('errorMsg').textContent = '';
     if(state.paused) return;
     sayCurrentChunk();
     if(state.difficulty === 'level1' && state.sameErr >= 3) showHint();
-  }, 900);
+  }, ERR_WAIT);
   trackEvent('error_made', { level: state.difficulty, stage: state.stage });
 }
 
@@ -1689,7 +1726,7 @@ function advanceInstruction(){
       clearHint();
       document.getElementById('errorMsg').textContent = '';
       snapshotInstruction();
-      showCurrentInstruction();
+      showNextInstructionAfterGap();
     }
   } else {
     if(!checkGoal()){
@@ -1700,16 +1737,63 @@ function advanceInstruction(){
       setInstructions(rerouted || []);
       state.curIndex = 0;
       snapshotInstruction();
-      showCurrentInstruction();
+      showNextInstructionAfterGap();
     }
   }
 }
 
 let audioCtx = null;
+let sfxBuf = null;          // 事先做好的短音效（按鍵音 7 種音高＋錯誤音），按的時候直接播放，不用即時生成
+let keepAliveSrc = null;    // 極小聲的循環底噪：讓 iPhone 的音訊硬體不要休眠，第一聲才不會慢半拍
 function ensureAudio(){
   try{
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      try{ audioCtx = new AC({ latencyHint:'interactive' }); }catch(e){ audioCtx = new AC(); }
+    }
+    if(audioCtx.state !== 'running' && audioCtx.resume) audioCtx.resume();
+    if(!sfxBuf) buildSfx();
+  }catch(e){}
+}
+function renderTone(freq, dur, type, gain){
+  const sr = audioCtx.sampleRate, n = Math.max(1, Math.floor(sr * dur));
+  const buf = audioCtx.createBuffer(1, n, sr), d = buf.getChannelData(0);
+  for(let i = 0; i < n; i++){
+    const t = i / sr, ph = (t * freq) % 1;
+    const w = type === 'square' ? (ph < 0.5 ? 1 : -1) : Math.sin(2 * Math.PI * ph);
+    d[i] = w * gain * Math.pow(0.001 / gain, t / dur);   // 和原本一樣：指數衰減到 0.001
+  }
+  return buf;
+}
+function buildSfx(){
+  sfxBuf = { beep: [], err: renderTone(220, 0.22, 'square', 0.18) };
+  for(let k = 0; k <= 6; k++) sfxBuf.beep.push(renderTone(900 + k * 90, 0.12, 'sine', 0.22));
+}
+function startAudioKeepAlive(){
+  try{
+    ensureAudio();
+    if(!audioCtx || keepAliveSrc) return;
+    const sr = audioCtx.sampleRate, buf = audioCtx.createBuffer(1, sr, sr), d = buf.getChannelData(0);
+    for(let i = 0; i < sr; i++) d[i] = (Math.random() * 2 - 1) * 0.0002;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    src.connect(audioCtx.destination);
+    src.start();
+    keepAliveSrc = src;
+  }catch(e){}
+}
+function stopAudioKeepAlive(){
+  try{ if(keepAliveSrc){ keepAliveSrc.stop(); keepAliveSrc.disconnect(); } }catch(e){}
+  keepAliveSrc = null;
+}
+function playBuf(buf){
+  try{
+    ensureAudio();
+    if(!audioCtx || !buf) return;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start(0);
   }catch(e){}
 }
 function playTone(freq, duration, type, gain){
@@ -1728,13 +1812,20 @@ function playTone(freq, duration, type, gain){
     o.stop(audioCtx.currentTime + duration);
   }catch(e){}
 }
-function playBeep(pressIndex){ playTone(900 + Math.min(pressIndex || 0, 6)*90, 0.12, 'sine', 0.22); }
-function playErrorTone(){ playTone(220, 0.22, 'square', 0.18); }
+function playBeep(pressIndex){
+  if(sfxBuf) playBuf(sfxBuf.beep[Math.min(pressIndex || 0, 6)]);
+  else playTone(900 + Math.min(pressIndex || 0, 6)*90, 0.12, 'sine', 0.22);
+}
+function playErrorTone(){
+  if(sfxBuf) playBuf(sfxBuf.err);
+  else playTone(220, 0.22, 'square', 0.18);
+}
 
 function pressDirection(dir){
   if(!state.playing){ playBeep(0); return; }
   if(state.paused) return;
   if(state.awaitingKeyAnnouncement) return; // 「找到鑰匙了」的語音還沒講完，先忽略操作，避免蓋過去
+  if(state.gapWait) return;                 // 還沒聽到下一個指令，先不收按鍵（避免亂算錯誤）
   if(state.curIndex >= state.instructions.length) return;
   const ins = state.instructions[state.curIndex];
   if(dir !== ins.dir){
@@ -1743,6 +1834,7 @@ function pressDirection(dir){
     return;
   }
   clearHint();
+  if(state.errWait){ clearErrWait(); document.getElementById('errorMsg').textContent = ''; }   // 按對了：取消這次自動重唸、收起錯誤訊息
   state.totalPresses++;
   if(ins.kind === 'turn'){
     playBeep(0);
@@ -2440,30 +2532,32 @@ function computeBoardSize(){
   const isMobileLayout = window.matchMedia('(max-width: 700px)').matches;
   const wrapChrome = 26;   // #boardWrap 的 padding(10*2) + border(3*2) 近似值
 
+  const insBox = document.getElementById('instructionBox');
+  if(!isMobileLayout){
+    if(insBox) insBox.style.minHeight = '';
+    const st = document.getElementById('stageLabel'); if(st) st.style.minHeight = '';
+  }
   if(isMobileLayout){
-    // 手機版：棋盤大小要「整局固定」，不能跟著網址列／工具列收合而忽大忽小。
+    // 手機版：棋盤大小要「整局固定」，不能跟著網址列／工具列收合而忽大忽小，又要盡量用滿寬度。
     // 1) 高度用 100svh（工具列都顯示時的高度）這個固定值，不用會跳動的 innerHeight。
-    // 2) 指令框、答錯提示、第幾步的高度會隨內容變，改用預留的固定高度（實際比預留高才用實際值）。
-    // 3) 算過一次就記起來；只有寬度（轉向）、語言／拼音／繁簡設定、進出遊戲狀態改變時才重算。
-    const key = [window.innerWidth, SETTINGS.lang, SETTINGS.phon, SETTINGS.script, document.body.classList.contains('mobile-playing')].join('|');
+    // 2) 指令框、第幾步的高度會隨內容變，改成固定最小高度（先預留好）。
+    // 3) 不用估算：量「整個畫面現在用掉多少高度」，剩下多少就全部給棋盤（上限是滿寬）。
+    // 4) 算過一次就記起來；只有寬度（轉向）、語言／拼音／繁簡設定、進出遊戲改變時才重算。
+    const frame = 16;   // 棋盤外框：左右各 padding 6 + border 2
+    const playing = document.body.classList.contains('mobile-playing');
+    const key = [window.innerWidth, SETTINGS.lang, SETTINGS.phon, SETTINGS.script, playing].join('|');
     if(boardSizeCache && boardSizeCache.key === key) return boardSizeCache.size;
-    const availableWidth = window.innerWidth - 28 - wrapChrome;
-    let size = Math.min(availableWidth, 420 - wrapChrome);
-    size = Math.max(180, size);
-    // 量測棋盤上下其他區塊的高度，確保棋盤＋方向鍵＋控制鍵能同時塞進畫面
-    const RESERVE = { instructionBox:84, errorMsg:18, stageLabel:30 };
-    const ids = ['playerGreeting','statRow','voiceWarnGame','stageLabel','instructionBox','errorMsg','ctlRow','dpad'];
-    let chromeHeight = 0;
-    ids.forEach(id => {
-      const el = document.getElementById(id);
-      if(el && window.getComputedStyle(el).display !== 'none') chromeHeight += Math.max(el.getBoundingClientRect().height, RESERVE[id] || 0);
-    });
-    document.querySelectorAll('#boardWrap > h1, #boardWrap > .seal').forEach(el => {
-      if(window.getComputedStyle(el).display !== 'none') chromeHeight += el.getBoundingClientRect().height;
-    });
-    const availableHeight = stableViewportHeight() - chromeHeight - wrapChrome - 48;
-    size = Math.min(size, Math.max(160, availableHeight));
-    size = Math.floor(size);
+    const maxContent = Math.max(180, Math.min(window.innerWidth - 20, 420) - frame);
+    const ga = document.getElementById('gameArea');
+    if(!playing || !ga || ga.offsetHeight === 0) return Math.floor(Math.min(maxContent, 300));   // 還沒進遊戲：不精算、也不記住
+    const insMin = SETTINGS.phon === 'both' ? 78 : (SETTINGS.phon === 'off' ? 52 : 64);
+    if(insBox) insBox.style.minHeight = insMin + 'px';
+    const st = document.getElementById('stageLabel'); if(st) st.style.minHeight = '20px';
+    const padBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    const used = ga.getBoundingClientRect().bottom + window.scrollY + padBottom;   // 整頁現在需要的高度
+    const leftover = stableViewportHeight() - used - 2;
+    let size = Math.floor(Math.min(maxContent, canvas.width + leftover));
+    size = Math.max(160, size);
     boardSizeCache = { key, size };
     return size;
   }
@@ -2525,6 +2619,8 @@ function pauseGame(showOverlay){
   if(!state.playing || state.paused) return false;
   clockTick();
   stopSpeech();
+  clearGapWait();
+  if(state.errWait){ clearErrWait(); document.getElementById('errorMsg').textContent = ''; }
   state.paused = true;
   if(showOverlay !== false) show('pauseov', true);
   updateTimer();
@@ -2559,6 +2655,8 @@ $('pauseBtn').addEventListener('click', () => pauseGame());
 $('resumeBtn').addEventListener('click', resumeGame);
 $('replayBtn').addEventListener('click', () => {
   if(!state.playing || state.paused || state.awaitingKeyAnnouncement) return;
+  clearGapWait();
+  if(state.errWait){ clearErrWait(); document.getElementById('errorMsg').textContent = ''; }
   state.replays++;
   sayCurrentChunk();
   trackEvent('replay', { level: state.difficulty });
@@ -2685,6 +2783,9 @@ if(window.visualViewport){
 function reopenNameGate(){
   state.gameId++;            // 讓這一局所有還沒跑完的計時器失效
   stopSpeech();
+  clearGapWait();
+  clearErrWait();
+  stopAudioKeepAlive();
   stopClock();
   clearHint();
   state.playing = false;
@@ -2741,6 +2842,7 @@ function commentKey(r){
 
 // 結果畫面順序（與色數、比比看統一）：分數 → 評語 → 排行榜 → 再玩一次／下一關 → 主選單
 function showResult(r){
+  stopAudioKeepAlive();
   const n = levelNum(state.difficulty);
   const practice = state.difficulty === 'level1';
   const row = (k, v) => `<tr><td>${L(k)}</td><td>${v}</td></tr>`;

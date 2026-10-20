@@ -58,6 +58,7 @@ async function enter(page, level = 'level1', name = 'Ana'){
 // 照指令一直按對的方向，直到找到寶藏
 const SOLVE = `(async()=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));
   for(let n=0;n<3000&&state.playing;n++){ if(state.awaitingKeyAnnouncement||state.paused){await sl(20);continue;}
+    if(state.gapWait){ clearGapWait(); showCurrentInstruction(); }   // 略過「完成指令後的停頓」，不然整局要等很久
     pressDirection(state.instructions[state.curIndex].dir); await sl(2);} })()`;
 async function solveAndWaitResult(page){
   await page.evaluate(SOLVE);
@@ -131,7 +132,7 @@ async function solveAndWaitResult(page){
     // 同一句連錯 3 次 → 方向鍵發亮
     await page.waitForTimeout(100);
     await page.evaluate(() => { const right = state.instructions[state.curIndex].dir; const wrong = DIRS.find(d => d !== right); pressDirection(wrong); pressDirection(wrong); pressDirection(wrong); });
-    await page.waitForTimeout(1100);
+    await page.waitForTimeout(2800);   // 錯誤訊息停 2.5 秒後才重唸、才亮提示
     const glow = await page.evaluate(() => { const b = document.querySelector('#dpad .hintGlow'); return b && b.id === DPAD_ID[state.instructions[state.curIndex].dir]; });
     ok(glow, '同一句錯 3 次，該按的方向鍵發亮');
     await page.evaluate(() => pressDirection(state.instructions[state.curIndex].dir));
@@ -183,7 +184,7 @@ async function solveAndWaitResult(page){
     const after = await page.evaluate(() => ({ r: state.dogRow, c: state.dogCol, f: state.facing, i: state.curIndex, s: state.stepsDone }));
     ok(after.r === before.r && after.c === before.c && after.f === before.f && after.i === 0 && after.s === 0, '按錯 → 小狗回到這一組的起點', { before, after });
     await page.evaluate(() => { window.__said = []; });
-    await page.waitForTimeout(2600);
+    await page.waitForTimeout(3900);   // 按錯後等 2.5 秒才整組重唸（句子之間再停 0.6 秒）
     const re = await page.evaluate(() => window.__said.map(s => s.text));
     ok(chunk.every(t => re.includes(t)), '按錯後整組重唸', re);
     ok(errors.length === 0, '沒有錯誤', errors);
@@ -257,7 +258,7 @@ async function solveAndWaitResult(page){
     await enter(page, 'level2');
     await page.waitForTimeout(500);
     // 一路按到找到鑰匙
-    await page.evaluate(async () => { const sl = ms => new Promise(r => setTimeout(r, ms)); for(let n = 0; n < 2000 && state.stage === 'key'; n++){ pressDirection(state.instructions[state.curIndex].dir); await sl(1); } });
+    await page.evaluate(async () => { const sl = ms => new Promise(r => setTimeout(r, ms)); for(let n = 0; n < 2000 && state.stage === 'key'; n++){ if(state.gapWait){ clearGapWait(); showCurrentInstruction(); } pressDirection(state.instructions[state.curIndex].dir); await sl(1); } });
     ok(await page.evaluate(() => state.awaitingKeyAnnouncement), '找到鑰匙，正在宣布');
     await page.click('#pauseBtn');
     await page.evaluate(() => { window.__said = []; });
@@ -384,6 +385,101 @@ async function solveAndWaitResult(page){
     ok(await cv() === first, '答錯提示出現時棋盤大小不變', await cv());
     await page.setViewportSize({ width: 340, height: 664 }); await page.waitForTimeout(200);
     ok(await cv() < first, '寬度改變（轉向／換螢幕）時才重新計算', await cv());
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('完成指令後停 1.2 秒才唸下一個；按錯後訊息停 2.5 秒、期間可以做其他動作');
+  {
+    const { page, ctx, errors } = await open(browser, { speechMs: 10 });
+    await page.evaluate(() => { Math.random = (() => { let s = 11; return () => (s = (s * 9301 + 49297) % 233280) / 233280; })(); });
+    await enter(page, 'level2');
+    await page.waitForTimeout(300);
+    // 找一個「至少兩個指令、第一個不會直接撞到鑰匙」的地圖
+    for(let i = 0; i < 40; i++){
+      const good = await page.evaluate(() => state.instructions.length >= 3 && !state.chunkLabels.get(0).texts.some(t => /鑰匙/.test(t)));
+      if(good) break;
+      await page.evaluate(() => startGame()); await page.waitForTimeout(100);
+    }
+    await page.waitForTimeout(150);
+    await page.evaluate(() => { window.__said = []; });
+    // 完成第一個指令
+    const t0 = await page.evaluate(() => { const i0 = state.curIndex; while(state.curIndex === i0 && state.playing && !state.gapWait) pressDirection(state.instructions[state.curIndex].dir); return Date.now(); });
+    ok(await page.evaluate(() => state.gapWait), '完成一個指令後進入停頓');
+    ok((await page.$eval('#instructionBox', e => e.innerText.trim())) === '', '停頓期間指令框先清空（不留舊指令）');
+    const pressesBefore = await page.evaluate(() => state.totalPresses);
+    await page.evaluate(() => pressDirection('up')); await page.evaluate(() => pressDirection('left'));
+    ok(await page.evaluate(pb => state.totalPresses === pb && state.errorCount === 0, pressesBefore), '停頓期間按鍵不算（不會被算成錯誤）');
+    await page.waitForTimeout(900);
+    ok((await page.evaluate(() => window.__said.length)) === 0, '1.2 秒內還沒唸下一個');
+    await page.waitForFunction(() => window.__said.length >= 1, null, { timeout: 3000 });
+    const dt = await page.evaluate(t => window.__said[0].at - t, t0);
+    ok(dt >= 1150 && dt < 1700, '約 1.2 秒後才唸下一個', dt);
+    ok(await page.evaluate(() => !state.gapWait && state.thinkMs < 600), '停頓時間不算思考時間', await page.evaluate(() => state.thinkMs));
+
+    // 按錯：訊息停 2.5 秒
+    await page.evaluate(() => { window.__said = []; const r = state.instructions[state.curIndex].dir; window.__t1 = Date.now(); pressDirection(DIRS.find(d => d !== r)); });
+    ok((await page.$eval('#errorMsg', e => e.innerText.trim())).length > 0, '按錯 → 出現錯誤訊息');
+    await page.waitForTimeout(2000);
+    ok((await page.$eval('#errorMsg', e => e.innerText.trim())).length > 0, '2 秒後錯誤訊息還在');
+    ok((await page.evaluate(() => window.__said.length)) === 0, '2 秒內不會重唸');
+    await page.waitForFunction(() => window.__said.length >= 1, null, { timeout: 3000 });
+    const dt2 = await page.evaluate(() => window.__said[0].at - window.__t1);
+    ok(dt2 >= 2450 && dt2 < 3200, '約 2.5 秒後才重唸', dt2);
+    ok((await page.$eval('#errorMsg', e => e.innerText.trim())) === '', '重唸時錯誤訊息消失');
+    ok(await page.evaluate(() => state.thinkMs < 900), '等待錯誤訊息的時間不算思考時間', await page.evaluate(() => state.thinkMs));
+
+    // 等待期間可以做別的動作：按對 → 馬上收起訊息、取消自動重唸
+    await page.waitForTimeout(100);
+    await page.evaluate(() => { window.__said = []; const r = state.instructions[state.curIndex].dir; pressDirection(DIRS.find(d => d !== r)); });
+    await page.waitForTimeout(800);
+    await page.evaluate(() => pressDirection(state.instructions[state.curIndex].dir));
+    ok((await page.$eval('#errorMsg', e => e.innerText.trim())) === '', '等待中按對 → 訊息馬上收起');
+    await page.waitForTimeout(2600);
+    ok((await page.evaluate(() => window.__said.length)) === 0, '等待中按對 → 不會再自動重唸');
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('手機版：找到寶藏後棋盤不縮小；各種手機高度都不用捲動、棋盤盡量大');
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 654 }, isMobile: true, hasTouch: true }); const page = await ctx.newPage();
+    const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', r => r.request().url().startsWith('http://localhost') ? r.continue() : r.abort());
+    await page.addInitScript(SPEECH(10));
+    await page.addInitScript('try{localStorage.setItem(' + JSON.stringify(KEY) + ',' + JSON.stringify(JSON.stringify({ v:1, script:'trad', lang:'es', phon:'pinyin', rate:'normal' })) + ');}catch(e){}');
+    await page.goto(BASE + '/index.html');
+    await page.waitForTimeout(300);
+    await enter(page, 'level2');
+    await page.waitForTimeout(400);
+    const cv = () => page.$eval('#board', e => e.width);
+    const first = await cv();
+    ok(first + 16 >= 290, '654 高的手機：棋盤外框寬度 ≥ 290（原本約 267）', first + 16);
+    await page.evaluate(() => { const r = state.instructions[state.curIndex].dir; pressDirection(DIRS.find(d => d !== r)); });   // 讓答錯訊息出現
+    await page.waitForTimeout(100);
+    const fit = await page.evaluate(() => ({ docH: document.documentElement.scrollHeight, ih: window.innerHeight }));
+    ok(fit.docH <= fit.ih, '連答錯訊息出現時也不用捲動，方向鍵和四顆按鈕都在畫面內', fit);
+    await solveAndWaitResult(page);
+    ok(await cv() === first, '找到寶藏後棋盤大小不變', [first, await cv()]);
+    ok(await page.evaluate(() => document.body.classList.contains('mobile-playing')), '找到寶藏後仍維持精簡模式');
+    await page.click('#resMenuBtn');
+    ok(!(await page.evaluate(() => document.body.classList.contains('mobile-playing'))), '回主選單才還原');
+    ok(errors.length === 0, '沒有錯誤', errors);
+    await ctx.close();
+  }
+
+  console.log('音效：事先做好、按的時候直接播放');
+  {
+    const { page, ctx, errors } = await open(browser);
+    await enter(page, 'level1');
+    ok(await page.evaluate(() => !!(sfxBuf && sfxBuf.beep.length === 7 && sfxBuf.err)), '按鍵音 7 種音高＋錯誤音都已先做好');
+    ok(await page.evaluate(() => !!keepAliveSrc), '遊戲中有維持音訊喚醒（防止第一聲慢半拍）');
+    const n = await page.evaluate(() => { let c = 0; const orig = audioCtx.createOscillator.bind(audioCtx); audioCtx.createOscillator = () => { c++; return orig(); };
+      const r = state.instructions[state.curIndex].dir; pressDirection(r); pressDirection(DIRS.find(d => d !== r)); return c; });
+    ok(n === 0, '按鍵音與錯誤音不再即時建立振盪器', n);
+    await page.evaluate(() => { state.gameId++; });
+    await page.click('#menuBtn'); await page.click('#confirmYes');
+    ok(await page.evaluate(() => !keepAliveSrc), '回主選單就關掉喚醒底噪');
     ok(errors.length === 0, '沒有錯誤', errors);
     await ctx.close();
   }
