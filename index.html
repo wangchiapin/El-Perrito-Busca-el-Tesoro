@@ -96,6 +96,8 @@ window.dataLayer = window.dataLayer || [];
     max-width:100%;
     height:100%;           /* 撐滿扣除 body padding 後的可視高度 */
   }
+  /* 電腦版整頁固定不捲動，版權列放不進去，所以電腦版不顯示；手機版照常顯示在最底下 */
+  @media (min-width: 701px){ #hgCopy{ display:none !important; } }
   h1{
     font-family:"Fredoka","Baloo 2","Noto Sans TC",sans-serif;
     font-weight:700;
@@ -2866,9 +2868,12 @@ try{
   if(window.__hgCopy)return; window.__hgCopy=1;
   function mk(){
     if(document.getElementById('hgCopy'))return;
+    if(document.documentElement.hasAttribute('data-hg-nocopy'))return;
     var d=document.createElement('div'); d.id='hgCopy';
     d.textContent='© 2026 @cadadiaunosminutos_ben_chino ｜ 保留所有權利 / Todos los derechos reservados';
-    d.style.cssText='position:fixed;left:48px;right:48px;bottom:calc(2px + env(safe-area-inset-bottom,0px));text-align:center;font:10px/1.3 system-ui,-apple-system,"Noto Sans TC",sans-serif;color:rgba(120,120,120,.85);pointer-events:none;user-select:none;z-index:1;';
+    d.style.cssText='display:block;flex:none;width:100%;box-sizing:border-box;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));text-align:center;font:10px/1.4 system-ui,-apple-system,"Noto Sans TC",sans-serif;color:rgba(120,120,120,.85);user-select:none;position:static;';
+    var cs=getComputedStyle(document.body);
+    if(cs.display.indexOf('flex')>-1&&cs.flexDirection.indexOf('row')===0){document.body.style.flexWrap='wrap';d.style.flex='0 0 100%';}
     document.body.appendChild(d);
   }
   if(document.body)mk(); else document.addEventListener('DOMContentLoaded',mk);
