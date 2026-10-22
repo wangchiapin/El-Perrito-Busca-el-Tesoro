@@ -457,8 +457,9 @@ async function solveAndWaitResult(page){
     ok(first + 16 >= 290, '654 高的手機：棋盤外框寬度 ≥ 290（原本約 267）', first + 16);
     await page.evaluate(() => { const r = state.instructions[state.curIndex].dir; pressDirection(DIRS.find(d => d !== r)); });   // 讓答錯訊息出現
     await page.waitForTimeout(100);
-    const fit = await page.evaluate(() => ({ docH: document.documentElement.scrollHeight, ih: window.innerHeight }));
-    ok(fit.docH <= fit.ih, '連答錯訊息出現時也不用捲動，方向鍵和四顆按鈕都在畫面內', fit);
+    // 頁面最後面有一行共用的版權說明（#hgCopy，只在窄螢幕出現），不算在「遊戲畫面要塞進一屏」裡
+    const fit = await page.evaluate(() => { const c = document.getElementById('hgCopy'); return { docH: document.documentElement.scrollHeight, ih: window.innerHeight, copyH: c ? c.offsetHeight : 0 }; });
+    ok(fit.docH - fit.copyH <= fit.ih, '連答錯訊息出現時，遊戲畫面（不含最後面的版權說明）也不用捲動，方向鍵和四顆按鈕都在畫面內', fit);
     await solveAndWaitResult(page);
     ok(await cv() === first, '找到寶藏後棋盤大小不變', [first, await cv()]);
     ok(await page.evaluate(() => document.body.classList.contains('mobile-playing')), '找到寶藏後仍維持精簡模式');
