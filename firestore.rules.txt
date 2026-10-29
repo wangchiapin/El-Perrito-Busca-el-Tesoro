@@ -1,3 +1,0 @@
-// 小狗找寶藏的排行榜規則已搬到 memorma-24dab 專案。
-// 請看 Memorama repo 的 firestore-rules-full.txt（match /perrito_boards/{board}/entries/{uid} 那一段）。
-// 舊的 perrito-busca-el-tesoro 專案不再使用。

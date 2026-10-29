@@ -2825,7 +2825,7 @@ $('lbBackBtn').addEventListener('click', () => { $('leaderboardModal').style.dis
 <script type="module">
 // 排行榜：Firebase 專案 memorma-24dab（匿名登入；2026-10-21 由 perrito-busca-el-tesoro 併進來）
 // 資料放在 perrito_boards/{level2|level3|level4}/entries/{匿名登入的 uid}，一台裝置一關一筆，只留最高分。
-// 安全規則在 Memorama repo 的 firestore-rules-full.txt（整份貼到 memorma 的 Firebase 後台）。
+// 安全規則的正本在 game-kit 的 firebase-rules/memorma-24dab.rules.txt（整份貼到 memorma 的 Firebase 後台）。
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,collection,query,orderBy,limit,getDocs,getDoc,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";

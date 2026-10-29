@@ -32,7 +32,13 @@
 
 ## 排行榜
 
-`perrito_boards/{level2|level3|level4}/entries/{uid}`：每台裝置每關只留最高分，顯示前 10 名；同分比思考時間。規則在 Memorama repo 的 `firestore-rules-full.txt`（整份貼到 memorma-24dab）。
+`perrito_boards/{level2|level3|level4}/entries/{uid}`：每台裝置每關只留最高分，顯示前 10 名；同分比思考時間。規則正本在 game-kit（私人 repo）的 `firebase-rules/``memorma-24dab.rules.txt`（整份貼到 memorma-24dab）；這個 repo 不放規則檔。
+
+## 遊玩紀錄
+2026-10-21 起記錄訪客、開始、玩完，寫到 `memorma-24dab` 的 `plays`、`visits`（程式裡「遊玩紀錄」那一段）。
+
+## 分享連結預覽（2026-10-28）
+把網址貼到 LINE、WhatsApp 時，會顯示遊戲名稱「小狗找寶藏 · El Perrito Busca el Tesoro」和縮圖。縮圖是根目錄的 `og.jpg`（1200x630）；名稱與說明文字寫在 `index.html` `<head>` 的 `og:title`、`og:description`。
 
 ## 測試
 
