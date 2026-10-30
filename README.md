@@ -44,6 +44,8 @@
 
 `node tests/run.js`（Playwright；語音與 Firebase 都用替身，不碰真的資料庫）。
 
+另有 `tests/test_options.js`（2026-10-30，約 120 項）：語速三檔、第 3 關、拼音加注音同時顯示、靜音、方向鍵、`?audio=`／`?vol=`。
+
 ## 手機瀏覽器備註：捲動後回不到頂端（2026-10-24）
 iPhone 版 Chrome 上，頁面可以捲動時，往下捲之後有時回不到最上面（Safari 正常）。
 處理方式（已套用在本遊戲）：
